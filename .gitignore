@@ -1,0 +1,7 @@
+# Ignore course notes, Word docs and large PDFs
+*.docx
+*.pdf
+generate_*.py
+test_script.js
+.DS_Store
+.system_generated/
