@@ -772,6 +772,51 @@
         <div class="team-sub-chips-grid" id="team-sub-chips-grid"></div>
       </div>
 
+      <!-- Round 4 Debate Dock: 1 Minute Debate -->
+      <div class="r4-debate-dock" id="r4-debate-dock" style="display: none;">
+        <div class="r4-debate-header">
+          <div class="r4-debate-timer-box">
+            <span class="r4-debate-clock" id="r4-debate-timer">01:00</span>
+            <span class="r4-debate-stage-badge stage-hq" id="r4-debate-stage-badge">【前半段 · 總部發言時間 (30 秒)】總部陳述市場危機與交付底線</span>
+          </div>
+          <button class="action-btn-secondary" id="btn-debate-toggle" onclick="DebateTimer.toggle()">開始 1 分鐘辯論</button>
+        </div>
+      </div>
+
+      <!-- Round 4 Negotiation Board -->
+      <div class="voting-status-panel" id="r4-negotiation-board" style="display: none;">
+        <div class="voting-panel-header">
+          <span class="voting-panel-title">第四題：非對稱博弈與調解斡旋看板</span>
+          <span class="voting-progress-pill" id="r4-chameleon-prop-status">提案狀態：研擬中...</span>
+        </div>
+        <div id="r4-live-proposal-display" style="padding: 12px 14px; background: var(--ios-bg); border-radius: 12px; font-size: 13px; color: var(--ios-label); line-height: 1.6; border: 1px solid var(--ios-hairline);">
+          變色龍尚未送出提案。變色龍可於手機端隨時調整並發送最合適之調解方案。
+        </div>
+        <div class="r4-board-grid">
+          <div class="r4-role-card">
+            <div class="r4-role-header">
+              <span>總部代表（第 1、2 組）</span>
+              <span id="r4-hq-vote-status" class="r4-role-status-text">研議中...</span>
+            </div>
+            <p style="font-size: 11.5px; color: var(--ios-secondary-label); margin: 0;">核心關切：1 小時內穩定市場預期與董事會信任，獲得可信交付承諾</p>
+          </div>
+          <div class="r4-role-card">
+            <div class="r4-role-header">
+              <span>公司現場（第 3、4 組）</span>
+              <span id="r4-tokyo-vote-status" class="r4-role-status-text">研議中...</span>
+            </div>
+            <p style="font-size: 11.5px; color: var(--ios-secondary-label); margin: 0;">核心關切：絕不背黑鍋簽署不平等免責條款，捍衛工程品質真相與團隊名譽</p>
+          </div>
+          <div class="r4-role-card">
+            <div class="r4-role-header">
+              <span>文化變色龍（第 5 組）</span>
+              <span style="color: var(--ios-purple); font-size: 12px; font-weight: 600;">調解斡旋席</span>
+            </div>
+            <p style="font-size: 11.5px; color: var(--ios-secondary-label); margin: 0;">調解任務：掌握雙方不公開難處，提出雙方均能簽字接受的妥協協定</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Voting Results Grid: Revealed only when presenter clicks reveal -->
       <div id="tension-announcement-wrap" style="display: none; margin-top: 14px;"></div>
       <div class="options-grid" id="options-grid" style="display: none;"></div>
@@ -954,9 +999,9 @@
       title: "委婉留白時的追問藝術",
       sceneKey: "midnightBoardroom",
       speaker: "佐藤部長（雙手交疊，緩緩喝了一口茶，審慎沉吟）：",
-      dialogue: "「……交付時程方面，我們現場會全力以赴進行慎重研討，只是部分細節可能還需要團隊內部進一步調研……」
+      dialogue: `「……交付時程方面，我們現場會全力以赴進行慎重研討，只是部分細節可能還需要團隊內部進一步調研……」
 
-【背景形勢】：總部明日開盤前必須向華爾街做空機構與董事會提交進度，此時總部該如何接話？",
+【背景形勢】：總部明日開盤前必須向華爾街做空機構與董事會提交進度，此時總部該如何接話？`,
       options: [
         {
           id: "A",
@@ -995,9 +1040,9 @@
       title: "晶圓遭挪用風暴與責任定調",
       sceneKey: "confidentialLab",
       speaker: "東京工程團隊（遞交底層 log 數據與集體抗議連署書）：",
-      dialogue: "東京私下向調解人證實：延誤根本非技術問題（東京良率實測達 98.4%），而是總部董事關係戶私自插單強行挪走 30% 晶圓！東京團隊連續加班三週背黑鍋，如今卻被總部公開質疑工作效率低落，日本工程師全員抗議。
+      dialogue: `東京私下向調解人證實：延誤根本非技術問題（東京良率實測達 98.4%），而是總部董事關係戶私自插單強行挪走 30% 晶圓！東京團隊連續加班三週背黑鍋，如今卻被總部公開質疑工作效率低落，日本工程師全員抗議。
 
-【背景形勢】：調解席與總部該如何定調這起內部醜聞，並平息兩地怒火？",
+【背景形勢】：調解席與總部該如何定調這起內部醜聞，並平息兩地怒火？`,
       options: [
         {
           id: "A",
@@ -1036,9 +1081,9 @@
       title: "跨國通訊口角升級與場域重構",
       sceneKey: "hybridChashitsu",
       speaker: "美日跨國 Slack 頻道（爭執紀錄截圖曝光）：",
-      dialogue: "兩地工程師在公開 Slack 頻道爆發激烈口角：美方工程師不斷使用大寫英文與 @here 催促進度，日方工程師感到被當眾公開審查羞辱，開始採取集體已讀不回與拒絕更新英文工單的被動防禦，跨國協作即將全面中斷。
+      dialogue: `兩地工程師在公開 Slack 頻道爆發激烈口角：美方工程師不斷使用大寫英文與 @here 催促進度，日方工程師感到被當眾公開審查羞辱，開始採取集體已讀不回與拒絕更新英文工單的被動防禦，跨國協作即將全面中斷。
 
-【背景形勢】：應採取何種形式與管道重構，徹底打破溝通死結？",
+【背景形勢】：應採取何種形式與管道重構，徹底打破溝通死結？`,
       options: [
         {
           id: "A",
@@ -1080,17 +1125,17 @@
 
       hqContext: {
         title: "總部內部機密情境（第 1、2 組專屬）：華爾街做空暴跌與究責最後通牒",
-        briefing: "華爾街做空機構發布報告指控產能嚴重不足，母公司盤前股價暴跌 8.5%，各大投行與董事會要求 1 小時內發布全球重訊並指名究責，董事會揚言限期未決將撤換高層！
+        briefing: `華爾街做空機構發布報告指控產能嚴重不足，母公司盤前股價暴跌 8.5%，各大投行與董事會要求 1 小時內發布全球重訊並指名究責，董事會揚言限期未決將撤換高層！
 
-（註：總部完全不知道東京現場其實產能被董事關係戶挪用的實情）",
+（註：總部完全不知道東京現場其實產能被董事關係戶挪用的實情）`,
         coreConstraint: "總部核心底線：必須在 1 小時內穩定市場預期與董事會信任，獲得可信的交付承諾或品質保證。"
       },
 
       tokyoContext: {
         title: "公司現場機密情境（第 3、4 組專屬）：良率免責背書與工程師尊嚴防線",
-        briefing: "東京現場三週無休趕工良率達 98.4%，延誤全因董事關係戶挪抽 30% 產能。然而總部施壓要求現場簽署「免責背書」，若簽署未來若有瑕疵現場需負全責，若拒簽新產品可能夭折。工會與工程師全員憤怒抗議拒簽！
+        briefing: `東京現場三週無休趕工良率達 98.4%，延誤全因董事關係戶挪抽 30% 產能。然而總部施壓要求現場簽署「免責背書」，若簽署未來若有瑕疵現場需負全責，若拒簽新產品可能夭折。工會與工程師全員憤怒抗議拒簽！
 
-（註：公司完全不知道總部在華爾街面臨刑事起訴與股票下市的即時生死危機）",
+（註：公司完全不知道總部在華爾街面臨刑事起訴與股票下市的即時生死危機）`,
         coreConstraint: "公司核心底線：絕不背黑鍋簽署不平等免責條款，捍衛工程品質真相與團隊名譽。"
       },
 
