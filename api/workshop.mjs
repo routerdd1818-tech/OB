@@ -15,13 +15,26 @@ function setCookie(res,role,token) { res.setHeader('Set-Cookie',`cq_${role}=${to
 function shared(state,options) { return { epoch:state.epoch, revision:state.revision, roundIndex:state.round, phase:state.phase, deadline:state.deadline, remaining:state.remaining, serverTime:Date.now(), round:publicRound(state.round,options) }; }
 function memberView(state,member) {
   const group=state.groups[member.group-1];
-  return {...shared(state,true), member:{name:member.name,id:member.id,group:member.group,isRepresentative:group.representative===member.id}, group:{id:group.id,cq:group.cq, representativeName:Object.values(state.participants).find(p=>p.id===group.representative)?.name || '尚未指定'}, vote:state.votes[state.round][group.id] || null, result:state.phase==='revealed'||state.phase==='finished'?state.results[state.round][group.id] || null:null};
+  const isJury=(member.group===5);
+  const revealed=['revealed','finished'].includes(state.phase);
+  if(isJury) {
+    const decisionGroups=state.groups.slice(0,4).map(g=>{
+      const vote=state.votes[state.round][g.id];
+      const opt=vote?rounds[state.round].options.find(o=>o.id===vote.choice):null;
+      return { id:g.id, cq:g.cq, submitted:Boolean(vote), choice:vote?vote.choice:null, proposal:vote?vote.proposal:null, title:opt?opt.title:null, text:opt?opt.text:null, blindspot:opt?opt.blindspot:null, consensus:vote?vote.consensus:null };
+    });
+    return { ...shared(state,true), member:{name:member.name,id:member.id,group:member.group,isRepresentative:true,isJury:true}, group:{id:5,cq:100,isJury:true,representativeName:member.name}, decisionGroups, juryRankings:state.juryRankings?(state.juryRankings[state.round]||{}):{}, jurySubmitted:state.jurySubmitted?Boolean(state.jurySubmitted[state.round]):false, optionsWithIntel:rounds[state.round].options, results:revealed?state.results[state.round]:null };
+  }
+  return { ...shared(state,true), member:{name:member.name,id:member.id,group:member.group,isRepresentative:group.representative===member.id,isJury:false}, group:{id:group.id,cq:group.cq,isJury:false,representativeName:Object.values(state.participants).find(p=>p.id===group.representative)?.name || '尚未指定'}, vote:state.votes[state.round][group.id] || null, juryRank:(revealed&&state.juryRankings)?(state.juryRankings[state.round]?.[group.id]||null):null, result:revealed?state.results[state.round][group.id] || null:null };
 }
 function hostView(state,req) {
   const revealed=['revealed','finished'].includes(state.phase);
   const votes=state.votes[state.round];
-  const result= {...shared(state,false), completed:Object.keys(votes).length, groups:state.groups.map(g=>({...g, count:Object.values(state.participants).filter(p=>p.group===g.id && p.expires>Date.now()).length, submitted:Boolean(votes[g.id]), members:Object.values(state.participants).filter(p=>p.group===g.id && p.expires>Date.now()).map(({id,name})=>({id,name}))})), joinUrl:process.env.PUBLIC_URL ? new URL('/',process.env.PUBLIC_URL).href : `${process.env.VERCEL?'https':'http'}://${req.headers.host}/`};
-  if (revealed) { result.results=state.results[state.round]; result.distribution=[...rounds[state.round].options,...(state.round===3?[rounds[3].breakdown]:[])].map(o=>({id:o.id,title:o.title,count:Object.values(votes).filter(v=>v.choice===o.id).length, result:outcome(state.round,{choice:o.id})})); }
+  const decisionVotes=Object.keys(votes).filter(id=>Number(id)<=4);
+  const jurySubmitted=state.jurySubmitted?Boolean(state.jurySubmitted[state.round]):false;
+  const juryRankings=state.juryRankings?state.juryRankings[state.round]:{};
+  const result= { ...shared(state,false), completed:decisionVotes.length, decisionTotal:4, jurySubmitted, juryRankings, groups:state.groups.map(g=>({...g, count:Object.values(state.participants).filter(p=>p.group===g.id && p.expires>Date.now()).length, submitted:g.id===5?jurySubmitted:Boolean(votes[g.id]), members:Object.values(state.participants).filter(p=>p.group===g.id && p.expires>Date.now()).map(({id,name})=>({id,name}))})), joinUrl:process.env.PUBLIC_URL ? new URL('/',process.env.PUBLIC_URL).href : `${process.env.VERCEL?'https':'http'}://${req.headers.host}/`};
+  if (revealed) { result.results=state.results[state.round]; result.distribution=[...rounds[state.round].options,...(state.round===3?[rounds[3].breakdown]:[])].map(o=>({id:o.id,title:o.title,count:Object.entries(votes).filter(([gid,v])=>Number(gid)<=4&&v.choice===o.id).length, result:outcome(state.round,{choice:o.id})})); }
   return result;
 }
 async function bodyOf(req) {
@@ -73,7 +86,19 @@ export default async function handler(req,res) {
     await mutate(state=>{
       const user=session(req,state,role);
       if(role==='member') {
+        if(action==='jury-rank') {
+          if(user.group!==5) fail('只有第 5 組（裁判組）可進行評定裁決',403);
+          if(state.phase!=='voting') fail('目前非評定階段',409);
+          if(body.epoch!==state.epoch||body.roundIndex!==state.round) fail('回合已更新，請重新整理',409);
+          if(!body.rankings||typeof body.rankings!=='object') fail('請提供評定名次');
+          if(!state.juryRankings) state.juryRankings=[{},{},{},{}];
+          if(!state.jurySubmitted) state.jurySubmitted=[false,false,false,false];
+          state.juryRankings[state.round]=body.rankings;
+          state.jurySubmitted[state.round]=true;
+          return;
+        }
         if(action!=='vote') fail('無權執行此操作',403);
+        if(user.group===5) fail('第 5 組為裁判組，不參與決策投票',403);
         if(state.phase!=='voting') fail('目前未開放投票',409);
         if(body.epoch!==state.epoch||body.roundIndex!==state.round) fail('回合已更新，請重新整理',409);
         if(state.groups[user.group-1].representative!==user.id) fail('請由本組代表提交決策',403);
@@ -94,8 +119,18 @@ export default async function handler(req,res) {
         else{state.deadline=Date.now()+(state.remaining??rounds[state.round].seconds*1000);state.remaining=null;}
       } else if(action==='reveal') {
         if(state.phase!=='voting') fail('本回合尚未開始或已揭曉',409);
-        if(Object.keys(state.votes[state.round]).length<5 && body.confirmIncomplete!==true) fail('仍有組別未提交，請確認後再揭曉',409);
-        for(const group of state.groups){const result=outcome(state.round,state.votes[state.round][group.id]);if(result){const before=group.cq;group.cq=Math.min(100,Math.max(0,before+result.cq));state.results[state.round][group.id]={...result,cqBefore:before,cqAfter:group.cq,actualDelta:group.cq-before};}}
+        const decisionSubmitted=Object.keys(state.votes[state.round]).filter(id=>Number(id)<=4).length;
+        if(decisionSubmitted<4 && body.confirmIncomplete!==true) fail('仍有決策組別未提交，請確認後再揭曉',409);
+        for(const group of state.groups){
+          if(group.id===5) continue;
+          const vote=state.votes[state.round][group.id];
+          const result=outcome(state.round,vote);
+          if(result){
+            const before=group.cq;
+            group.cq=Math.min(100,Math.max(0,before+result.cq));
+            state.results[state.round][group.id]={...result,cqBefore:before,cqAfter:group.cq,actualDelta:group.cq-before,juryRank:state.juryRankings?.[state.round]?.[group.id]||null};
+          }
+        }
         state.phase='revealed';state.deadline=null;state.remaining=null;
       } else if(action==='next') {
         if(state.phase!=='revealed') fail('請先揭曉本回合',409);
