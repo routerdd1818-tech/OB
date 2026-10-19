@@ -34,25 +34,6 @@
       --ios-radius-card: 20px;
       --ios-radius-pill: 9999px;
       --ios-radius-btn: 14px;
-
-      /* Legacy compatibility mappings */
-      --bg-canvas: var(--ios-bg);
-      --bg-surface: var(--ios-surface);
-      --bg-card: var(--ios-card);
-      --bg-card-hover: var(--ios-card-hover);
-      --bg-elevated: var(--ios-elevated);
-      --border-subtle: var(--ios-hairline);
-      --border-medium: var(--ios-hairline-strong);
-      --border-focus: var(--ios-blue);
-      --text-primary: var(--ios-label);
-      --text-secondary: var(--ios-secondary-label);
-      --text-muted: var(--ios-tertiary-label);
-      --accent-blue: var(--ios-blue);
-      --color-success: var(--ios-green);
-      --color-warning: var(--ios-amber);
-      --color-danger: var(--ios-red);
-      --font-sans: var(--ios-font);
-      --font-mono: var(--ios-mono);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
@@ -64,387 +45,414 @@
       overflow-x: hidden;
       min-height: 100vh;
       display: flex;
-      justify-content: center;
-      align-items: flex-start;
+      flex-direction: column;
       -webkit-font-smoothing: antialiased;
     }
 
     #app-container {
-      position: relative;
-      width: 100%;
-      max-width: 1240px;
-      min-height: 100vh;
-      background: var(--ios-bg);
       display: flex;
       flex-direction: column;
-      border: none;
-      box-shadow: 0 0 60px rgba(70, 55, 40, 0.08);
+      min-height: 100vh;
+      width: 100%;
+      max-width: 1440px;
+      margin: 0 auto;
+      padding: 0 24px 40px;
     }
 
-    /* iOS Warm Glass Header HUD */
+    /* Top HUD */
     header.hud-bar {
       position: sticky;
       top: 0;
       z-index: 100;
-      padding: 14px 22px;
-      display: flex;
-      flex-direction: column;
       background: rgba(247, 244, 237, 0.88);
-      border-bottom: 1px solid var(--ios-hairline);
       backdrop-filter: blur(25px);
       -webkit-backdrop-filter: blur(25px);
-      gap: 12px;
+      border-bottom: 1px solid var(--ios-hairline);
+      padding: 16px 0 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
     }
+
     .hud-top-row {
       display: flex;
-      align-items: center;
       justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 10px;
+      align-items: center;
     }
-    .brand-group { display: flex; align-items: center; gap: 10px; }
+
+    .brand-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
     .logo-badge {
-      background: rgba(0, 113, 227, 0.1);
-      color: var(--ios-blue);
-      font-family: var(--ios-mono);
-      font-weight: 700;
+      background: var(--ios-label);
+      color: var(--ios-bg);
       font-size: 11px;
+      font-weight: 700;
       padding: 4px 10px;
       border-radius: var(--ios-radius-pill);
-      letter-spacing: 0.04em;
-      border: 1px solid rgba(0, 113, 227, 0.25);
+      letter-spacing: 0.5px;
     }
-    .project-title { font-weight: 700; font-size: 15px; color: var(--ios-label); letter-spacing: -0.01em; }
-    .hud-actions-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .project-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--ios-label);
+      letter-spacing: -0.3px;
+    }
+
+    .hud-actions-group {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
     .hud-stat-chip {
       background: var(--ios-card);
       border: 1px solid var(--ios-hairline);
       border-radius: var(--ios-radius-pill);
-      padding: 5px 14px;
-      font-size: 12px;
-      font-weight: 500;
+      padding: 6px 14px;
+      font-size: 12.5px;
+      font-weight: 600;
       color: var(--ios-secondary-label);
-      box-shadow: var(--ios-shadow);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
     }
+    .sync-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #15803d;
+      display: inline-block;
+      transition: background 0.3s;
+    }
+
     .hud-btn {
       background: var(--ios-card);
       border: 1px solid var(--ios-hairline);
-      color: var(--ios-label);
-      font-size: 12px;
+      border-radius: var(--ios-radius-btn);
+      padding: 8px 16px;
+      font-size: 13px;
       font-weight: 600;
-      padding: 6px 16px;
-      border-radius: var(--ios-radius-pill);
+      color: var(--ios-label);
       cursor: pointer;
-      transition: all 0.15s ease;
-      min-height: 32px;
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      box-shadow: var(--ios-shadow);
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
     }
-    .hud-btn:hover { background: var(--ios-card-hover); border-color: var(--ios-hairline-strong); }
-    .hud-btn:active { transform: scale(0.97); }
+    .hud-btn:hover {
+      background: var(--ios-card-hover);
+      transform: translateY(-1px);
+    }
 
-    /* 5 Teams Health Strip */
+    /* Teams HP Strip (Teams 1-4 active, Team 5 as Jury) */
     .teams-hp-strip {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 10px;
-      background: rgba(237, 232, 220, 0.7);
-      padding: 10px;
-      border-radius: 16px;
-      border: 1px solid var(--ios-hairline);
+      gap: 12px;
     }
+
     .team-hp-card {
       background: var(--ios-card);
       border: 1px solid var(--ios-hairline);
-      border-radius: 12px;
-      padding: 10px 12px;
+      border-radius: 16px;
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
-      gap: 6px;
-      transition: all 0.2s ease;
+      gap: 8px;
       position: relative;
+      overflow: hidden;
       box-shadow: var(--ios-shadow);
+      transition: all 0.25s ease;
+    }
+    .team-hp-card.jury-card {
+      background: linear-gradient(180deg, rgba(124, 58, 237, 0.05), #ffffff);
+      border-color: rgba(124, 58, 237, 0.25);
     }
     .team-hp-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 12px;
-      font-weight: 600;
     }
-    .team-hp-name { color: var(--ios-label); display: flex; align-items: center; gap: 6px; }
-    .team-headcount-badge { font-size: 10px; font-weight: 500; color: var(--ios-tertiary-label); background: rgba(60, 50, 40, 0.08); padding: 2px 6px; border-radius: var(--ios-radius-pill); }
-    .team-hp-val { color: var(--ios-green); font-weight: 700; font-family: var(--ios-mono); font-size: 13px; }
-    .team-hp-track { width: 100%; height: 4px; background: rgba(60, 50, 40, 0.08); border-radius: var(--ios-radius-pill); overflow: hidden; }
-    .team-hp-fill { height: 100%; width: 100%; background: var(--ios-green); border-radius: var(--ios-radius-pill); transition: width 0.6s ease, background 0.3s ease; }
-    .team-submission-status { font-size: 11px; color: var(--ios-tertiary-label); display: flex; justify-content: space-between; align-items: center; }
-    .status-badge { padding: 2px 8px; border-radius: var(--ios-radius-pill); font-weight: 500; font-size: 10.5px; }
-    .status-pending { background: rgba(60, 50, 40, 0.06); color: var(--ios-secondary-label); }
-    .status-submitted { background: rgba(21, 128, 61, 0.12); color: #15803d; border: 1px solid rgba(21, 128, 61, 0.25); }
-
-    /* Stepper */
-    .step-tracker { display: flex; align-items: center; gap: 8px; overflow-x: auto; padding: 2px 0; width: 100%; }
-    .step-pill {
-      font-size: 12px;
-      font-weight: 600;
-      padding: 6px 14px;
-      border-radius: var(--ios-radius-pill);
-      background: rgba(60, 50, 40, 0.06);
-      color: var(--ios-secondary-label);
-      border: 1px solid transparent;
-      cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.15s ease;
-    }
-    .step-pill:hover { background: rgba(60, 50, 40, 0.1); color: var(--ios-label); }
-    .step-pill.active {
-      background: #ffffff;
-      color: var(--ios-label);
-      border: 1px solid var(--ios-hairline);
-      box-shadow: 0 2px 8px rgba(70, 55, 40, 0.08);
-    }
-
-    /* Main Area */
-    main.game-arena { flex: 1; display: flex; flex-direction: column; padding: 20px; gap: 16px; }
-    #scene-backdrop-wrap {
-      position: relative;
-      width: 100%;
-      min-height: 220px;
-      border-radius: var(--ios-radius-card);
-      overflow: hidden;
-      border: 1px solid var(--ios-hairline);
-      background: var(--ios-surface);
-      display: flex;
-      align-items: flex-end;
-      box-shadow: var(--ios-shadow);
-    }
-    #scene-svg-container {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      opacity: 0.95;
-      pointer-events: none;
-    }
-    #scene-svg-container svg { width: 100%; height: 100%; object-fit: cover; }
-    .scene-overlay-content {
-      position: relative;
-      z-index: 10;
-      width: 100%;
-      padding: 18px 22px;
-      background: linear-gradient(0deg, rgba(237, 232, 220, 0.98) 40%, rgba(237, 232, 220, 0.75) 80%, transparent 100%);
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .round-meta-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
-      font-weight: 600;
-      color: var(--ios-blue);
-      background: rgba(0, 113, 227, 0.1);
-      padding: 3px 10px;
-      border-radius: var(--ios-radius-pill);
-      border: 1px solid rgba(0, 113, 227, 0.25);
-      width: fit-content;
-    }
-    .round-mandate-title { font-size: 20px; font-weight: 700; color: var(--ios-label); letter-spacing: -0.015em; }
-    .dialogue-bubble {
-      background: var(--ios-card);
-      border: 1px solid var(--ios-hairline);
-      border-left: 4px solid var(--ios-blue);
-      border-radius: 16px;
-      padding: 14px 18px;
-      font-size: 14px;
-      line-height: 1.65;
-      color: var(--ios-label);
-      box-shadow: var(--ios-shadow);
-    }
-    .speaker-tag { font-weight: 600; color: var(--ios-blue); margin-right: 6px; }
-
-    /* Host Control Ribbon */
-    .host-control-ribbon {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 12px;
-      background: var(--ios-card);
-      border: 1px solid var(--ios-hairline);
-      border-radius: 16px;
-      padding: 12px 18px;
-      box-shadow: var(--ios-shadow);
-    }
-    .timer-display-box { display: flex; align-items: center; gap: 10px; }
-    .timer-label { font-size: 12px; color: var(--ios-secondary-label); font-weight: 500; }
-    .timer-digits {
-      font-family: var(--ios-mono);
-      font-size: 18px;
-      font-weight: 700;
-      color: var(--ios-label);
-      background: var(--ios-bg);
-      padding: 3px 12px;
-      border-radius: 8px;
-      border: 1px solid var(--ios-hairline);
-    }
-    .host-btn-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-    .action-btn-primary {
-      background: var(--ios-blue);
-      color: #ffffff;
-      border: none;
-      font-weight: 600;
+    .team-hp-name {
       font-size: 13px;
-      padding: 8px 18px;
-      border-radius: var(--ios-radius-pill);
-      cursor: pointer;
-      transition: all 0.15s ease;
-      box-shadow: 0 2px 8px rgba(0, 113, 227, 0.25);
-    }
-    .action-btn-primary:hover { opacity: 0.92; }
-    .action-btn-primary:active { transform: scale(0.97); }
-    .action-btn-primary:disabled {
-      background: rgba(60, 50, 40, 0.12);
-      color: var(--ios-tertiary-label);
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-    .action-btn-secondary {
-      background: var(--ios-bg);
-      color: var(--ios-label);
-      border: 1px solid var(--ios-hairline);
-      font-weight: 500;
-      font-size: 12.5px;
-      padding: 7px 16px;
-      border-radius: var(--ios-radius-pill);
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-    .action-btn-secondary:hover { background: #ede8dc; }
-    .action-btn-secondary:active { transform: scale(0.97); }
-
-    /* Theme Accents (Warm Minimalist) */
-    #scene-backdrop-wrap.theme-r1 { border-color: rgba(0, 113, 227, 0.3); }
-    #scene-backdrop-wrap.theme-r1 .round-meta-badge { color: var(--ios-blue); background: rgba(0, 113, 227, 0.1); border-color: rgba(0, 113, 227, 0.25); }
-    #scene-backdrop-wrap.theme-r1 .dialogue-bubble { border-left-color: var(--ios-blue); }
-
-    #scene-backdrop-wrap.theme-r2 { border-color: rgba(21, 128, 61, 0.3); }
-    #scene-backdrop-wrap.theme-r2 .round-meta-badge { color: var(--ios-green); background: rgba(21, 128, 61, 0.1); border-color: rgba(21, 128, 61, 0.25); }
-    #scene-backdrop-wrap.theme-r2 .dialogue-bubble { border-left-color: var(--ios-green); }
-
-    #scene-backdrop-wrap.theme-r3 { border-color: rgba(180, 83, 9, 0.3); }
-    #scene-backdrop-wrap.theme-r3 .round-meta-badge { color: var(--ios-amber); background: rgba(180, 83, 9, 0.1); border-color: rgba(180, 83, 9, 0.25); }
-    #scene-backdrop-wrap.theme-r3 .dialogue-bubble { border-left-color: var(--ios-amber); }
-
-    #scene-backdrop-wrap.theme-r4 { border-color: rgba(124, 58, 237, 0.35); }
-    #scene-backdrop-wrap.theme-r4 .round-meta-badge { color: var(--ios-purple); background: rgba(124, 58, 237, 0.1); border-color: rgba(124, 58, 237, 0.3); }
-    #scene-backdrop-wrap.theme-r4 .dialogue-bubble { border-left-color: var(--ios-purple); }
-
-    /* iOS Tension Reduction Hero Card */
-    .ios-tension-hero {
-      background: var(--ios-card);
-      border: 1px solid var(--ios-hairline);
-      border-radius: var(--ios-radius-card);
-      padding: 18px 22px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      box-shadow: 0 8px 30px rgba(70, 55, 40, 0.08);
-      margin-bottom: 16px;
-    }
-    .ios-tension-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      flex-wrap: wrap;
-      gap: 10px;
-    }
-    .ios-tension-meta {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-    .ios-tension-pill {
-      font-size: 11px;
-      font-weight: 600;
-      padding: 3px 10px;
-      border-radius: var(--ios-radius-pill);
-      background: rgba(0, 113, 227, 0.1);
-      color: var(--ios-blue);
-      border: 1px solid rgba(0, 113, 227, 0.25);
-    }
-    .ios-tension-title {
-      font-size: 16px;
       font-weight: 700;
       color: var(--ios-label);
-      letter-spacing: -0.01em;
-    }
-    .ios-tension-delta-badge {
-      font-size: 13.5px;
-      font-weight: 700;
-      font-family: var(--ios-mono);
-      padding: 4px 12px;
-      border-radius: var(--ios-radius-pill);
-      display: inline-flex;
-      align-items: center;
-      gap: 4px;
-    }
-    .delta-high-drop {
-      background: rgba(21, 128, 61, 0.12);
-      color: #15803d;
-      border: 1px solid rgba(21, 128, 61, 0.3);
-    }
-    .delta-mid-drop {
-      background: rgba(180, 83, 9, 0.12);
-      color: #b45309;
-      border: 1px solid rgba(180, 83, 9, 0.3);
-    }
-    .delta-no-drop {
-      background: rgba(220, 38, 38, 0.12);
-      color: #dc2626;
-      border: 1px solid rgba(220, 38, 38, 0.3);
-    }
-    .ios-tension-gauge-wrap {
       display: flex;
-      flex-direction: column;
+      align-items: center;
       gap: 6px;
-      background: var(--ios-bg);
-      padding: 12px 14px;
-      border-radius: 14px;
-      border: 1px solid var(--ios-hairline);
     }
-    .ios-tension-track {
+    .team-role-tag {
+      font-size: 10px;
+      padding: 2px 6px;
+      border-radius: 6px;
+      background: var(--ios-surface);
+      color: var(--ios-secondary-label);
+      font-weight: 600;
+    }
+    .jury-tag {
+      background: rgba(124, 58, 237, 0.1);
+      color: var(--ios-purple);
+    }
+    .team-hp-val {
+      font-family: var(--ios-mono);
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ios-green);
+    }
+
+    .team-hp-track {
       width: 100%;
-      height: 8px;
+      height: 6px;
       background: rgba(60, 50, 40, 0.08);
       border-radius: var(--ios-radius-pill);
       overflow: hidden;
     }
-    .ios-tension-fill {
+    .team-hp-fill {
       height: 100%;
       border-radius: var(--ios-radius-pill);
-      transition: width 0.9s cubic-bezier(0.2, 0.8, 0.2, 1);
+      transition: width 0.6s cubic-bezier(0.16, 1, 0.3, 1), background 0.6s ease;
     }
-    .ios-tension-labels {
+
+    .team-submission-status {
       display: flex;
+      align-items: center;
       justify-content: space-between;
-      font-size: 12px;
+      font-size: 11.5px;
       color: var(--ios-secondary-label);
     }
-    .ios-tension-current-val {
-      color: var(--ios-label);
+    .status-badge {
       font-weight: 600;
+      padding: 2px 8px;
+      border-radius: var(--ios-radius-pill);
+    }
+    .status-pending { background: rgba(180, 83, 9, 0.08); color: var(--ios-amber); }
+    .status-submitted { background: rgba(21, 128, 61, 0.1); color: var(--ios-green); }
+    .status-jury-ready { background: rgba(124, 58, 237, 0.1); color: var(--ios-purple); }
+
+    /* Step Tracker (3 Rounds + Final) */
+    nav.step-tracker {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 2px;
+    }
+    .step-pill {
+      background: transparent;
+      border: 1px solid var(--ios-hairline);
+      border-radius: var(--ios-radius-pill);
+      padding: 6px 16px;
+      font-size: 12.5px;
+      font-weight: 600;
+      color: var(--ios-secondary-label);
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .step-pill:hover { background: var(--ios-surface); }
+    .step-pill.active {
+      background: var(--ios-label);
+      color: var(--ios-bg);
+      border-color: var(--ios-label);
+    }
+
+    /* Main Game Arena */
+    main.game-arena {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 16px;
+    }
+
+    /* Scene Container */
+    #round-stage-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    #scene-backdrop-wrap {
+      position: relative;
+      border-radius: var(--ios-radius-card);
+      overflow: hidden;
+      min-height: 230px;
+      background: var(--ios-surface);
+      border: 1px solid var(--ios-hairline);
+      box-shadow: var(--ios-shadow);
+    }
+    #scene-svg-container {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .scene-overlay-content {
+      position: relative;
+      z-index: 2;
+      padding: 24px 28px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .round-meta-badge {
+      display: inline-flex;
+      align-items: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ios-blue);
+      letter-spacing: 0.5px;
+    }
+    .round-mandate-title {
+      font-size: 24px;
+      font-weight: 800;
+      color: var(--ios-label);
+      letter-spacing: -0.4px;
+    }
+
+    .dialogue-bubble {
+      background: rgba(255, 255, 255, 0.92);
+      border: 1px solid var(--ios-hairline);
+      border-radius: 16px;
+      padding: 16px 20px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.03);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+    .speaker-tag {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: var(--ios-label);
+      display: block;
+      margin-bottom: 6px;
+    }
+    #dialogue-text {
+      font-size: 14.5px;
+      line-height: 1.65;
+      color: #332f2b;
+      white-space: pre-wrap;
+    }
+
+    /* Host Controls Bar */
+    .host-control-deck {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      background: var(--ios-card);
+      border: 1px solid var(--ios-hairline);
+      border-radius: var(--ios-radius-card);
+      padding: 14px 20px;
+      box-shadow: var(--ios-shadow);
+    }
+    .timer-readout-group {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .timer-digits {
       font-family: var(--ios-mono);
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--ios-label);
     }
-    .ios-tension-comment {
+    .timer-btn-mini {
+      background: var(--ios-surface);
+      border: 1px solid var(--ios-hairline);
+      border-radius: 10px;
+      padding: 6px 12px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      color: var(--ios-label);
+    }
+
+    .host-btn-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .action-btn-primary {
+      background: var(--ios-blue);
+      color: #ffffff;
+      border: none;
+      border-radius: var(--ios-radius-btn);
+      padding: 10px 22px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: 0 2px 10px rgba(0, 113, 227, 0.25);
+    }
+    .action-btn-primary:hover {
+      background: #0062c4;
+      transform: translateY(-1px);
+    }
+    .action-btn-secondary {
+      background: var(--ios-surface);
+      border: 1px solid var(--ios-hairline);
+      color: var(--ios-label);
+      border-radius: var(--ios-radius-btn);
+      padding: 10px 18px;
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .action-btn-secondary:hover {
+      background: #e5dfd2;
+    }
+
+    /* Persuasion / Pitch Dock */
+    .persuasion-dock {
+      background: var(--ios-card);
+      border: 1px solid var(--ios-hairline);
+      border-radius: var(--ios-radius-card);
+      padding: 16px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 14px;
+      box-shadow: var(--ios-shadow);
+    }
+    .persuasion-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .persuasion-timer-box { display: flex; align-items: center; gap: 12px; }
+    .persuasion-clock {
+      font-family: var(--ios-mono);
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--ios-blue);
+      background: var(--ios-bg);
+      padding: 4px 14px;
+      border-radius: 10px;
+      border: 1px solid var(--ios-hairline);
+    }
+    .persuasion-stage-badge {
       font-size: 13px;
-      color: #44403c;
-      line-height: 1.55;
+      font-weight: 600;
+      padding: 5px 14px;
+      border-radius: var(--ios-radius-pill);
+      background: rgba(0, 113, 227, 0.08);
+      color: var(--ios-blue);
+      border: 1px solid rgba(0, 113, 227, 0.2);
     }
+    .persuasion-btn-box { display: flex; gap: 8px; }
 
     /* Voting Status Panel */
     .voting-status-panel {
@@ -467,19 +475,15 @@
       font-size: 15px;
       font-weight: 700;
       color: var(--ios-label);
-      display: flex;
-      align-items: center;
-      gap: 8px;
     }
     .voting-progress-pill {
       font-family: var(--ios-mono);
       font-size: 12px;
-      font-weight: 600;
-      color: var(--ios-blue);
-      background: rgba(0, 113, 227, 0.1);
-      border: 1px solid rgba(0, 113, 227, 0.25);
-      padding: 3px 12px;
+      font-weight: 700;
+      padding: 4px 10px;
       border-radius: var(--ios-radius-pill);
+      background: rgba(0, 113, 227, 0.08);
+      color: var(--ios-blue);
     }
     .voting-panel-hint {
       font-size: 13px;
@@ -489,134 +493,184 @@
     .team-sub-chips-grid {
       display: grid;
       grid-template-columns: repeat(5, 1fr);
-      gap: 8px;
+      gap: 10px;
+      margin-top: 4px;
     }
     .team-sub-chip {
       background: var(--ios-bg);
       border: 1px solid var(--ios-hairline);
-      border-radius: 10px;
-      padding: 8px 10px;
+      border-radius: 12px;
+      padding: 10px 12px;
       display: flex;
       flex-direction: column;
       gap: 4px;
-      transition: all 0.2s ease;
+      transition: all 0.25s ease;
     }
     .team-sub-chip.submitted {
-      border-color: rgba(21, 128, 61, 0.35);
-      background: rgba(21, 128, 61, 0.08);
+      border-color: rgba(21, 128, 61, 0.3);
+      background: rgba(21, 128, 61, 0.05);
     }
-    .team-sub-chip-name { font-size: 12px; font-weight: 600; color: var(--ios-label); }
-    .team-sub-chip-status { font-size: 11px; color: var(--ios-tertiary-label); }
-    .team-sub-chip.submitted .team-sub-chip-status { color: #15803d; font-weight: 600; }
-
-    /* Options Grid (Revealed Phase) */
-    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
-    .option-card {
-      background: var(--ios-card);
-      border: 1px solid var(--ios-hairline);
-      border-radius: var(--ios-radius-card);
-      padding: 16px 18px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      transition: border-color 0.15s ease, background 0.15s ease;
-      box-shadow: var(--ios-shadow);
-    }
-    .option-header { display: flex; justify-content: space-between; align-items: center; }
-    .option-tag-badge {
+    .team-sub-chip-name {
+      font-size: 12.5px;
       font-weight: 700;
-      font-size: 12px;
-      padding: 3px 10px;
-      border-radius: var(--ios-radius-pill);
-      background: var(--ios-bg);
       color: var(--ios-label);
-      border: 1px solid var(--ios-hairline);
     }
-    .option-votes-badge { font-size: 11.5px; color: var(--ios-secondary-label); font-weight: 500; }
-    .opt-result-bar-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
-      margin: 6px 0;
-      background: var(--ios-bg);
-      padding: 8px 12px;
-      border-radius: 10px;
-      border: 1px solid var(--ios-hairline);
-    }
-    .opt-result-label {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
+    .team-sub-chip-status {
+      font-size: 11.5px;
+      font-weight: 600;
       color: var(--ios-secondary-label);
     }
-    .opt-result-teams { color: var(--ios-blue); font-weight: 600; }
-    .opt-result-pct { font-family: var(--ios-mono); font-weight: 700; color: var(--ios-label); }
-    .opt-result-track { width: 100%; height: 6px; background: rgba(60, 50, 40, 0.08); border-radius: var(--ios-radius-pill); overflow: hidden; }
-    .opt-result-fill { height: 100%; background: var(--ios-blue); border-radius: var(--ios-radius-pill); transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
-    .option-text-main { font-size: 13.5px; line-height: 1.6; color: #292524; }
-    .option-reveal-box { margin-top: 6px; padding: 12px 14px; border-radius: 12px; font-size: 12.5px; line-height: 1.55; }
-    .option-reveal-box.reveal-penalty { background: rgba(220, 38, 38, 0.08); border: 1px solid rgba(220, 38, 38, 0.25); color: #991b1b; }
-    .option-reveal-box.reveal-success { background: rgba(21, 128, 61, 0.08); border: 1px solid rgba(21, 128, 61, 0.25); color: #166534; }
+    .team-sub-chip.submitted .team-sub-chip-status {
+      color: var(--ios-green);
+    }
 
-    /* Round 4 Dedicated Debate Dock */
-    .r4-debate-dock {
+    /* Tension Hero Announcement Box */
+    .ios-tension-hero {
       background: var(--ios-card);
-      border: 1px solid rgba(124, 58, 237, 0.3);
+      border: 1px solid var(--ios-hairline);
       border-radius: var(--ios-radius-card);
-      padding: 16px 20px;
+      padding: 20px 24px;
+      box-shadow: var(--ios-shadow);
       display: flex;
       flex-direction: column;
-      gap: 12px;
-      margin-top: 14px;
-      box-shadow: var(--ios-shadow);
+      gap: 14px;
     }
-    .r4-debate-header {
+    .ios-tension-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
       flex-wrap: wrap;
       gap: 10px;
     }
-    .r4-debate-timer-box { display: flex; align-items: center; gap: 10px; }
-    .r4-debate-clock {
-      font-family: var(--ios-mono);
-      font-size: 22px;
+    .ios-tension-badge {
+      font-size: 13px;
       font-weight: 700;
-      color: var(--ios-purple);
-      background: var(--ios-bg);
-      padding: 4px 14px;
-      border-radius: 10px;
-      border: 1px solid rgba(124, 58, 237, 0.25);
+      color: var(--ios-secondary-label);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
     }
-    .r4-debate-stage-badge {
-      font-size: 12px;
-      font-weight: 600;
-      padding: 4px 12px;
+    .ios-tension-delta {
+      font-size: 13px;
+      font-weight: 700;
+      padding: 4px 14px;
       border-radius: var(--ios-radius-pill);
     }
-    .stage-hq { background: rgba(0, 113, 227, 0.1); color: var(--ios-blue); border: 1px solid rgba(0, 113, 227, 0.25); }
-    .stage-tokyo { background: rgba(21, 128, 61, 0.1); color: var(--ios-green); border: 1px solid rgba(21, 128, 61, 0.25); }
-    .stage-done { background: rgba(124, 58, 237, 0.1); color: var(--ios-purple); border: 1px solid rgba(124, 58, 237, 0.25); }
-
-    /* Tripartite Board */
-    .r4-board-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-top: 12px;
+    .delta-high-drop { background: rgba(21, 128, 61, 0.1); color: var(--ios-green); border: 1px solid rgba(21, 128, 61, 0.25); }
+    .delta-no-drop { background: rgba(220, 38, 38, 0.1); color: var(--ios-red); border: 1px solid rgba(220, 38, 38, 0.25); }
+    .ios-tension-track-wrap {
+      width: 100%;
+      height: 8px;
+      background: rgba(60, 50, 40, 0.08);
+      border-radius: var(--ios-radius-pill);
+      overflow: hidden;
     }
-    .r4-role-card {
-      background: var(--ios-bg);
-      border: 1px solid var(--ios-hairline);
-      border-radius: 14px;
-      padding: 12px 14px;
+    .ios-tension-fill {
+      height: 100%;
+      border-radius: var(--ios-radius-pill);
+      transition: width 1s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .ios-tension-metrics-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12.5px;
+      color: var(--ios-secondary-label);
+      font-family: var(--ios-mono);
+      font-weight: 600;
+    }
+    .ios-tension-comment {
+      font-size: 13.5px;
+      color: #3f3b37;
+      line-height: 1.6;
+    }
+
+    /* Jury Results Grid (Revealed Phase) */
+    .jury-results-grid {
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 14px;
+      margin-top: 14px;
     }
-    .r4-role-header { display: flex; justify-content: space-between; align-items: center; font-size: 12px; font-weight: 700; color: var(--ios-label); }
-    .r4-role-status-text { font-size: 12px; color: var(--ios-secondary-label); line-height: 1.4; }
+    .jury-group-card {
+      background: var(--ios-card);
+      border: 1px solid var(--ios-hairline);
+      border-radius: var(--ios-radius-card);
+      padding: 20px 22px;
+      box-shadow: var(--ios-shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      transition: all 0.25s ease;
+    }
+    .jury-group-card.rank-top {
+      border-color: rgba(21, 128, 61, 0.35);
+      background: linear-gradient(180deg, rgba(21, 128, 61, 0.04), #ffffff);
+    }
+    .jury-group-card.tier-1 {
+      border-color: rgba(21, 128, 61, 0.35);
+      background: linear-gradient(180deg, rgba(21, 128, 61, 0.04), #ffffff);
+    }
+    .jury-group-card.tier-2 {
+      border-color: rgba(180, 83, 9, 0.3);
+      background: linear-gradient(180deg, rgba(180, 83, 9, 0.04), #ffffff);
+    }
+    .jury-group-card.tier-3 {
+      border-color: rgba(220, 38, 38, 0.3);
+      background: linear-gradient(180deg, rgba(220, 38, 38, 0.04), #ffffff);
+    }
+
+    .jury-group-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .jury-rank-badge {
+      font-size: 13.5px;
+      font-weight: 700;
+      padding: 4px 14px;
+      border-radius: var(--ios-radius-pill);
+      background: rgba(0, 113, 227, 0.1);
+      color: var(--ios-blue);
+    }
+    .jury-rank-badge.top-badge {
+      background: rgba(21, 128, 61, 0.12);
+      color: var(--ios-green);
+    }
+    .jury-teams-chips {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ios-label);
+    }
+
+    .jury-option-box {
+      background: var(--ios-bg);
+      border: 1px solid var(--ios-hairline);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 13.5px;
+      line-height: 1.6;
+      color: var(--ios-label);
+    }
+    .jury-blindspot-box {
+      background: rgba(220, 38, 38, 0.07);
+      border: 1px solid rgba(220, 38, 38, 0.22);
+      border-radius: 12px;
+      padding: 12px 16px;
+      font-size: 13px;
+      line-height: 1.6;
+      color: #991b1b;
+    }
+    .jury-blindspot-box.success {
+      background: rgba(21, 128, 61, 0.07);
+      border: 1px solid rgba(21, 128, 61, 0.22);
+      color: #166534;
+    }
 
     /* Leaderboard */
     .leaderboard-container {
@@ -638,45 +692,40 @@
       background: var(--ios-bg);
       border: 1px solid var(--ios-hairline);
       border-radius: 12px;
-      padding: 12px 18px;
+      padding: 14px 18px;
     }
-    .rank-card.rank-1 { border-color: rgba(0, 113, 227, 0.35); background: rgba(0, 113, 227, 0.05); }
-    .rank-badge { font-weight: 700; font-family: var(--ios-mono); font-size: 13px; color: var(--ios-blue); width: 60px; }
-    .rank-team-name { font-weight: 600; font-size: 14px; flex: 1; color: var(--ios-label); }
+    .rank-card.rank-1 { border-color: rgba(21, 128, 61, 0.35); background: rgba(21, 128, 61, 0.05); }
+    .rank-badge { font-weight: 700; font-family: var(--ios-mono); font-size: 13.5px; color: var(--ios-blue); width: 80px; }
+    .rank-team-name { font-weight: 600; font-size: 14.5px; flex: 1; color: var(--ios-label); }
     .rank-hp-score { font-weight: 700; font-family: var(--ios-mono); font-size: 15px; color: var(--ios-green); }
     .theory-synthesis-box {
       background: var(--ios-bg);
       border: 1px solid var(--ios-hairline);
       border-radius: 14px;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
+      padding: 18px 22px;
+      margin-top: 10px;
     }
-    .theory-heading { font-size: 14px; font-weight: 600; color: var(--ios-blue); }
-    .theory-desc { font-size: 13px; line-height: 1.6; color: #44403c; }
+    .theory-heading { font-size: 14.5px; font-weight: 700; color: var(--ios-label); margin-bottom: 8px; }
+    .theory-desc { font-size: 13.5px; line-height: 1.7; color: var(--ios-secondary-label); }
 
-    /* Modal */
+    /* Modals & Toasts */
     .modal-overlay {
       position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(40, 35, 30, 0.45);
+      inset: 0;
+      background: rgba(28, 25, 23, 0.4);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
       z-index: 200;
-      display: none;
+      display: flex;
       justify-content: center;
       align-items: center;
-      padding: 16px;
-      backdrop-filter: blur(15px);
+      padding: 20px;
     }
     .modal-card {
-      background: #ffffff;
-      border: 1px solid var(--ios-hairline-strong);
-      border-radius: 24px;
-      max-width: 440px;
+      background: var(--ios-card);
+      border-radius: var(--ios-radius-card);
       width: 100%;
+      max-width: 440px;
       padding: 24px;
       display: flex;
       flex-direction: column;
@@ -688,18 +737,6 @@
     .modal-close-btn { background: none; border: none; color: var(--ios-secondary-label); font-size: 20px; cursor: pointer; }
     .qr-preview-box { display: flex; flex-direction: column; align-items: center; padding: 16px; background: #ffffff; border-radius: 14px; border: 1px solid var(--ios-hairline); }
 
-    /* Sync Dot & Toast */
-    .sync-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #15803d;
-      display: inline-block;
-      transition: background 0.3s;
-    }
-    .sync-dot.offline {
-      background: #dc2626;
-    }
     .ios-toast {
       position: fixed;
       top: 18px;
@@ -738,7 +775,7 @@
         <span class="project-title">跨文化職場對話博弈（簡報者主控台）</span>
       </div>
       <div class="hud-actions-group">
-        <span class="hud-stat-chip" id="hud-sync-status" onclick="promptChangeRoom()" style="cursor: pointer; display: inline-flex; align-items: center; gap: 6px;" title="點擊切換同步房間代碼">
+        <span class="hud-stat-chip" id="hud-sync-status" onclick="promptChangeRoom()" style="cursor: pointer;" title="點擊更換同步房間代碼">
           <span class="sync-dot" id="sync-dot"></span>
           <span id="sync-text">即時同步 · 房間 ob2026</span>
         </span>
@@ -747,13 +784,14 @@
       </div>
     </div>
 
+    <!-- Teams HP Strip (Teams 1-4 Active, Team 5 Jury) -->
     <div class="teams-hp-strip" id="teams-hp-strip"></div>
 
+    <!-- Step Tracker (3 Rounds + Final) -->
     <nav class="step-tracker" id="step-tracker">
-      <button class="step-pill active" id="pill-r1" onclick="jumpToRound(1)">第一回：認知維度 (Head)</button>
-      <button class="step-pill" id="pill-r2" onclick="jumpToRound(2)">第二回：動機維度 (Heart)</button>
-      <button class="step-pill" id="pill-r3" onclick="jumpToRound(3)">第三回：行為維度 (Body)</button>
-      <button class="step-pill" id="pill-r4" onclick="jumpToRound(4)">第四回：全案巔峰情境模擬</button>
+      <button class="step-pill active" id="pill-r1" onclick="jumpToRound(1)">第一回：單維度枷鎖</button>
+      <button class="step-pill" id="pill-r2" onclick="jumpToRound(2)">第二回：雙維度交織</button>
+      <button class="step-pill" id="pill-r3" onclick="jumpToRound(3)">第三回：全維度大成</button>
       <button class="step-pill" id="pill-final" onclick="jumpToRound('final')">終局結算與 CQ 生存榜</button>
     </nav>
   </header>
@@ -763,144 +801,109 @@
       <div id="scene-backdrop-wrap">
         <div id="scene-svg-container"></div>
         <div class="scene-overlay-content">
-          <div class="round-meta-badge" id="round-theme-tag">【主題一：認知維度】</div>
+          <div class="round-meta-badge" id="round-theme-tag">【第一回：單維度枷鎖】</div>
           <h2 class="round-mandate-title" id="round-mandate-title">委婉留白時的追問藝術</h2>
           <div class="dialogue-bubble" id="round-dialogue-box">
             <span class="speaker-tag" id="speaker-tag">佐藤部長：</span>
-            <span id="dialogue-text">載入中...</span>
-          </div>
-
-          <div class="r4-faction-filter-bar" id="r4-filter-bar" style="display: none;">
-            <span style="font-size: 11px; color: #fde68a; font-weight: 700;">檢視議題視角：</span>
-            <button class="r4-filter-btn active" id="btn-filter-hq" onclick="setR4HostFilter('hq')">總部議題 (第 1、2 組)</button>
-            <button class="r4-filter-btn" id="btn-filter-tokyo" onclick="setR4HostFilter('tokyo')">分公司議題 (第 3、4 組)</button>
-            <button class="r4-filter-btn" id="btn-filter-chameleon" onclick="setR4HostFilter('chameleon')">協調議題 (第 5 組)</button>
+            <div id="dialogue-text">載入中...</div>
           </div>
         </div>
       </div>
 
-      <div class="host-control-ribbon">
-        <div class="timer-display-box">
-          <span class="timer-label">組內研商倒數：</span>
-          <span class="timer-digits" id="timer-display">02:00</span>
-          <button class="action-btn-secondary" onclick="toggleTimer()" id="btn-timer-toggle">計時暫停</button>
-          <button class="action-btn-secondary" onclick="resetTimer()">重設計時</button>
+      <!-- Host Controls -->
+      <div class="host-control-deck">
+        <div class="timer-readout-group">
+          <span class="timer-digits" id="timer-digits">01:30</span>
+          <button class="timer-btn-mini" onclick="toggleTimer()">暫停 / 繼續</button>
+          <button class="timer-btn-mini" onclick="resetTimer()">重設</button>
         </div>
 
         <div class="host-btn-group">
           <button class="action-btn-primary" id="btn-reveal-results" onclick="revealRoundResults()">
-            揭曉全班投票結果
+            揭曉裁判評定與衝突指數
           </button>
           <button class="action-btn-secondary" id="btn-next-round" onclick="advanceNextRound()">
             進入下一回合
           </button>
-          <button class="action-btn-secondary" onclick="simulateRandomVotes()" title="自動模擬各組代表決策以利單機展示">
+          <button class="action-btn-secondary" onclick="simulateRandomVotes()" title="自動模擬 1~4 組決策以利單機展示">
             模擬各組作答
           </button>
-          <button class="action-btn-secondary" onclick="simulateClassCheckin()" title="模擬全班學員掃碼簽到">
-            模擬簽到人數
+          <button class="action-btn-secondary" onclick="simulateJuryRanking()" title="自動模擬第 5 組裁判評定">
+            模擬裁判評定
           </button>
         </div>
       </div>
 
-            <!-- Voting Status Panel: Shown during voting phase -->
+      <!-- Persuasion / Pitch Dock: 30 Seconds Pitch per Group -->
+      <div class="persuasion-dock" id="persuasion-dock">
+        <div class="persuasion-header">
+          <div class="persuasion-timer-box">
+            <span class="persuasion-clock" id="persuasion-timer">00:30</span>
+            <span class="persuasion-stage-badge" id="persuasion-stage-badge">【申辯席】請第 1 組向裁判組闡述決策理由 (30 秒)</span>
+          </div>
+          <div class="persuasion-btn-box">
+            <button class="action-btn-secondary" id="btn-persuasion-toggle" onclick="PersuasionTimer.toggle()">開始申辯倒數</button>
+            <button class="action-btn-secondary" onclick="PersuasionTimer.nextTeam()">切換下一組</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Voting Status Panel -->
       <div class="voting-status-panel" id="voting-status-panel">
         <div class="voting-panel-header">
-          <span class="voting-panel-title" id="voting-panel-title">各組代表研討與投票中</span>
-          <span class="voting-progress-pill" id="voting-progress-pill">0 / 5 組已送出決策</span>
+          <span class="voting-panel-title" id="voting-panel-title">決策組研討與裁判席監控中</span>
+          <span class="voting-progress-pill" id="voting-progress-pill">0 / 4 組已送出決策</span>
         </div>
         <p class="voting-panel-hint" id="voting-panel-hint">
-          情境題目已推送至學員手機端。每組投票完全保密不互通，僅於報告者揭曉後在此顯示全班投票統計結果。
+          情境題目已推送至學員手機。第 1~4 組投票獨立保密；第 5 組（裁判組）掌握暗藏代價，在各組申辯後進行體感衝突評定。
         </p>
         <div class="team-sub-chips-grid" id="team-sub-chips-grid"></div>
       </div>
 
-      <!-- Round 4 Debate Dock: 1 Minute Debate -->
-      <div class="r4-debate-dock" id="r4-debate-dock" style="display: none;">
-        <div class="r4-debate-header">
-          <div class="r4-debate-timer-box">
-            <span class="r4-debate-clock" id="r4-debate-timer">01:00</span>
-            <span class="r4-debate-stage-badge stage-hq" id="r4-debate-stage-badge">【前半段 · 總部發言時間 (30 秒)】總部陳述市場危機與交付底線</span>
-          </div>
-          <button class="action-btn-secondary" id="btn-debate-toggle" onclick="DebateTimer.toggle()">開始 1 分鐘辯論</button>
-        </div>
-      </div>
-
-      <!-- Round 4 Negotiation Board -->
-      <div class="voting-status-panel" id="r4-negotiation-board" style="display: none;">
-        <div class="voting-panel-header">
-          <span class="voting-panel-title">第四題：非對稱博弈與調解斡旋看板</span>
-          <span class="voting-progress-pill" id="r4-chameleon-prop-status">提案狀態：研擬中...</span>
-        </div>
-        <div id="r4-live-proposal-display" style="padding: 12px 14px; background: var(--ios-bg); border-radius: 12px; font-size: 13px; color: var(--ios-label); line-height: 1.6; border: 1px solid var(--ios-hairline);">
-          變色龍尚未送出提案。變色龍可於手機端隨時調整並發送最合適之調解方案。
-        </div>
-        <div class="r4-board-grid">
-          <div class="r4-role-card">
-            <div class="r4-role-header">
-              <span>總部代表（第 1、2 組）</span>
-              <span id="r4-hq-vote-status" class="r4-role-status-text">研議中...</span>
-            </div>
-            <p style="font-size: 11.5px; color: var(--ios-secondary-label); margin: 0;">核心關切：1 小時內穩定市場預期與董事會信任，獲得可信交付承諾</p>
-          </div>
-          <div class="r4-role-card">
-            <div class="r4-role-header">
-              <span>公司現場（第 3、4 組）</span>
-              <span id="r4-tokyo-vote-status" class="r4-role-status-text">研議中...</span>
-            </div>
-            <p style="font-size: 11.5px; color: var(--ios-secondary-label); margin: 0;">核心關切：絕不背黑鍋簽署不平等免責條款，捍衛工程品質真相與團隊名譽</p>
-          </div>
-          <div class="r4-role-card">
-            <div class="r4-role-header">
-              <span>文化變色龍（第 5 組）</span>
-              <span style="color: var(--ios-purple); font-size: 12px; font-weight: 600;">調解斡旋席</span>
-            </div>
-            <p style="font-size: 11.5px; color: var(--ios-secondary-label); margin: 0;">調解任務：掌握雙方不公開難處，提出雙方均能簽字接受的妥協協定</p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Voting Results Grid: Revealed only when presenter clicks reveal -->
+      <!-- Tension Hero Announcement Wrap -->
       <div id="tension-announcement-wrap" style="display: none; margin-top: 14px;"></div>
-      <div class="options-grid" id="options-grid" style="display: none;"></div>
+
+      <!-- Jury Results Grid (Revealed Phase) -->
+      <div class="jury-results-grid" id="jury-results-grid" style="display: none;"></div>
     </section>
 
+    <!-- Final Leaderboard Stage -->
     <section class="leaderboard-container" id="leaderboard-stage" style="display: none;">
       <h2 class="leaderboard-title">OB報告：跨文化 CQ 生存排行榜</h2>
-      <p style="text-align: center; color: #c4b5a5; font-size: 13px;">
-        經過四輪高階跨文化商業困境之嚴苛洗禮，全班 5 組最終留存 CQ 生命值結算如下：
+      <p style="text-align: center; color: var(--ios-secondary-label); font-size: 13.5px;">
+        歷經三回跨文化高階商業困境考驗與第 5 組裁判評定，全班決策組留存 CQ 生命值結算如下：
       </p>
       <div class="leaderboard-list" id="leaderboard-ranks-list"></div>
       <div class="theory-synthesis-box">
         <h3 class="theory-heading">【組織行為學理論覆盤：跨文化智商 Christopher Earley & Soon Ang (2004)】</h3>
         <p class="theory-desc">
-          <strong>1. 認知 CQ (Head)：</strong>洞察高語境溝通中的弦外之音。當對方表達「慎重研討」時，能解讀出委婉的阻礙警訊，而非用西方標準 KPI 進行公開逼迫。<br><br>
-          <strong>2. 動機 CQ (Heart)：</strong>在跨文化衝突爆發時，克制法律審計與金錢封口的傲慢，同理對方的「群體名譽與職人尊嚴」，找到雙方共同價值觀的最大公約數。<br><br>
-          <strong>3. 行為 CQ (Body)：</strong>能隨情境靈活調適溝通管道，揚棄冰冷的公開工單監控與輕浮的無效社交，透過「非正式對等磋商」搭建真正的心理安全通道。<br><br>
-          <strong>4. 系統協同 (Adaptive Leadership)：</strong>當總部、分公司各自受困於合規審計與尊嚴防衛時，具備敏捷調解特質的協調者能重構雙軌治理機制，達成商業利益與文化尊嚴的雙贏終局。
+          <strong>1. 認知 CQ (Head)：</strong>洞察高語境溝通中的弦外之音。若只有認知而無動機與行為，溝通會淪為冷血的 KPI 逼迫與公開審查。<br><br>
+          <strong>2. 動機 CQ (Heart)：</strong>在跨文化衝突爆發時，克制法律威嚇與金錢封口的傲慢，同理「群體名譽與職人尊嚴」，找到共同價值觀的最大公約數。<br><br>
+          <strong>3. 行為 CQ (Body)：</strong>靈活調適溝通管道，揚棄冰冷的工單監控與輕浮的無效社交，透過對等、心理安全之場域建立信任。<br><br>
+          <strong>4. 全維度綜效 (Adaptive Leadership)：</strong>唯有兼具 Head（雙軌戰略重構）、Heart（職人自尊捍衛）與 Body（日常微觀對等熱線），方能化解做空危機與文化防衛，達成真正的系統雙贏。
         </p>
       </div>
       <div style="text-align: center; margin-top: 10px;">
-        <button class="action-btn-primary" onclick="restartGame()">重新開始生存挑戰</button>
+        <button class="action-btn-primary" onclick="restartGame()">重新開始挑戰</button>
       </div>
     </section>
   </main>
 </div>
 
 <!-- QR Modal -->
-<div class="modal-overlay" id="qr-modal">
+<div class="modal-overlay" id="qr-modal" style="display: none;">
   <div class="modal-card">
     <div class="modal-header">
-      <h3 class="modal-title">學員手機掃碼加入網址</h3>
+      <h3 class="modal-title">學員手機掃碼加入</h3>
       <button class="modal-close-btn" onclick="closeQRModal()">×</button>
     </div>
     <div class="qr-preview-box">
       <canvas id="qr-canvas" style="display: none;"></canvas>
       <img id="qr-img" alt="QR Code" style="width: 180px; height: 180px; display: block;" />
       <p style="font-size: 13.5px; font-weight: 600; color: var(--ios-label); margin-top: 10px;">請學員使用手機相機掃碼加入作答</p>
-      <p style="font-size: 12px; color: var(--ios-secondary-label); margin-top: 2px;">房間代碼：<strong id="qr-room-text" style="color: var(--ios-blue);">ob2026</strong> · 各組獨立作答保密</p>
+      <p style="font-size: 12px; color: var(--ios-secondary-label); margin-top: 2px;">房間代碼：<strong id="qr-room-text" style="color: var(--ios-blue);">ob2026</strong> · 第 5 組為裁判組</p>
     </div>
-    <div style="font-size: 11.5px; color: #a39789; text-align: center; word-break: break-all;" id="qr-url-text"></div>
+    <div style="font-size: 11.5px; color: var(--ios-secondary-label); text-align: center; word-break: break-all;" id="qr-url-text"></div>
     <div style="display: flex; gap: 8px;">
       <button class="action-btn-secondary" style="flex: 1;" onclick="copyPageUrl()">複製學員網址</button>
       <button class="action-btn-primary" style="flex: 1;" onclick="closeQRModal()">完成</button>
@@ -909,16 +912,13 @@
 </div>
 
 <script>
-
+  /* Audio Engine (Synthesizer Chimes) */
   const AudioEngine = {
     ctx: null,
     init() {
       if (!this.ctx) {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (AudioCtx) this.ctx = new AudioCtx();
-      }
-      if (this.ctx && this.ctx.state === 'suspended') {
-        this.ctx.resume();
       }
     },
     playClick() {
@@ -930,12 +930,30 @@
         osc.connect(gain);
         gain.connect(this.ctx.destination);
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(440, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.05);
-        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+        osc.frequency.setValueAtTime(480, this.ctx.currentTime);
+        gain.gain.setValueAtTime(0.04, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
         osc.start();
         osc.stop(this.ctx.currentTime + 0.05);
+      } catch (e) {}
+    },
+    playChime() {
+      try {
+        this.init();
+        if (!this.ctx) return;
+        const notes = [523.25, 659.25, 783.99];
+        notes.forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.08);
+          gain.gain.setValueAtTime(0.08, this.ctx.currentTime + idx * 0.08);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.08 + 0.35);
+          osc.start(this.ctx.currentTime + idx * 0.08);
+          osc.stop(this.ctx.currentTime + idx * 0.08 + 0.35);
+        });
       } catch (e) {}
     },
     playDamage() {
@@ -947,56 +965,218 @@
         osc.connect(gain);
         gain.connect(this.ctx.destination);
         osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(260, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(110, this.ctx.currentTime + 0.35);
-        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
+        osc.frequency.setValueAtTime(140, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(60, this.ctx.currentTime + 0.25);
+        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.25);
         osc.start();
-        osc.stop(this.ctx.currentTime + 0.35);
-      } catch (e) {}
-    },
-    playChime() {
-      try {
-        this.init();
-        if (!this.ctx) return;
-        [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
-          const osc = this.ctx.createOscillator();
-          const gain = this.ctx.createGain();
-          osc.connect(gain);
-          gain.connect(this.ctx.destination);
-          osc.type = 'triangle';
-          osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.08);
-          gain.gain.setValueAtTime(0.18, this.ctx.currentTime + idx * 0.08);
-          gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + idx * 0.08 + 0.3);
-          osc.start(this.ctx.currentTime + idx * 0.08);
-          osc.stop(this.ctx.currentTime + idx * 0.08 + 0.3);
-        });
+        osc.stop(this.ctx.currentTime + 0.25);
       } catch (e) {}
     }
   };
 
+  /* Three Progressive Dilemmas Data */
+  const DilemmasData = {
+    1: {
+      themeTag: "【第一回：單維度枷鎖】認知、動機、行為之單項極限試煉",
+      title: "委婉留白時的追問藝術",
+      sceneKey: "midnightBoardroom",
+      speaker: "佐藤部長（雙手交疊，緩緩喝了一口茶，審慎沉吟）：",
+      dialogue: `「……交付時程方面，我們現場會全力以赴進行慎重研討，只是部分細節可能還需要團隊內部進一步調研……」
 
+【背景形勢】：總部明日開盤前必須向華爾街做空機構與董事會提交進度。此時受限於初期溝通管道，只能運用「單一維度能力」，總部該如何接話？`,
+      options: [
+        {
+          id: "A",
+          dimension: "純 Head（認知分析）",
+          title: "方案 A：進度量化追蹤策略",
+          text: "「感謝佐藤部長的回饋。為確保全球供應鏈排程精準，請東京團隊在今日下午 5 點前，將調研里程碑量化為具體甘特圖並標註預計完工日。」",
+          penalty: -20,
+          tensionDrop: "20%",
+          tensionRemaining: "80%",
+          tensionComment: "雖然切中商業邏輯，但在高語境文化下硬性逼問死線等同當眾逼其認錯，日方啟動防禦機制已讀不回，現場張力依舊高達 80%！",
+          blindspot: "【純 Head 盲點（認知極限）】：有腦無理性同理。日方高語境下「慎重研討」已是幾近無法完工的求救訊號。逼問硬性死線破壞深層信任，觸發日方被動防禦。"
+        },
+        {
+          id: "B",
+          dimension: "純 Heart（動機共情）",
+          title: "方案 B：全員情感撫慰與信任承諾",
+          text: "「總部完全理解東京團隊連日加班的沉重壓力。請現場放寬心，我們相信日方的職人精神，時程若趕不上總部會為大家承擔市場壓力。」",
+          penalty: -25,
+          tensionDrop: "15%",
+          tensionRemaining: "85%",
+          tensionComment: "情感支持看似拉滿，但對外部做空機構毫無交代，且日方感到被「施捨同情卻不信任現場能力」，殘餘張力高達 85%！",
+          blindspot: "【純 Heart 盲點（動機過載）】：有心無商業結構。華爾街明日開盤面臨做空狙擊，虛浮的安慰無法替代產能承諾，更讓日方覺得總部不了解製造嚴肅性。"
+        },
+        {
+          id: "C",
+          dimension: "純 Body（行為調適）",
+          title: "方案 C：非正式日式晚茶場域重構",
+          text: "「立刻關閉所有公開遠距工單追蹤，美方團隊全員改用日式非正式晚茶餐敘管道，邀請東京管理層在私下氛圍中隨興交流。」",
+          penalty: -20,
+          tensionDrop: "25%",
+          tensionRemaining: "75%",
+          tensionComment: "形式主義的社交模仿，未解決底層技術延誤的真實結構，美日雙方同感尷尬焦慮，殘餘張力 75%！",
+          blindspot: "【純 Body 盲點（行為模仿）】：有身無腦亦無心。盲目採用日方社交習慣，但未觸及核心問題，在危機當頭強行社交顯得輕浮而本末倒置。"
+        },
+        {
+          id: "D",
+          dimension: "常規防禦（階層轉移）",
+          title: "方案 D：指派中立專案辦公室（PMO）介入",
+          text: "「要求兩地人資與專案辦公室（PMO）全面介入，召開跨文化協調會議，並由第三方專案經理重新裁定排程責任歸屬。」",
+          penalty: -30,
+          tensionDrop: "10%",
+          tensionRemaining: "90%",
+          tensionComment: "典型的官僚推諉與程序拖延，兩地團隊皆感失望與推卸責任，對話張力維持在 90% 極度緊繃狀態！",
+          blindspot: "【常規防禦盲點（程序推諉）】：缺乏 CQ 領導力。在緊急危機中逃避對話，將核心決策轉移至行政部門，兩邊團隊均感到未被尊重。"
+        }
+      ]
+    },
+
+    2: {
+      themeTag: "【第二回：雙維度交織】真相醜聞曝光與兩兩結合突破",
+      title: "晶圓遭挪用風暴與責任定調",
+      sceneKey: "confidentialLab",
+      speaker: "東京工程團隊（遞交底層 log 數據與集體抗議連署書）：",
+      dialogue: `東京私下向調解人證實：延誤根本非技術問題（東京良率實測達 98.4%），而是總部董事關係戶私自插單強行挪走 30% 晶圓！東京團隊連續加班三週背黑鍋，如今卻被總部公開質疑工作效率低落，兩地工程師在 Slack 互罵互退群。
+
+【背景形勢】：衝突全面升級！此時解鎖「雙維度結合能力」，該如何定調這起內部醜聞並平息怒火？`,
+      options: [
+        {
+          id: "A",
+          dimension: "Head + Heart",
+          title: "方案 A：真相內部專函澄清與名譽背書",
+          text: "「私下向東京核心幹部坦誠總部內部政治插單實情，正式發函為東京工程團隊之職人名譽背書；但要求雙方繼續在原有的 Slack 頻道完成最後交接。」",
+          penalty: -15,
+          tensionDrop: "45%",
+          tensionRemaining: "55%",
+          tensionComment: "解決了真相（Head）也給予尊嚴（Heart），但溝通場域（缺少 Body）仍留在充滿敵意的原頻道，基層工程師冷暴力對峙仍存！",
+          blindspot: "【缺少 Body 維度】：場域未重構。敵意已在公開頻道根深蒂固，不改變互動載體與行為協定，基層同仁仍處於防禦性對立。"
+        },
+        {
+          id: "B",
+          dimension: "Head + Body",
+          title: "方案 B：封閉匿名技術白板與獨立財務記帳",
+          text: "「立即關閉爆發爭執的公開頻道，改設匿名技術參數白板；同時重塑產能公式，將短少之 30% 晶圓獨立記帳，由總部財務承擔合規缺口。」",
+          penalty: -15,
+          tensionDrop: "50%",
+          tensionRemaining: "50%",
+          tensionComment: "冷靜理性的制度設計（Head+Body），但東京團隊被冤枉三週的情感怒火被一筆勾銷，日方感到被「技術性封口」，殘餘張力 50%！",
+          blindspot: "【缺少 Heart 維度】：名譽未復原。職人文化視名譽重於制度。缺乏高層真誠道歉與尊嚴平反，制度再完美也無法激發主動協同。"
+        },
+        {
+          id: "C",
+          dimension: "Heart + Body",
+          title: "方案 C：高層現場鞠躬長談與雙向茶敘互訪",
+          text: "「總部技術高層帶隊親赴東京，在清酒餐敘與工會代表面對面深談並誠摯致歉，宣布建立平等的研發雙向互訪機制。」",
+          penalty: -20,
+          tensionDrop: "40%",
+          tensionRemaining: "60%",
+          tensionComment: "人際氣氛修復極佳（Heart+Body），但對「被挪走的 30% 晶圓該如何向做空機構交代」毫无解方，明早開盤依舊面臨暴跌做空，殘餘張力 60%！",
+          blindspot: "【缺少 Head 維度】：商業架構真空。感動無法取代商業交期真相。做空機構即將發動攻擊，缺乏客觀數據與合約解套，全案依然面臨下市風險。"
+        },
+        {
+          id: "D",
+          dimension: "利益換背書",
+          title: "方案 D：提撥 20% 專案獎金換取現場背書",
+          text: "「由總部提撥專案特別預算，為東京現場全員發放加成激勵獎金，換取日方簽署免責背書以利總部對外公布統一進度口徑。」",
+          penalty: -30,
+          tensionDrop: "10%",
+          tensionRemaining: "90%",
+          tensionComment: "將工程專業視為可買賣的商品！東京核心工程師視為收買侮辱而引發集體辭職潮，對話張力飆升至 90%！",
+          blindspot: "【現實利益陷阱】：名譽金錢化。對恪守職人名譽的團隊而言，金錢收買形同人格羞辱，直接踩中動機 CQ 最深層紅線。"
+        }
+      ]
+    },
+
+    3: {
+      themeTag: "【第三回：全維度大成】做空狙擊倒數 1 小時之系統協同終局",
+      title: "華爾街做空危機與跨太平洋聯合調解協定",
+      sceneKey: "grandSummit",
+      speaker: "全球董事會與跨國危機應變總部（最後通牒倒數）：",
+      dialogue: `華爾街做空機構報告預計 1 小時後全球發布，母公司盤前市值面臨蒸發；東京現場全體工程師抗議拒簽免責聲明，工會辭職信已整齊放在部長桌上。
+
+【背景形勢】：全案終局！此時必須整合「Head 理性商業治理 + Heart 文化名譽保證 + Body 敏捷對等管道」全維度能力，尋求化解破局之協定！`,
+      options: [
+        {
+          id: "A",
+          dimension: "平衡妥協型",
+          title: "方案 A：三維兼顧之現有排程硬衝方案",
+          text: "「總部啟動關係戶內部審查（Head），公開表彰東京工藝成就（Heart），設立常設協調室（Body）；但維持原有上市日期，現場以現有產能全力趕工。」",
+          penalty: -25,
+          tier: 2,
+          tensionDrop: "35%",
+          tensionRemaining: "65%",
+          tensionComment: "看似三維兼具，但忽視了實體晶圓短少 30% 是物理不可逆事實，等於逼現場工程師過勞死，殘餘張力 65%！",
+          blindspot: "【物理產能忽視】：偽全維度。口頭承諾雖好，但迴避了硬性產能缺口，依然將交付代價轉嫁給基層工程師。"
+        },
+        {
+          id: "B",
+          dimension: "真·雙軌協同",
+          title: "方案 B：雙軌協定・旗艦限量典藏與良率名譽專案專函",
+          text: "「【Head】以 98.4% 極限良率將首批晶片重塑為『旗艦限量典藏版』溢價交付；【Heart】董事會簽署專案專函確認現場零過失，表彰職人工藝；【Body】建立兩地首席架構師每日 15 分鐘對等直通熱線。」",
+          penalty: 0,
+          bonus: 20,
+          tier: 1,
+          tensionDrop: "85%",
+          tensionRemaining: "15%",
+          tensionComment: "深層文化綜效！守住現場尊嚴底線，給予總部戰略說辭，建立長期平等合作範式，對話張力降低 85%，迎來真正雙贏！",
+          blindspot: "【最優解（雙軌戰略協同）】：完全融合 Head（商業策略重新定調）、Heart（名譽與自尊絕對捍衛）與 Body（日常微觀對等熱線）。"
+        },
+        {
+          id: "C",
+          dimension: "程序審計型",
+          title: "方案 C：國際第三方獨立審計與專案凍結 60 天",
+          text: "「委託第三方獨立機構調查插單實情（Head），總部提撥尊嚴保障信託（Heart），改以律師專管系統對接（Body）；專案全面凍結 60 天等待調查報告。」",
+          penalty: -20,
+          tier: 3,
+          tensionDrop: "30%",
+          tensionRemaining: "70%",
+          tensionComment: "陷入程序正義陷阱！錯失 60 天上市黃金期，客戶以違約取消數億美元訂單，專案直接夭折，殘餘張力 70%！",
+          blindspot: "【程序正義陷阱】：過度依賴外部中立程序，忽略了半導體商場的時效殘酷性，兩全其美卻輸掉整個市場。"
+        },
+        {
+          id: "D",
+          dimension: "權力失衡型",
+          title: "方案 D：總部全盤交出專案決策權予東京現場",
+          text: "「總部全面承認管理失職（Heart），將後續所有技術排程與發布決策全權委任東京現場主導（Head），總部退居純支援角色（Body）。」",
+          penalty: -30,
+          tier: 3,
+          tensionDrop: "20%",
+          tensionRemaining: "80%",
+          tensionComment: "權力過度傾斜！總部董事會直接發動不信任案撤換管理層，專案被強行終止收回，殘餘張力 80%！",
+          blindspot: "【權力失衡陷阱】：放棄總部應有的治理責任，引發總部董事會劇烈反彈，導致全體崩盤。"
+        }
+      ]
+    }
+  };
+
+  /* Scene SVGs */
   const SceneSVGs = {
     midnightBoardroom: () => `
       <svg viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
         <rect width="1200" height="600" fill="#ede8dc"/>
-        <g stroke="#78716c" stroke-width="0.75" opacity="0.18">
+        <g stroke="#78716c" stroke-width="0.75" opacity="0.15">
+          <line x1="0" y1="100" x2="1200" y2="100"/>
+          <line x1="0" y1="200" x2="1200" y2="200"/>
+          <line x1="0" y1="300" x2="1200" y2="300"/>
+          <line x1="0" y1="400" x2="1200" y2="400"/>
+          <line x1="0" y1="500" x2="1200" y2="500"/>
           <line x1="150" y1="0" x2="150" y2="600"/>
-          <line x1="380" y1="0" x2="380" y2="600"/>
+          <line x1="300" y1="0" x2="300" y2="600"/>
+          <line x1="450" y1="0" x2="450" y2="600"/>
           <line x1="600" y1="0" x2="600" y2="600"/>
-          <line x1="820" y1="0" x2="820" y2="600"/>
+          <line x1="750" y1="0" x2="750" y2="600"/>
+          <line x1="900" y1="0" x2="900" y2="600"/>
           <line x1="1050" y1="0" x2="1050" y2="600"/>
-          <line x1="0" y1="180" x2="1200" y2="180"/>
-          <line x1="0" y1="360" x2="1200" y2="360"/>
         </g>
-        <circle cx="600" cy="300" r="160" stroke="#0071e3" stroke-width="1.2" fill="none" opacity="0.22"/>
-        <circle cx="600" cy="300" r="280" stroke="#0071e3" stroke-width="0.8" fill="none" stroke-dasharray="4 8" opacity="0.16"/>
+        <circle cx="600" cy="300" r="200" stroke="#0071e3" stroke-width="1.2" fill="none" opacity="0.2"/>
       </svg>
     `,
     confidentialLab: () => `
       <svg viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-        <rect width="1200" height="600" fill="#eae5d9"/>
-        <g stroke="#78716c" stroke-width="0.75" opacity="0.16">
+        <rect width="1200" height="600" fill="#e8e3d5"/>
+        <g stroke="#78716c" stroke-width="0.75" opacity="0.15">
           <circle cx="600" cy="300" r="120" fill="none"/>
           <circle cx="600" cy="300" r="220" fill="none"/>
           <circle cx="600" cy="300" r="320" fill="none"/>
@@ -1004,22 +1184,6 @@
           <line x1="600" y1="0" x2="600" y2="600"/>
         </g>
         <circle cx="600" cy="300" r="170" stroke="#15803d" stroke-width="1.2" fill="none" stroke-dasharray="6 6" opacity="0.25"/>
-      </svg>
-    `,
-    hybridChashitsu: () => `
-      <svg viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
-        <rect width="1200" height="600" fill="#ede7db"/>
-        <g stroke="#78716c" stroke-width="0.75" opacity="0.18">
-          <line x1="200" y1="0" x2="200" y2="600"/>
-          <line x1="400" y1="0" x2="400" y2="600"/>
-          <line x1="600" y1="0" x2="600" y2="600"/>
-          <line x1="800" y1="0" x2="800" y2="600"/>
-          <line x1="1000" y1="0" x2="1000" y2="600"/>
-          <line x1="0" y1="150" x2="1200" y2="150"/>
-          <line x1="0" y1="300" x2="1200" y2="300"/>
-          <line x1="0" y1="450" x2="1200" y2="450"/>
-        </g>
-        <rect x="420" y="180" width="360" height="240" rx="16" stroke="#b45309" stroke-width="1.2" fill="none" opacity="0.22"/>
       </svg>
     `,
     grandSummit: () => `
@@ -1037,319 +1201,277 @@
     `
   };
 
-
-  const DilemmasData = {
-    1: {
-      themeTag: "【第一回：認知維度】高語境解碼與深層常模辨識",
-      title: "委婉留白時的追問藝術",
-      sceneKey: "midnightBoardroom",
-      speaker: "佐藤部長（雙手交疊，緩緩喝了一口茶，審慎沉吟）：",
-      dialogue: `「……交付時程方面，我們現場會全力以赴進行慎重研討，只是部分細節可能還需要團隊內部進一步調研……」
-
-【背景形勢】：總部明日開盤前必須向華爾街做空機構與董事會提交進度，此時總部該如何接話？`,
-      options: [
-        {
-          id: "A",
-          title: "方案 A：進度量化追蹤策略",
-          text: "「感謝佐藤部長的回饋。為確保全球供應鏈排程精準，請東京團隊在今日下午 5 點前，將調研里程碑量化為具體甘特圖並標註預計完工日。」",
-          penalty: -20,
-          blindspot: "文化盲點：日方高語境下「慎重研討」已是幾近無法如期完工的求救訊號。公開逼問硬性死線等於逼其當場認錯或撒謊，破壞深層信任。"
-        },
-        {
-          id: "B",
-          title: "方案 B：全球資源緊急調度策略",
-          text: "「總部充分理解東京團隊的沉重壓力。我們已批准協調 5 位矽谷資深架構師於明晨直飛東京現場，直接進駐協助分擔程式碼調校。」",
-          penalty: -25,
-          blindspot: "文化盲點：在日式職人與現場主義（Gemba）文化中，不請自來的總部專家等同官方審計接管，暗示東京團隊無能，激起全員防衛消極抵制。"
-        },
-        {
-          id: "C",
-          title: "方案 C：全員民主共識決策機制",
-          text: "「為分擔管理層決策壓力，建議此時在大會中由美日全體研發工程師進行線上不記名投票，依第一線真實工時表決是否微調發布日。」",
-          penalty: -15,
-          blindspot: "文化盲點：破壞東亞長幼有序與組織和睦（和，Wa）。強迫基層在主管前公開表態會造成極大社交焦慮，且被日方視為總部推卸治理責任。"
-        },
-        {
-          id: "D",
-          title: "方案 D：雙邊技術排程微調對齊",
-          text: "「非常理解公差調研的嚴謹性與技術深度。今日大會先行休會，會後由我方營運負責人親自致電佐藤部長，就底層架構參數先做個別溝通。」",
-          penalty: 0,
-          bonus: 5,
-          blindspot: "最優解：精準實踐「根回し（Nemawashi）」，為日方搭設心理安全階梯，真正被挪用晶圓的實情方能在私下電話中被如實吐露。"
-        }
-      ]
-    },
-
-    2: {
-      themeTag: "【第二回：動機維度】自尊維護與消解文化防衛",
-      title: "晶圓遭挪用風暴與責任定調",
-      sceneKey: "confidentialLab",
-      speaker: "東京工程團隊（遞交底層 log 數據與集體抗議連署書）：",
-      dialogue: `東京私下向調解人證實：延誤根本非技術問題（東京良率實測達 98.4%），而是總部董事關係戶私自插單強行挪走 30% 晶圓！東京團隊連續加班三週背黑鍋，如今卻被總部公開質疑工作效率低落，日本工程師全員抗議。
-
-【背景形勢】：調解席與總部該如何定調這起內部醜聞，並平息兩地怒火？`,
-      options: [
-        {
-          id: "A",
-          title: "方案 A：合規獨立審查與資安管控",
-          text: "「總部法務與合規長立即啟動內部專案調查，並針對代工廠及分部相關人員簽發全面保密協議（NDA），在調查結果出爐前嚴格隔離資訊。」",
-          penalty: -30,
-          blindspot: "文化盲點：法律霸凌（Legal Bullying）。將受害工程師視為潛在洩密犯罪嫌疑人，粉碎東京團隊最後的心理安全感，極易促使其向媒體揭弊。"
-        },
-        {
-          id: "B",
-          title: "方案 B：專案特別津貼與全員激勵",
-          text: "「由總部提撥專案特別預算，為東京現場全體工程師發放每人雙倍專案激勵獎金與全員加成加班津貼，以實質回饋感謝大家的辛勞付出。」",
-          penalty: -20,
-          blindspot: "文化盲點：將名譽金錢化（Monetizing Dignity）。對恪守「職人精神（Shokunin）」的團隊而言，用金錢封口形同侮辱專業自尊。"
-        },
-        {
-          id: "C",
-          title: "方案 C：市場重大訊息公開澄清",
-          text: "「總部立即召開全球法人說明會，正式向公眾揭露該外部代工廠違約插單情事，並宣告啟動商務索賠，公開向市場還給東京團隊清白。」",
-          penalty: -25,
-          blindspot: "文化盲點：玉石俱焚（Pyrrhic Victory）。公開指責關係戶導致主管機關立案調查，全產品線被迫無限期凍結，市值崩跌造成全體雙輸。"
-        },
-        {
-          id: "D",
-          title: "方案 D：內部責任專函與戰略重整",
-          text: "「董事會正式出具內部專函確認研發團隊零過失，對外發表聲明將本次時程微調定調為『追求旗艦級極限品質之戰略升級』，公開向董事會表彰研發團隊。」",
-          penalty: 0,
-          bonus: 10,
-          blindspot: "最優解：動機 CQ 核心在於保護群體的自尊與自我效能感，精準擊中日方名譽與美方商業利益的唯一交集點。"
-        }
-      ]
-    },
-
-    3: {
-      themeTag: "【第三回：行為維度】跨國協作摩擦與溝通機制重構",
-      title: "跨國通訊口角升級與場域重構",
-      sceneKey: "hybridChashitsu",
-      speaker: "美日跨國 Slack 頻道（爭執紀錄截圖曝光）：",
-      dialogue: `兩地工程師在公開 Slack 頻道爆發激烈口角：美方工程師不斷使用大寫英文與 @here 催促進度，日方工程師感到被當眾公開審查羞辱，開始採取集體已讀不回與拒絕更新英文工單的被動防禦，跨國協作即將全面中斷。
-
-【背景形勢】：應採取何種形式與管道重構，徹底打破溝通死結？`,
-      options: [
-        {
-          id: "A",
-          title: "方案 A：敏捷看板全透明數位化監控",
-          text: "「全面導入 Jira 自動化即時追蹤機制，要求雙方每 2 小時自動同步任務進度與程式碼提交紀錄，建立客觀中立的全球燃盡圖。」",
-          penalty: -20,
-          blindspot: "文化盲點：監視焦慮（Surveillance Anxiety）。高語境文化會解讀為極度的「不信任」與微觀管理，觸發工程師「形式合規、消極怠工」。"
-        },
-        {
-          id: "B",
-          title: "方案 B：確立層級責任與指揮鏈貫徹",
-          text: "「由總部全球執行副總向東京製造部長發布正式行政備忘錄，要求部長依組織層級督導下屬，落實日常溝通時效考核。」",
-          penalty: -25,
-          blindspot: "文化盲點：摧毀日本下意上達的「稟議制（Ringi）」與共識和諧。部長陷入忠誠與下屬信賴的夾縫，極易導致部長引咎辭職。"
-        },
-        {
-          id: "C",
-          title: "方案 C：非正式跨文化團隊凝聚交流",
-          text: "「規劃跨國同仁線上文化交流茶會，透過非正式輕鬆互動與生活話題分享，緩解近期專案衝刺引發的人際緊張。」",
-          penalty: -15,
-          blindspot: "文化盲點：輕浮無禮（Tone-Deaf Frivolity）。在面臨重大專案危機與信任破裂時強推休閒娛樂，被日方視為輕佻與極不專業，加劇心理反感。"
-        },
-        {
-          id: "D",
-          title: "方案 D：設立去層級技術對等站會機制",
-          text: "「設立每日 15 分鐘『雙邊技術對等站會』，選派兼具跨文化背景之核心工程師擔任窗口，脫鉤考核流程，聚焦具體技術本體。」",
-          penalty: 0,
-          bonus: 5,
-          blindspot: "最優解：將溝通模式從「公開審訊」轉換為「同儕探討」，精準落實行為 CQ 中的語言與非語言行為靈活切換。"
-        }
-      ]
-    },
-
-    4: {
-      themeTag: "【第四回：全案巔峰情境模擬】三方非對稱協同大會審",
-      title: "華爾街做空危機與跨太平洋聯合調解協定",
-      sceneKey: "grandSummit",
-      isR4Special: true,
-
-      hqContext: {
-        title: "總部內部機密情境（第 1、2 組專屬）：華爾街做空暴跌與究責最後通牒",
-        briefing: `華爾街做空機構發布報告指控產能嚴重不足，母公司盤前股價暴跌 8.5%，各大投行與董事會要求 1 小時內發布全球重訊並指名究責，董事會揚言限期未決將撤換高層！
-
-（註：總部完全不知道東京現場其實產能被董事關係戶挪用的實情）`,
-        coreConstraint: "總部核心底線：必須在 1 小時內穩定市場預期與董事會信任，獲得可信的交付承諾或品質保證。"
-      },
-
-      tokyoContext: {
-        title: "公司現場機密情境（第 3、4 組專屬）：良率免責背書與工程師尊嚴防線",
-        briefing: `東京現場三週無休趕工良率達 98.4%，延誤全因董事關係戶挪抽 30% 產能。然而總部施壓要求現場簽署「免責背書」，若簽署未來若有瑕疵現場需負全責，若拒簽新產品可能夭折。工會與工程師全員憤怒抗議拒簽！
-
-（註：公司完全不知道總部在華爾街面臨刑事起訴與股票下市的即時生死危機）`,
-        coreConstraint: "公司核心底線：絕不背黑鍋簽署不平等免責條款，捍衛工程品質真相與團隊名譽。"
-      },
-
-      chameleonContext: {
-        title: "變色龍全域情報情境（第 5 組專屬）：跨文化仲裁與雙軌談判中心",
-        intelDossier: [
-          "【總部秘密難處】：盤前股價暴跌 8.5%，華爾街做空狙擊，限期 1 小時交代究責，否則高層撤換下台。",
-          "【公司秘密難處】：良率已達 98.4%，延誤純係關係戶抽單；總部逼簽免責背書，現場視為踐踏職人尊嚴。"
-        ],
-        mission: "變色龍獨家掌握雙方不可退讓的隱藏底線。請在 1 分鐘雙邊辯論後，選定並提出最佳調解協定，爭取雙方全體同意！"
-      },
-
-      proposals: [
-        {
-          id: "A",
-          title: "方案 A：責任對半均攤與時程歸零",
-          text: "「促成雙方即刻停火，各自承擔一半延誤責任，將專案交付時程歸零重新排程，彼此不再追究晶圓挪用細節。」",
-          blindspot: "致命缺陷（和稀泥無效妥協）：看似公平，但日方認為未查清晶圓挪用真相是栽贓，職人士氣徹底崩潰；總部投資人則認為管理層毫無合約約束力，母公司評級遭降，兩頭落空。",
-          penalty: -25
-        },
-        {
-          id: "B",
-          title: "方案 B：現實權力導向・由總部發布並事後補償分公司",
-          text: "「建議東京分公司配合總部簽署階段性背書以利對外發布，總部事後由全球研發預算提撥 20% 專案獎金補償東京團隊。」",
-          blindspot: "致命缺陷（將名譽金錢化）：將工程專業視為可買賣的商品。東京核心工程師視為收買侮辱而引發集體辭職潮，微米級封測工藝永久斷層。",
-          penalty: -30
-        },
-        {
-          id: "C",
-          title: "方案 C：聘請第三方獨立審計機構・凍結爭議 60 天",
-          text: "「建議董事會委託國際獨立第三方法律與技術機構進行中立調查，在 60 天內出具客觀責任報告後再行決定處分。」",
-          blindspot: "致命缺陷（程序正義陷阱）：錯失半導體市場 60 天發布黃金視窗，客戶直接以違約為由取消年度大單並索賠 2 億美元，專案直接夭折。",
-          penalty: -20
-        },
-        {
-          id: "D",
-          title: "方案 D：雙軌協定・技術條件書聯合簽名與旗艦品質聯席會",
-          text: "「對內由總部副總與東京部長聯名簽署『技術參數偏差專案專函』釐清現場零責任；對外由雙方共組『旗艦品質聯席委員會』，定調為工藝升級。」",
-          blindspot: "最優解（雙軌戰略協同）：精準守住現場專業與尊嚴防線，同時賦予總部對外合理的戰略說辭，建立長期平等的跨文化組織合作範式。",
-          penalty: 0,
-          bonus: 15
-        }
-      ]
-    }
-  };
-
-
-  const DebateTimer = {
-    remaining: 60,
+  /* Persuasion Timer (30s Pitch per Team) */
+  const PersuasionTimer = {
+    remaining: 30,
+    currentTeam: 1,
     running: false,
     interval: null,
-    stage: 'hq',
-
-    start() {
-      if (this.interval) clearInterval(this.interval);
-      this.running = true;
-      this.updateUI();
-      this.interval = setInterval(() => {
-        if (this.remaining > 0) {
-          this.remaining--;
-          if (this.remaining === 30) {
-            AudioEngine.playChime();
-            this.stage = 'tokyo';
-          }
-          if (this.remaining === 0) {
-            clearInterval(this.interval);
-            this.running = false;
-            this.stage = 'done';
-            AudioEngine.playChime();
-          }
-          this.updateUI();
-          broadcastState('R4_DEBATE_TICK', {
-            remaining: this.remaining,
-            stage: this.stage,
-            running: this.running
-          });
-        }
-      }, 1000);
-    },
 
     toggle() {
-      AudioEngine.playClick();
       if (this.running) {
-        clearInterval(this.interval);
-        this.running = false;
-        this.updateUI();
-        broadcastState('R4_DEBATE_TICK', {
-          remaining: this.remaining,
-          stage: this.stage,
-          running: false
-        });
+        this.pause();
       } else {
         this.start();
       }
     },
 
-    reset() {
+    start() {
       if (this.interval) clearInterval(this.interval);
-      this.remaining = 60;
-      this.running = false;
-      this.stage = 'hq';
+      this.running = true;
+      AudioEngine.playClick();
       this.updateUI();
-      broadcastState('R4_DEBATE_TICK', {
-        remaining: 60,
-        stage: 'hq',
-        running: false
-      });
+      this.interval = setInterval(() => {
+        if (this.remaining > 0) {
+          this.remaining--;
+          this.updateUI();
+        } else {
+          clearInterval(this.interval);
+          this.running = false;
+          AudioEngine.playChime();
+          this.updateUI();
+        }
+      }, 1000);
+    },
+
+    pause() {
+      clearInterval(this.interval);
+      this.running = false;
+      this.updateUI();
+    },
+
+    reset() {
+      clearInterval(this.interval);
+      this.running = false;
+      this.remaining = 30;
+      this.currentTeam = 1;
+      this.updateUI();
+    },
+
+    nextTeam() {
+      AudioEngine.playClick();
+      clearInterval(this.interval);
+      this.running = false;
+      this.remaining = 30;
+      this.currentTeam = (this.currentTeam % 4) + 1;
+      this.updateUI();
     },
 
     updateUI() {
-      const timerEl = document.getElementById('r4-debate-timer');
-      const badgeEl = document.getElementById('r4-debate-stage-badge');
-      const btnEl = document.getElementById('btn-debate-toggle');
+      const timerEl = document.getElementById('persuasion-timer');
+      const badgeEl = document.getElementById('persuasion-stage-badge');
+      const btnEl = document.getElementById('btn-persuasion-toggle');
+
       if (timerEl) {
-        const m = Math.floor(this.remaining / 60);
-        const s = this.remaining % 60;
-        timerEl.innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        timerEl.innerText = `00:${String(this.remaining).padStart(2, '0')}`;
       }
       if (badgeEl) {
-        if (this.stage === 'hq') {
-          const rem = this.remaining > 30 ? this.remaining - 30 : 0;
-          badgeEl.innerText = `【前半段 · 總部發言時間 (剩餘 ${rem} 秒)】總部陳述市場危機與交付底線`;
-          badgeEl.className = 'r4-debate-stage-badge stage-hq';
-        } else if (this.stage === 'tokyo') {
-          badgeEl.innerText = `【後半段 · 公司發言時間 (剩餘 ${this.remaining} 秒)】公司陳述良率真相與責任底線`;
-          badgeEl.className = 'r4-debate-stage-badge stage-tokyo';
-        } else {
-          badgeEl.innerText = `【辯論結束】變色龍提出調解協定，總部與公司進行接受/拒絕表決`;
-          badgeEl.className = 'r4-debate-stage-badge stage-done';
-        }
+        badgeEl.innerText = `【申辯席】請第 ${this.currentTeam} 組向裁判組闡述決策理由 (剩餘 ${this.remaining} 秒)`;
       }
       if (btnEl) {
-        btnEl.innerText = this.running ? '暫停辯論計時' : (this.remaining === 60 ? '開始 1 分鐘辯論' : '繼續辯論計時');
+        btnEl.innerText = this.running ? '暫停倒數' : (this.remaining === 30 ? '開始申辯倒數' : '繼續倒數');
       }
     }
   };
 
+  /* Game State */
   const GameState = {
+    roomId: 'ob2026',
     currentRound: 1,
-    roundStatus: "voting",
-    r4Proposal: null,
-    r4Decisions: { 1: null, 2: null, 3: null, 4: null },
+    roundStatus: 'voting', // 'voting' | 'persuasion' | 'revealed'
     teams: {
-      1: { name: "第 1 組", faction: "hq", hp: 100, headcount: 1, currentChoice: null, submitted: false },
-      2: { name: "第 2 組", faction: "hq", hp: 100, headcount: 1, currentChoice: null, submitted: false },
-      3: { name: "第 3 組", faction: "tokyo", hp: 100, headcount: 1, currentChoice: null, submitted: false },
-      4: { name: "第 4 組", faction: "tokyo", hp: 100, headcount: 1, currentChoice: null, submitted: false },
-      5: { name: "第 5 組", faction: "chameleon", hp: 100, headcount: 1, currentChoice: null, submitted: false }
+      1: { name: "第 1 組", role: "決策組", hp: 100, currentChoice: null, submitted: false, headcount: 6 },
+      2: { name: "第 2 組", role: "決策組", hp: 100, currentChoice: null, submitted: false, headcount: 7 },
+      3: { name: "第 3 組", role: "決策組", hp: 100, currentChoice: null, submitted: false, headcount: 6 },
+      4: { name: "第 4 組", role: "決策組", hp: 100, currentChoice: null, submitted: false, headcount: 8 },
+      5: { name: "第 5 組", role: "裁判組", hp: 100, currentChoice: null, submitted: false, headcount: 5 }
     },
-    timerRemaining: 120,
-    timerRunning: false,
+    juryRankings: null, // e.g. { 1: 1, 2: 2, 3: 1, 4: 3 } or { 1: 'tier1', ... }
+    jurySubmitted: false,
+    timerSeconds: 90,
     timerInterval: null,
-    syncChannel: null
+    lastTensionData: null
   };
 
-  function initApp() {
-    try {
-      GameState.syncChannel = new BroadcastChannel('project_atlas_cq_sync');
-      GameState.syncChannel.onmessage = (e) => {
-        handleSyncMessage(e.data);
-      };
-    } catch (err) {}
+  /* RealtimeSync Engine */
+  const RealtimeSync = {
+    roomId: 'ob2026',
+    isHost: true,
+    sseSource: null,
+    pollTimer: null,
+    heartbeatTimer: null,
+    syncChannel: null,
+    processedMsgIds: new Set(),
 
-    window.addEventListener('storage', (e) => {
-      if (e.key === 'project_atlas_cq_state' && e.newValue) {
-        try { handleSyncMessage(JSON.parse(e.newValue)); } catch (err) {}
+    getRoomId() {
+      const params = new URLSearchParams(window.location.search);
+      const r = params.get('room');
+      if (r && r.trim()) return r.trim().toLowerCase();
+      const saved = localStorage.getItem('ob_cq_room_id');
+      if (saved && saved.trim()) return saved.trim().toLowerCase();
+      return 'ob2026';
+    },
+
+    setRoomId(newId) {
+      if (!newId || !newId.trim()) return;
+      const clean = newId.trim().toLowerCase();
+      localStorage.setItem('ob_cq_room_id', clean);
+      const url = new URL(window.location.href);
+      url.searchParams.set('room', clean);
+      window.history.replaceState({}, '', url.toString());
+      this.roomId = clean;
+      GameState.roomId = clean;
+      this.init();
+      initQRCode();
+      this.updateStatusUI(true);
+      showToast('已切換至房間【' + clean + '】！');
+      broadcastState('STATE_UPDATE');
+    },
+
+    updateStatusUI(connected) {
+      const dot = document.getElementById('sync-dot');
+      const text = document.getElementById('sync-text');
+      if (dot) dot.style.background = connected ? '#15803d' : '#dc2626';
+      if (text) text.innerText = connected ? `即時同步 · 房間 ${this.roomId}` : `連線重試中 · 房間 ${this.roomId}`;
+    },
+
+    init() {
+      this.roomId = this.getRoomId();
+      GameState.roomId = this.roomId;
+      this.updateStatusUI(false);
+
+      // Local BroadcastChannel
+      try {
+        if (this.syncChannel) this.syncChannel.close();
+        this.syncChannel = new BroadcastChannel('ob_cq_channel_' + this.roomId);
+        this.syncChannel.onmessage = (e) => this.handleIncoming(e.data);
+      } catch (e) {}
+
+      // Storage event
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'ob_cq_vote_' + this.roomId && e.newValue) {
+          try { this.handleIncoming(JSON.parse(e.newValue)); } catch (err) {}
+        }
+      });
+
+      // SSE Connection to ntfy.sh
+      if (this.sseSource) {
+        try { this.sseSource.close(); } catch (e) {}
       }
-    });
+      const voteTopic = `ob_cq_vote_${this.roomId}`;
+      try {
+        this.sseSource = new EventSource(`https://ntfy.sh/${voteTopic}/sse`);
+        this.sseSource.onopen = () => this.updateStatusUI(true);
+        this.sseSource.onmessage = (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            if (data.event === 'message') {
+              const msgId = data.id;
+              if (msgId && this.processedMsgIds.has(msgId)) return;
+              if (msgId) this.processedMsgIds.add(msgId);
+              const payload = JSON.parse(data.message);
+              this.handleIncoming(payload);
+            }
+          } catch (err) {}
+        };
+        this.sseSource.onerror = () => this.updateStatusUI(false);
+      } catch (err) {
+        this.updateStatusUI(false);
+      }
 
+      // Backup Poll every 2.5s
+      if (this.pollTimer) clearInterval(this.pollTimer);
+      this.pollTimer = setInterval(() => this.pollVotes(10), 2500);
+      this.pollVotes(60);
+
+      // Heartbeat every 12s
+      if (this.heartbeatTimer) clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = setInterval(() => {
+        broadcastState('STATE_HEARTBEAT');
+      }, 12000);
+    },
+
+    handleIncoming(payload) {
+      if (!payload || !payload.type) return;
+      const key = payload.msgId || `${payload.type}_${payload.teamId}_${payload.choiceId || JSON.stringify(payload.rankings)}_${payload.timestamp}`;
+      if (this.processedMsgIds.has(key)) return;
+      this.processedMsgIds.add(key);
+
+      handleSyncMessage(payload);
+    },
+
+    send(packet) {
+      packet.msgId = packet.msgId || ('host_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6));
+      packet.timestamp = packet.timestamp || Date.now();
+      packet.roomId = this.roomId;
+      this.processedMsgIds.add(packet.msgId);
+
+      if (this.syncChannel) {
+        try { this.syncChannel.postMessage(packet); } catch (e) {}
+      }
+      try {
+        localStorage.setItem('ob_cq_state_' + this.roomId, JSON.stringify(packet));
+      } catch (e) {}
+
+      const stateTopic = `ob_cq_state_${this.roomId}`;
+      fetch(`https://ntfy.sh/${stateTopic}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(packet)
+      }).catch(() => {});
+    },
+
+    pollVotes(sinceSec = 10) {
+      const voteTopic = `ob_cq_vote_${this.roomId}`;
+      fetch(`https://ntfy.sh/${voteTopic}/json?poll=1&since=${sinceSec}s`)
+        .then(res => res.text())
+        .then(text => {
+          if (!text) return;
+          const lines = text.trim().split('\n');
+          lines.forEach(line => {
+            if (!line) return;
+            try {
+              const data = JSON.parse(line);
+              if (data.event === 'message') {
+                const msgId = data.id;
+                if (msgId && this.processedMsgIds.has(msgId)) return;
+                if (msgId) this.processedMsgIds.add(msgId);
+                const payload = JSON.parse(data.message);
+                this.handleIncoming(payload);
+              }
+            } catch (e) {}
+          });
+        })
+        .catch(() => {});
+    }
+  };
+
+  function promptChangeRoom() {
+    const current = RealtimeSync.roomId;
+    const input = prompt(`目前連線房間為【${current}】。\n若欲更換，請輸入新的房間代碼（例如 ob2026、demo、class-a）：`, current);
+    if (input && input.trim()) {
+      RealtimeSync.setRoomId(input.trim());
+    }
+  }
+
+  function showToast(text, duration = 3000) {
+    let t = document.getElementById('ios-toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'ios-toast';
+      t.className = 'ios-toast';
+      document.body.appendChild(t);
+    }
+    t.innerText = text;
+    t.classList.add('show');
+    clearTimeout(t._hideTimer);
+    t._hideTimer = setTimeout(() => {
+      t.classList.remove('show');
+    }, duration);
+  }
+
+  function initApp() {
+    RealtimeSync.init();
     renderTeamHPStrip();
     loadRound(GameState.currentRound);
     startTimer();
@@ -1358,32 +1480,37 @@
 
   function handleSyncMessage(msg) {
     if (!msg || !msg.type) return;
+
     if (msg.type === 'TEAM_SUBMIT') {
       const { teamId, choiceId } = msg;
-      if (GameState.teams[teamId]) {
+      if (teamId >= 1 && teamId <= 4 && GameState.teams[teamId]) {
         GameState.teams[teamId].currentChoice = choiceId;
         GameState.teams[teamId].submitted = true;
+        AudioEngine.playChime();
         renderTeamHPStrip();
         renderVotingStatusPanel();
+        showToast(`第 ${teamId} 組已送出代表決策！`);
+
+        // Check if all 4 active teams submitted
+        let allSubmitted = true;
+        for (let i = 1; i <= 4; i++) {
+          if (!GameState.teams[i].submitted) allSubmitted = false;
+        }
+        if (allSubmitted && GameState.roundStatus === 'voting') {
+          showToast('第 1~4 組已全數完成決策！請開啟 30 秒申辯說服席');
+          // Forward active team choices to Jury
+          broadcastState('TEAMS_CHOICES_READY');
+        }
       }
-    } else if (msg.type === 'CHAMELEON_PROPOSAL') {
-      const { proposalId } = msg;
-      GameState.r4Proposal = proposalId;
-      GameState.teams[5].currentChoice = proposalId;
+    } else if (msg.type === 'JURY_RANK_SUBMIT') {
+      const { rankings } = msg;
+      GameState.juryRankings = rankings;
       GameState.teams[5].submitted = true;
+      GameState.jurySubmitted = true;
+      AudioEngine.playChime();
       renderTeamHPStrip();
-      renderR4NegotiationBoard();
-      // Forward to all clients so HQ & Company see the proposal immediately
-      broadcastState('R4_PROPOSAL_OFFER', { proposalId });
-    } else if (msg.type === 'R4_DECISION') {
-      const { teamId, decision } = msg;
-      if (GameState.teams[teamId]) {
-        GameState.teams[teamId].currentChoice = decision;
-        GameState.teams[teamId].submitted = true;
-        GameState.r4Decisions[teamId] = decision;
-        renderTeamHPStrip();
-        renderR4NegotiationBoard();
-      }
+      renderVotingStatusPanel();
+      showToast('第 5 組（裁判組）已完成體感衝突評定！');
     } else if (msg.type === 'TEAM_JOIN') {
       const { teamId } = msg;
       if (GameState.teams[teamId]) {
@@ -1394,28 +1521,37 @@
     }
   }
 
-  function broadcastState(type, payload = {}) {
-    // Sanitize teams so other teams' secret choices are NEVER leaked to participant devices
+  function broadcastState(type = 'STATE_UPDATE', payload = {}) {
+    // Teams 1-4 choices are withheld from participants, but passed to Jury if choices ready
     const sanitizedTeams = {};
     for (let i = 1; i <= 5; i++) {
       sanitizedTeams[i] = {
         name: GameState.teams[i].name,
-        faction: GameState.teams[i].faction,
+        role: GameState.teams[i].role,
         hp: GameState.teams[i].hp,
         submitted: GameState.teams[i].submitted
-        // currentChoice is strictly withheld from client devices!
       };
     }
+
+    // Confidential choices for Team 5 Jury
+    const teamChoices = {};
+    for (let i = 1; i <= 4; i++) {
+      teamChoices[i] = GameState.teams[i].currentChoice;
+    }
+
     const packet = {
       type,
       ...payload,
       teams: sanitizedTeams,
+      teamChoices: teamChoices,
+      currentRound: GameState.currentRound,
+      roundStatus: GameState.roundStatus,
+      juryRankings: GameState.juryRankings,
+      tensionData: GameState.lastTensionData,
       timestamp: Date.now()
     };
-    if (GameState.syncChannel) {
-      try { GameState.syncChannel.postMessage(packet); } catch (e) {}
-    }
-    try { localStorage.setItem('project_atlas_cq_state', JSON.stringify(packet)); } catch (e) {}
+
+    RealtimeSync.send(packet);
   }
 
   function renderVotingStatusPanel() {
@@ -1429,174 +1565,40 @@
     let submittedCount = 0;
     let chipsHtml = '';
 
-    for (let i = 1; i <= 5; i++) {
+    for (let i = 1; i <= 4; i++) {
       const team = GameState.teams[i];
       if (team.submitted) submittedCount++;
       const isSub = team.submitted;
       chipsHtml += `
         <div class="team-sub-chip ${isSub ? 'submitted' : ''}">
           <span class="team-sub-chip-name">${team.name}</span>
-          <span class="team-sub-chip-status">${isSub ? (GameState.roundStatus === 'revealed' ? `已投票 (${team.currentChoice})` : '已送出決策') : '研議中...'}</span>
+          <span class="team-sub-chip-status">${isSub ? (GameState.roundStatus === 'revealed' ? `選項 ${team.currentChoice}` : '已送出代表決策') : '研討中...'}</span>
         </div>
       `;
     }
+
+    // Team 5 Jury Chip
+    const juryTeam = GameState.teams[5];
+    const jurySub = GameState.jurySubmitted;
+    chipsHtml += `
+      <div class="team-sub-chip ${jurySub ? 'submitted' : ''}" style="border-color: rgba(124, 58, 237, 0.3);">
+        <span class="team-sub-chip-name" style="color: var(--ios-purple);">${juryTeam.name} (裁判席)</span>
+        <span class="team-sub-chip-status">${jurySub ? '已完成評定' : (submittedCount === 4 ? '申辯聆聽與評審中' : '監控中')}</span>
+      </div>
+    `;
 
     if (GameState.roundStatus === 'voting') {
       panel.style.display = 'flex';
-      titleEl.innerText = '各組代表研討與投票中';
-      pillEl.innerText = `${submittedCount} / 5 組已送出決策`;
-      hintEl.innerText = '情境題目已推送至學員手機端。每組投票完全保密不互通，僅於報告者揭曉後在此顯示全班投票統計結果。';
+      titleEl.innerText = '決策組研討與裁判席監控中';
+      pillEl.innerText = `${submittedCount} / 4 組已送出決策`;
+      hintEl.innerText = '情境題目已推送至學員手機。第 1~4 組投票獨立保密；第 5 組（裁判組）掌握暗藏代價，在各組申辯後進行體感衝突評定。';
     } else {
       panel.style.display = 'flex';
-      titleEl.innerText = '全班決策開票完成 · 投票結果如下';
-      pillEl.innerText = `全班 5 組已全數開票`;
-      hintEl.innerText = '以下為全班各組投票統計分佈與跨文化 CQ 覆盤判定：';
+      titleEl.innerText = '本回合全班開票與裁判評定完成';
+      pillEl.innerText = `裁判評定已公布`;
+      hintEl.innerText = '以下為第 5 組裁判依據各組申辯與暗藏代價評定之衝突指數排行榜與 CQ 覆盤：';
     }
     gridEl.innerHTML = chipsHtml;
-  }
-
-  function renderR4NegotiationBoard() {
-    const board = document.getElementById('r4-negotiation-board');
-    if (!board) return;
-
-    const propStatusEl = document.getElementById('r4-chameleon-prop-status');
-    const hqStatusEl = document.getElementById('r4-hq-vote-status');
-    const tokyoStatusEl = document.getElementById('r4-tokyo-vote-status');
-    const propDispEl = document.getElementById('r4-live-proposal-display');
-
-    // Chameleon Proposal
-    const propId = GameState.r4Proposal;
-    const r4Data = DilemmasData[4];
-    const proposal = propId && r4Data ? r4Data.proposals.find(p => p.id === propId) : null;
-
-    if (proposal) {
-      propStatusEl.innerText = `已送出：【${proposal.title}】`;
-      propStatusEl.style.color = '#a5b4fc';
-      propDispEl.innerHTML = `<strong>【變色龍調解提案（${proposal.title}）】：</strong><br>${proposal.text}`;
-    } else {
-      propStatusEl.innerText = '提案狀態：研擬中...';
-      propStatusEl.style.color = 'var(--text-muted)';
-      propDispEl.innerText = '變色龍尚未送出提案。變色龍可於手機端隨時調整並發送最合適之調解方案。';
-    }
-
-    // HQ (Team 1 & 2)
-    const hq1 = GameState.r4Decisions[1];
-    const hq2 = GameState.r4Decisions[2];
-    const hqSubmitted = (hq1 !== null || hq2 !== null);
-    if (GameState.roundStatus === 'revealed') {
-      hqStatusEl.innerText = `表態結果：第 1 組(${hq1 ? (hq1 === 'accept' ? '接受' : '拒絕') : '未表態'})、第 2 組(${hq2 ? (hq2 === 'accept' ? '接受' : '拒絕') : '未表態'})`;
-      hqStatusEl.style.color = '#38bdf8';
-    } else {
-      hqStatusEl.innerText = hqSubmitted ? '表態狀態：已送出決定' : '表態狀態：研議中...';
-      hqStatusEl.style.color = hqSubmitted ? '#38bdf8' : 'var(--text-muted)';
-    }
-
-    // Tokyo (Team 3 & 4)
-    const t3 = GameState.r4Decisions[3];
-    const t4 = GameState.r4Decisions[4];
-    const tSubmitted = (t3 !== null || t4 !== null);
-    if (GameState.roundStatus === 'revealed') {
-      tokyoStatusEl.innerText = `表態結果：第 3 組(${t3 ? (t3 === 'accept' ? '接受' : '拒絕') : '未表態'})、第 4 組(${t4 ? (t4 === 'accept' ? '接受' : '拒絕') : '未表態'})`;
-      tokyoStatusEl.style.color = '#34d399';
-    } else {
-      tokyoStatusEl.innerText = tSubmitted ? '表態狀態：已送出決定' : '表態狀態：研議中...';
-      tokyoStatusEl.style.color = tSubmitted ? '#34d399' : 'var(--text-muted)';
-    }
-  }
-
-  function renderTeamHPStrip() {
-    const strip = document.getElementById('teams-hp-strip');
-    if (!strip) return;
-    let html = '';
-    for (let i = 1; i <= 5; i++) {
-      const team = GameState.teams[i];
-      const hpPercent = Math.max(0, Math.min(100, team.hp));
-      let fillColor = 'linear-gradient(90deg, #10b981, #059669)';
-      if (hpPercent <= 30) fillColor = 'linear-gradient(90deg, #dc2626, #ef4444)';
-      else if (hpPercent <= 65) fillColor = 'linear-gradient(90deg, #d97706, #f59e0b)';
-
-      const statusClass = team.submitted ? 'status-submitted' : 'status-pending';
-      const statusText = team.submitted ? `已送出${GameState.roundStatus === 'revealed' ? ` (${team.currentChoice})` : ''}` : '研議中';
-
-      html += `
-        <div class="team-hp-card" id="team-card-${i}">
-          <div class="team-hp-header">
-            <span class="team-hp-name">
-              ${team.name}
-              <span class="team-headcount-badge">${team.headcount}人</span>
-            </span>
-            <span class="team-hp-val" id="team-hp-num-${i}">${team.hp} CQ</span>
-          </div>
-          <div class="team-hp-track">
-            <div class="team-hp-fill" id="team-hp-fill-${i}" style="width: ${hpPercent}%; background: ${fillColor};"></div>
-          </div>
-          <div class="team-submission-status">
-            <span>決策進度：</span>
-            <span class="status-badge ${statusClass}">${statusText}</span>
-          </div>
-          <div class="hp-damage-float" id="damage-float-${i}"></div>
-        </div>
-      `;
-    }
-    strip.innerHTML = html;
-  }
-
-  function triggerDamageAnimation(teamId, penalty) {
-    const card = document.getElementById(`team-card-${teamId}`);
-    const floatText = document.getElementById(`damage-float-${teamId}`);
-    if (card) {
-      card.classList.remove('damaged-anim');
-      void card.offsetWidth;
-      card.classList.add('damaged-anim');
-    }
-    if (floatText) {
-      floatText.innerText = penalty < 0 ? `${penalty} CQ` : `+${penalty} CQ`;
-      floatText.style.color = penalty < 0 ? '#ef4444' : '#10b981';
-      floatText.style.animation = 'none';
-      void floatText.offsetWidth;
-      floatText.style.animation = 'floatDamage 1.2s ease-out forwards';
-    }
-  }
-
-  function updateHeadcountDisplay() {
-    const chip = document.getElementById('hud-total-headcount');
-    if (!chip) return;
-    let total = 0;
-    for (let i = 1; i <= 5; i++) total += GameState.teams[i].headcount;
-    chip.innerText = `全班在線：${total} 人`;
-  }
-
-  function simulateClassCheckin() {
-    AudioEngine.playChime();
-    const counts = [6, 7, 6, 8, 5];
-    for (let i = 1; i <= 5; i++) GameState.teams[i].headcount = counts[i - 1];
-    renderTeamHPStrip();
-    renderVotingStatusPanel();
-    updateHeadcountDisplay();
-  }
-
-  function jumpToRound(roundNum) {
-    AudioEngine.playClick();
-    GameState.currentRound = roundNum;
-    loadRound(roundNum);
-  }
-
-  function setR4HostFilter(factionKey) {
-    AudioEngine.playClick();
-    GameState.r4HostFilter = factionKey;
-    document.querySelectorAll('.r4-filter-btn').forEach(btn => btn.classList.remove('active'));
-    const activeBtn = document.getElementById(`btn-filter-${factionKey}`);
-    if (activeBtn) activeBtn.classList.add('active');
-
-    const data = DilemmasData[4];
-    if (!data) return;
-    const currentFactionData = data.factions[GameState.r4HostFilter];
-    document.getElementById('round-theme-tag').innerText = data.themeTag + ` - ${currentFactionData.factionName}`;
-    document.getElementById('speaker-tag').innerText = currentFactionData.speaker;
-    document.getElementById('dialogue-text').innerText = currentFactionData.dialogue;
-
-    renderVotingStatusPanel();
-    renderOptionsGrid(currentFactionData.options);
   }
 
   function loadRound(roundNum) {
@@ -1606,38 +1608,37 @@
 
     const stageContainer = document.getElementById('round-stage-container');
     const leaderboardContainer = document.getElementById('leaderboard-stage');
-    const backdropWrap = document.getElementById('scene-backdrop-wrap');
-    const r4DebateDock = document.getElementById('r4-debate-dock');
-    const r4NegotiationBoard = document.getElementById('r4-negotiation-board');
+    const persuasionDock = document.getElementById('persuasion-dock');
     const votingStatusPanel = document.getElementById('voting-status-panel');
-    const optionsGrid = document.getElementById('options-grid');
+    const juryGrid = document.getElementById('jury-results-grid');
+    const tensionWrap = document.getElementById('tension-announcement-wrap');
 
     if (roundNum === 'final') {
       stageContainer.style.display = 'none';
       leaderboardContainer.style.display = 'flex';
       renderFinalLeaderboard();
-      broadcastState('STATE_UPDATE', { teams: GameState.teams, currentRound: 'final', roundStatus: 'revealed' });
+      broadcastState('STATE_UPDATE', { currentRound: 'final', roundStatus: 'revealed' });
       return;
     }
 
-    stageContainer.style.display = 'block';
+    stageContainer.style.display = 'flex';
     leaderboardContainer.style.display = 'none';
+    if (juryGrid) juryGrid.style.display = 'none';
+    if (tensionWrap) tensionWrap.style.display = 'none';
+    if (persuasionDock) persuasionDock.style.display = 'flex';
+    if (votingStatusPanel) votingStatusPanel.style.display = 'flex';
 
     const data = DilemmasData[roundNum];
     if (!data) return;
 
-    // Apply distinct round theme class
-    if (backdropWrap) {
-      backdropWrap.className = `theme-r${roundNum}`;
-    }
-
+    GameState.currentRound = roundNum;
     GameState.roundStatus = 'voting';
     for (let i = 1; i <= 5; i++) {
       GameState.teams[i].submitted = false;
       GameState.teams[i].currentChoice = null;
     }
-    GameState.r4Proposal = null;
-    GameState.r4Decisions = { 1: null, 2: null, 3: null, 4: null };
+    GameState.juryRankings = null;
+    GameState.jurySubmitted = false;
 
     const svgContainer = document.getElementById('scene-svg-container');
     if (svgContainer && SceneSVGs[data.sceneKey]) {
@@ -1647,486 +1648,326 @@
     document.getElementById('round-theme-tag').innerText = data.themeTag;
     document.getElementById('round-mandate-title').innerText = data.title;
     document.getElementById('speaker-tag').innerText = data.speaker || "全案形勢：";
-    document.getElementById('dialogue-text').innerText = data.dialogue || "三方非對稱利益博弈即將展開。";
-
-    // Mode switching between Rounds 1-3 and Round 4
-    if (roundNum === 4) {
-      if (r4DebateDock) r4DebateDock.style.display = 'flex';
-      if (r4NegotiationBoard) r4NegotiationBoard.style.display = 'flex';
-      if (votingStatusPanel) votingStatusPanel.style.display = 'none';
-      if (optionsGrid) optionsGrid.style.display = 'none';
-      DebateTimer.reset();
-      renderR4NegotiationBoard();
-    } else {
-      if (r4DebateDock) r4DebateDock.style.display = 'none';
-      if (r4NegotiationBoard) r4NegotiationBoard.style.display = 'none';
-      if (votingStatusPanel) votingStatusPanel.style.display = 'flex';
-      if (optionsGrid) optionsGrid.style.display = 'none';
-      renderVotingStatusPanel();
-    }
+    document.getElementById('dialogue-text').innerText = data.dialogue;
 
     const revealBtn = document.getElementById('btn-reveal-results');
     if (revealBtn) {
       revealBtn.disabled = false;
-      revealBtn.innerText = roundNum === 4 ? '揭曉三方談判結果' : '揭曉全班投票結果';
+      revealBtn.innerText = '揭曉裁判評定與衝突指數';
     }
 
+    PersuasionTimer.reset();
     resetTimer();
     renderTeamHPStrip();
+    renderVotingStatusPanel();
 
     broadcastState('STATE_UPDATE', {
-      teams: GameState.teams,
       currentRound: roundNum,
       roundStatus: 'voting'
     });
   }
 
-  function renderOptionsGrid(options) {
-    const grid = document.getElementById('options-grid');
-    if (!grid) return;
+  function revealRoundResults() {
+    AudioEngine.playChime();
+    const data = DilemmasData[GameState.currentRound];
+    if (!data) return;
 
-    if (GameState.roundStatus === 'voting') {
-      grid.style.display = 'none';
-      return;
-    }
-    grid.style.display = 'grid';
-
-    const currentData = DilemmasData[GameState.currentRound];
-    const votesCount = { A: [], B: [], C: [], D: [] };
-    let relevantTotal = 0;
-
-    for (let i = 1; i <= 5; i++) {
-      const team = GameState.teams[i];
-      relevantTotal++;
-      if (team.currentChoice && votesCount[team.currentChoice]) {
-        votesCount[team.currentChoice].push(team.name);
+    // Fallback if 1-4 haven't all submitted
+    const optIds = ['A', 'B', 'C', 'D'];
+    for (let i = 1; i <= 4; i++) {
+      if (!GameState.teams[i].currentChoice) {
+        GameState.teams[i].currentChoice = optIds[i - 1];
+        GameState.teams[i].submitted = true;
       }
     }
 
+    // Fallback if jury hasn't submitted
+    if (!GameState.juryRankings) {
+      if (GameState.currentRound === 3) {
+        GameState.juryRankings = { 1: 'tier1', 2: 'tier1', 3: 'tier2', 4: 'tier3' };
+      } else {
+        GameState.juryRankings = { 1: 1, 2: 2, 3: 1, 4: 3 };
+      }
+      GameState.jurySubmitted = true;
+    }
+
+    GameState.roundStatus = 'revealed';
+    renderVotingStatusPanel();
+    renderJuryResultsGrid();
+
+    broadcastState('STATE_UPDATE', {
+      currentRound: GameState.currentRound,
+      roundStatus: 'revealed',
+      juryRankings: GameState.juryRankings,
+      tensionData: GameState.lastTensionData
+    });
+  }
+
+  function renderJuryResultsGrid() {
+    const grid = document.getElementById('jury-results-grid');
+    if (!grid) return;
+    grid.style.display = 'flex';
+
+    const currentData = DilemmasData[GameState.currentRound];
+    const isRound3 = (GameState.currentRound === 3);
+    const rankings = GameState.juryRankings || {};
+
     let html = '';
-    options.forEach(opt => {
-      const pickedTeams = votesCount[opt.id] || [];
-      const count = pickedTeams.length;
-      const pct = relevantTotal > 0 ? Math.round((count / relevantTotal) * 100) : 0;
-      const teamsListText = pickedTeams.length > 0 ? pickedTeams.join('、') : '無組別選擇';
-      const isDrop = opt.tensionDrop !== '0%';
 
+    if (isRound3) {
+      // Round 3 Tiered grouping (Tier 1, Tier 2, Tier 3)
+      const tiers = [
+        { key: 'tier1', name: '卓越雙贏階層 (Tier 1)', badgeClass: 'tier-badge-1', desc: '成功化解做空危機並捍衛現場名譽與尊嚴', bonus: 20 },
+        { key: 'tier2', name: '局部妥協階層 (Tier 2)', badgeClass: 'tier-badge-2', desc: '口頭三維妥協，但忽視實體產能缺口，造成工程師過勞', bonus: -15 },
+        { key: 'tier3', name: '嚴重破局階層 (Tier 3)', badgeClass: 'tier-badge-3', desc: '陷入程序審計拖延或權力全面失衡，導致董事會或客戶反彈', bonus: -30 }
+      ];
+
+      tiers.forEach(tier => {
+        const teamsInTier = [1, 2, 3, 4].filter(tid => rankings[tid] === tier.key);
+        if (teamsInTier.length === 0) return;
+
+        const teamNames = teamsInTier.map(tid => `第 ${tid} 組`).join('、');
+        const sampleOptId = GameState.teams[teamsInTier[0]].currentChoice;
+        const opt = currentData.options.find(o => o.id === sampleOptId) || currentData.options[0];
+
+        // Apply HP changes
+        teamsInTier.forEach(tid => {
+          GameState.teams[tid].hp = Math.max(0, Math.min(100, GameState.teams[tid].hp + tier.bonus));
+          triggerDamageAnimation(tid, tier.bonus);
+        });
+
+        html += `
+          <div class="jury-group-card ${tier.key}">
+            <div class="jury-group-header">
+              <span class="jury-rank-badge ${tier.badgeClass}">${tier.name}</span>
+              <div class="jury-teams-chips">評定組別：${teamNames}</div>
+            </div>
+            <div class="jury-option-box">
+              <strong>【代表選擇方案】：</strong>${opt.title}<br>
+              ${opt.text}
+            </div>
+            <div class="jury-blindspot-box ${tier.key === 'tier1' ? 'success' : ''}">
+              <strong>【暗藏文化代價（裁判組揭密）】：</strong>${opt.blindspot}
+            </div>
+            <div class="ios-tension-metrics-row">
+              <span>起始張力：98%</span>
+              <span>張力降低：${opt.tensionDrop}</span>
+              <span style="color: ${tier.key === 'tier1' ? 'var(--ios-green)' : 'var(--ios-red)'}; font-weight: 700;">殘餘張力：${opt.tensionRemaining}</span>
+            </div>
+          </div>
+        `;
+      });
+
+      GameState.lastTensionData = {
+        tensionDrop: '85%',
+        tensionRemaining: '15%',
+        tensionComment: '第 5 組裁判評定：第 3 回合揭曉！雙軌戰略協同達成文化綜效！'
+      };
+
+    } else {
+      // Rounds 1 & 2: Ranks 1 to 4 (Grouping ties!)
+      const rankGroups = { 1: [], 2: [], 3: [], 4: [] };
+      for (let tid = 1; tid <= 4; tid++) {
+        const r = rankings[tid] || 3;
+        if (!rankGroups[r]) rankGroups[r] = [];
+        rankGroups[r].push(tid);
+      }
+
+      const rankLabels = {
+        1: { title: '第 1 名 · 體感衝突最低', isTop: true, penalty: 5 },
+        2: { title: '第 2 名', isTop: false, penalty: -10 },
+        3: { title: '第 3 名', isTop: false, penalty: -20 },
+        4: { title: '第 4 名 · 體感衝突最高', isTop: false, penalty: -30 }
+      };
+
+      for (let r = 1; r <= 4; r++) {
+        const teamsInRank = rankGroups[r];
+        if (!teamsInRank || teamsInRank.length === 0) continue;
+
+        const isTie = teamsInRank.length > 1;
+        const rankTitle = isTie ? `並列第 ${r} 名` : rankLabels[r].title;
+        const teamNames = teamsInRank.map(tid => `第 ${tid} 組`).join('、');
+        const info = rankLabels[r];
+
+        // Apply HP
+        teamsInRank.forEach(tid => {
+          GameState.teams[tid].hp = Math.max(0, Math.min(100, GameState.teams[tid].hp + info.penalty));
+          triggerDamageAnimation(tid, info.penalty);
+        });
+
+        // Collect choices of teams in this rank
+        const choicesHtml = teamsInRank.map(tid => {
+          const choiceId = GameState.teams[tid].currentChoice;
+          const opt = currentData.options.find(o => o.id === choiceId) || currentData.options[0];
+          return `
+            <div style="margin-top: 6px;">
+              <strong>第 ${tid} 組 選擇【${opt.title}】（${opt.dimension || ''}）：</strong><br>
+              ${opt.text}
+              <div class="jury-blindspot-box" style="margin-top: 6px;">
+                <strong>【暗藏文化代價（裁判組揭密）】：</strong>${opt.blindspot}
+              </div>
+            </div>
+          `;
+        }).join('');
+
+        html += `
+          <div class="jury-group-card ${info.isTop ? 'rank-top' : ''}">
+            <div class="jury-group-header">
+              <span class="jury-rank-badge ${info.isTop ? 'top-badge' : ''}">${rankTitle}</span>
+              <div class="jury-teams-chips">評定組別：${teamNames}</div>
+            </div>
+            <div class="jury-option-box">
+              ${choicesHtml}
+            </div>
+          </div>
+        `;
+      }
+
+      GameState.lastTensionData = {
+        tensionDrop: '50%',
+        tensionRemaining: '50%',
+        tensionComment: '第 5 組裁判評定：各組方案已依體感衝突殘留度排序完成！'
+      };
+    }
+
+    grid.innerHTML = html;
+    renderTeamHPStrip();
+    renderTensionHero(GameState.lastTensionData);
+  }
+
+  function renderTensionHero(data) {
+    const wrap = document.getElementById('tension-announcement-wrap');
+    if (!wrap || !data) return;
+    wrap.style.display = 'block';
+
+    const isDrop = (data.tensionDrop !== '0%');
+    wrap.innerHTML = `
+      <div class="ios-tension-hero">
+        <div class="ios-tension-header">
+          <span class="ios-tension-badge">對話張力即時公布</span>
+          <span class="ios-tension-delta ${isDrop ? 'delta-high-drop' : 'delta-no-drop'}">
+            ${isDrop ? `張力降低 ${data.tensionDrop}` : `張力未降低（極限緊繃）`}
+          </span>
+        </div>
+        <div class="ios-tension-track-wrap">
+          <div class="ios-tension-fill" style="width: ${parseInt(data.tensionRemaining || '50')}%; background: ${isDrop ? 'var(--ios-green)' : 'var(--ios-red)'};"></div>
+        </div>
+        <div class="ios-tension-metrics-row">
+          <span>起始張力：85%</span>
+          <span>殘餘張力：${data.tensionRemaining}</span>
+        </div>
+        <p class="ios-tension-comment">${data.tensionComment || ''}</p>
+      </div>
+    `;
+  }
+
+  function renderTeamHPStrip() {
+    const strip = document.getElementById('teams-hp-strip');
+    if (!strip) return;
+    let html = '';
+
+    for (let i = 1; i <= 4; i++) {
+      const team = GameState.teams[i];
+      const hp = Math.max(0, Math.min(100, team.hp));
+      let fillBg = 'var(--ios-green)';
+      if (hp <= 35) fillBg = 'var(--ios-red)';
+      else if (hp <= 65) fillBg = 'var(--ios-amber)';
+
+      const isSub = team.submitted;
       html += `
-        <div class="option-card" id="option-card-${opt.id}">
-          <div class="option-header">
-            <span class="option-tag-badge">${opt.title}</span>
-            <span class="option-votes-badge" id="opt-votes-${opt.id}">${count} 組選擇 (${pct}%)</span>
+        <div class="team-hp-card" id="team-card-${i}">
+          <div class="team-hp-header">
+            <span class="team-hp-name">${team.name} <span class="team-role-tag">決策組</span></span>
+            <span class="team-hp-val" id="team-hp-val-${i}">${hp} CQ</span>
           </div>
-
-          <div class="opt-result-bar-wrap">
-            <div class="opt-result-label">
-              <span>選擇組別：<span class="opt-result-teams">${teamsListText}</span></span>
-              <span class="opt-result-pct">${pct}%</span>
-            </div>
-            <div class="opt-result-track">
-              <div class="opt-result-fill" style="width: ${pct}%;"></div>
-            </div>
+          <div class="team-hp-track">
+            <div class="team-hp-fill" id="team-hp-fill-${i}" style="width: ${hp}%; background: ${fillBg};"></div>
           </div>
-
-          <p class="option-text-main">${opt.text}</p>
-          <div class="option-reveal-box ${opt.penalty < 0 ? 'reveal-penalty' : 'reveal-success'}" style="display: block;" id="reveal-box-${opt.id}">
-            <strong>【CQ 判定結果】：${opt.penalty < 0 ? `${opt.penalty} 點 CQ` : `+${opt.bonus} 點 CQ (卓越決策)`}</strong><br>
-            <div style="margin: 6px 0; display: flex; align-items: center; gap: 8px;">
-              <span class="ios-tension-pill ${isDrop ? 'delta-high-drop' : 'delta-no-drop'}" style="font-size: 11px;">
-                對話張力降低：${opt.tensionDrop}
-              </span>
-              <span style="font-size: 11.5px; color: var(--ios-secondary-label);">
-                （剩餘張力：${opt.tensionRemaining}）
-              </span>
-            </div>
-            <span>${opt.blindspot}</span>
+          <div class="team-submission-status">
+            <span>進度：</span>
+            <span class="status-badge ${isSub ? 'status-submitted' : 'status-pending'}">
+              ${isSub ? (GameState.roundStatus === 'revealed' ? `選項 ${team.currentChoice}` : '已送出') : '研議中'}
+            </span>
           </div>
         </div>
       `;
-    });
-    grid.innerHTML = html;
-  }
-
-  function revealRoundResults() {
-    if (GameState.roundStatus === 'revealed') return;
-    GameState.roundStatus = 'revealed';
-
-    const currentData = DilemmasData[GameState.currentRound];
-    if (!currentData) return;
-
-    if (GameState.currentRound === 4) {
-      // Ensure Chameleon has proposal
-      if (!GameState.r4Proposal) {
-        GameState.r4Proposal = 'D';
-        GameState.teams[5].currentChoice = 'D';
-        GameState.teams[5].submitted = true;
-      }
-      // Ensure decisions for Teams 1, 2, 3, 4
-      [1, 2, 3, 4].forEach(tid => {
-        if (!GameState.r4Decisions[tid]) {
-          GameState.r4Decisions[tid] = 'accept';
-          GameState.teams[tid].currentChoice = 'accept';
-          GameState.teams[tid].submitted = true;
-        }
-      });
-      applyRevealedR4();
-    } else {
-      const optIds = ['A', 'B', 'C', 'D'];
-      for (let i = 1; i <= 5; i++) {
-        if (!GameState.teams[i].currentChoice) {
-          GameState.teams[i].currentChoice = optIds[Math.floor(Math.random() * optIds.length)];
-          GameState.teams[i].submitted = true;
-        }
-      }
-      applyRevealedUI();
     }
 
-    broadcastState('STATE_UPDATE', {
-      teams: GameState.teams,
-      currentRound: GameState.currentRound,
-      roundStatus: 'revealed',
-      r4Proposal: GameState.r4Proposal,
-      r4Decisions: GameState.r4Decisions
-    });
-  }
-
-  function applyRevealedR4() {
-    const data = DilemmasData[4];
-    const proposal = data.proposals.find(p => p.id === GameState.r4Proposal) || data.proposals[0];
-    const grid = document.getElementById('options-grid');
-    if (!grid) return;
-
-    grid.style.display = 'grid';
-    renderR4NegotiationBoard();
-
-    // Check decisions
-    const hqAccept = (GameState.r4Decisions[1] === 'accept' && GameState.r4Decisions[2] === 'accept');
-    const tokyoAccept = (GameState.r4Decisions[3] === 'accept' && GameState.r4Decisions[4] === 'accept');
-    const isAgreement = hqAccept && tokyoAccept;
-
-    const initialTension = data.initialTension || "98%";
-    const tensionDrop = isAgreement ? proposal.tensionDrop : "0%";
-    const tensionRemaining = isAgreement ? proposal.tensionRemaining : "100%";
-    const tensionComment = isAgreement ? proposal.tensionComment : "談判宣告破裂！華爾街做空全面發酵，東京團隊集體辭職，對話張力飆升至 100% 毀滅性爆點！";
-
-    renderTensionHero({
-      initialTension,
-      tensionDrop,
-      tensionRemaining,
-      tensionComment,
-      leadChoice: proposal.id,
-      leadOptTitle: proposal.title,
-      isR4: true,
-      isAgreement
-    });
-
-    let outcomeTitle = '';
-    let outcomeClass = '';
-    let outcomeDesc = '';
-
-    if (isAgreement) {
-      outcomeTitle = `【三方達成調解協議】：總部與公司皆同意【${proposal.title}】`;
-      outcomeClass = proposal.penalty < 0 ? 'reveal-penalty' : 'reveal-success';
-      outcomeDesc = `<strong>協定落實評估：</strong>${proposal.blindspot}`;
-
-      if (proposal.penalty < 0) {
-        AudioEngine.playDamage();
-        for (let i = 1; i <= 5; i++) {
-          GameState.teams[i].hp = Math.max(0, GameState.teams[i].hp + proposal.penalty);
-          triggerDamageAnimation(i, proposal.penalty);
-        }
-      } else {
-        AudioEngine.playChime();
-        for (let i = 1; i <= 4; i++) {
-          GameState.teams[i].hp = Math.min(100, GameState.teams[i].hp + 10);
-          triggerDamageAnimation(i, 10);
-        }
-        GameState.teams[5].hp = Math.min(100, GameState.teams[5].hp + (proposal.bonus || 15));
-        triggerDamageAnimation(5, proposal.bonus || 15);
-      }
-    } else {
-      AudioEngine.playDamage();
-      const rejParties = [];
-      if (!hqAccept) rejParties.push('總部');
-      if (!tokyoAccept) rejParties.push('公司');
-      outcomeTitle = `【談判破局】：${rejParties.join('與')} 判定該提案不可接受，雙方宣告決裂！`;
-      outcomeClass = 'reveal-penalty';
-      outcomeDesc = `<strong>破局代價：</strong>調解方案未能滿足該方不可退讓之底線。華爾街全面做空拋售，東京工程團隊拒絕交付，全員扣除 30 點 CQ！<br><br>${proposal.blindspot}`;
-
-      for (let i = 1; i <= 5; i++) {
-        GameState.teams[i].hp = Math.max(0, GameState.teams[i].hp - 30);
-        triggerDamageAnimation(i, -30);
-      }
-    }
-
-    grid.innerHTML = `
-      <div class="option-card" style="grid-column: 1 / -1; border-color: ${isAgreement && proposal.penalty === 0 ? 'var(--ios-green)' : 'var(--ios-red)'};">
-        <div class="option-header">
-          <span class="option-tag-badge">${outcomeTitle}</span>
-          <span class="option-votes-badge">調解方案：${proposal.title}</span>
+    // Team 5: Jury Card
+    const jury = GameState.teams[5];
+    html += `
+      <div class="team-hp-card jury-card" id="team-card-5">
+        <div class="team-hp-header">
+          <span class="team-hp-name" style="color: var(--ios-purple);">${jury.name} <span class="team-role-tag jury-tag">裁判席</span></span>
+          <span class="team-hp-val" style="color: var(--ios-purple);">Jury</span>
         </div>
-        <p class="option-text-main" style="margin: 8px 0; font-size: 14.5px;"><strong>變色龍調解條款：</strong>${proposal.text}</p>
-        <div class="option-reveal-box ${outcomeClass}" style="display: block; font-size: 13px;">
-          ${outcomeDesc}
+        <div class="team-hp-track">
+          <div class="team-hp-fill" style="width: 100%; background: var(--ios-purple);"></div>
         </div>
-      </div>
-    `;
-
-    renderTeamHPStrip();
-    const revealBtn = document.getElementById('btn-reveal-results');
-    if (revealBtn) {
-      revealBtn.disabled = true;
-      revealBtn.innerText = '已揭曉談判與張力結果';
-    }
-
-    broadcastState('STATE_UPDATE', {
-      teams: GameState.teams,
-      currentRound: GameState.currentRound,
-      roundStatus: 'revealed',
-      r4Proposal: GameState.r4Proposal,
-      r4Decisions: GameState.r4Decisions,
-      tensionData: {
-        initialTension,
-        tensionDrop,
-        tensionRemaining,
-        tensionComment,
-        isAgreement
-      }
-    });
-  }
-
-  
-  function renderTensionHero(data) {
-    GameState.lastTensionData = data;
-    const wrap = document.getElementById('tension-announcement-wrap');
-    if (!wrap) return;
-    wrap.style.display = 'block';
-
-    const isPositive = (data.tensionDrop !== '0%');
-    const dropBadgeClass = isPositive ? 'delta-high-drop' : 'delta-no-drop';
-    const dropText = isPositive ? `對話張力降低 ${data.tensionDrop}` : `對話張力未降低（加劇緊繃）`;
-    const fillWidth = parseInt(data.tensionRemaining) || 50;
-    const fillColor = isPositive ? 'var(--ios-green)' : 'var(--ios-red)';
-
-    wrap.innerHTML = `
-      <div class="ios-tension-hero">
-        <div class="ios-tension-top">
-          <div class="ios-tension-meta">
-            <span class="ios-tension-pill">對話張力指標公布</span>
-            <h3 class="ios-tension-title">本次決策對話張力變化</h3>
-          </div>
-          <span class="ios-tension-delta-badge ${dropBadgeClass}">
-            ${dropText}
+        <div class="team-submission-status">
+          <span>裁定：</span>
+          <span class="status-badge ${GameState.jurySubmitted ? 'status-submitted' : 'status-jury-ready'}">
+            ${GameState.jurySubmitted ? '已評定' : '評審就緒'}
           </span>
         </div>
-
-        <div class="ios-tension-gauge-wrap">
-          <div class="ios-tension-track">
-            <div class="ios-tension-fill" style="width: ${fillWidth}%; background: ${fillColor};"></div>
-          </div>
-          <div class="ios-tension-labels">
-            <span>起始對話張力：${data.initialTension}</span>
-            <span class="ios-tension-current-val">當前對話張力：${data.tensionRemaining}</span>
-          </div>
-        </div>
-
-        <div class="ios-tension-comment">
-          <strong>【張力動態分析】：</strong>${data.tensionComment}
-        </div>
       </div>
     `;
+
+    strip.innerHTML = html;
   }
 
-  function applyRevealedUI() {
-    const currentData = DilemmasData[GameState.currentRound];
-    if (!currentData) return;
-
-    let anyPenalty = false;
-    const votesCount = { A: 0, B: 0, C: 0, D: 0 };
-    for (let i = 1; i <= 5; i++) {
-      const choice = GameState.teams[i].currentChoice;
-      if (choice && votesCount[choice] !== undefined) votesCount[choice]++;
+  function triggerDamageAnimation(teamId, delta) {
+    const card = document.getElementById(`team-card-${teamId}`);
+    if (card) {
+      card.style.transform = 'scale(0.97)';
+      setTimeout(() => { card.style.transform = 'none'; }, 200);
     }
+  }
 
-    // Determine majority choice
-    let leadChoice = 'D';
-    let maxVotes = -1;
-    ['A', 'B', 'C', 'D'].forEach(id => {
-      if (votesCount[id] > maxVotes) {
-        maxVotes = votesCount[id];
-        leadChoice = id;
-      }
+  function renderFinalLeaderboard() {
+    const listEl = document.getElementById('leaderboard-ranks-list');
+    if (!listEl) return;
+
+    // Rank Teams 1-4
+    const sorted = [1, 2, 3, 4].map(id => GameState.teams[id])
+      .sort((a, b) => b.hp - a.hp);
+
+    let html = '';
+    sorted.forEach((team, idx) => {
+      const isWinner = (idx === 0);
+      html += `
+        <div class="rank-card ${isWinner ? 'rank-1' : ''}">
+          <span class="rank-badge">${isWinner ? '冠軍' : `第 ${idx + 1} 名`}</span>
+          <span class="rank-team-name">${team.name}（決策代表席）</span>
+          <span class="rank-hp-score">${team.hp} CQ</span>
+        </div>
+      `;
     });
 
-    const leadOpt = currentData.options.find(o => o.id === leadChoice) || currentData.options[0];
-    const initialTension = currentData.initialTension || "85%";
-    const tensionDrop = leadOpt.tensionDrop || "0%";
-    const tensionRemaining = leadOpt.tensionRemaining || "85%";
-    const tensionComment = leadOpt.tensionComment || "";
+    // Special Jury Acknowledgement
+    html += `
+      <div class="rank-card" style="border-color: rgba(124, 58, 237, 0.3); background: rgba(124, 58, 237, 0.05); margin-top: 6px;">
+        <span class="rank-badge" style="color: var(--ios-purple);">特邀評審</span>
+        <span class="rank-team-name" style="color: var(--ios-purple);">第 5 組（全域體感裁判組 · Jury）</span>
+        <span class="rank-hp-score" style="color: var(--ios-purple);">全程評審完成</span>
+      </div>
+    `;
 
-    renderTensionHero({
-      initialTension,
-      tensionDrop,
-      tensionRemaining,
-      tensionComment,
-      leadChoice,
-      leadOptTitle: leadOpt.title
-    });
-
-    currentData.options.forEach(opt => {
-      const voteBadge = document.getElementById(`opt-votes-${opt.id}`);
-      if (voteBadge) voteBadge.innerText = `${votesCount[opt.id]} 組代表選擇`;
-      const revealBox = document.getElementById(`reveal-box-${opt.id}`);
-      if (revealBox) revealBox.style.display = 'block';
-    });
-
-    for (let i = 1; i <= 5; i++) {
-      const team = GameState.teams[i];
-      const opt = currentData.options.find(o => o.id === team.currentChoice);
-      if (opt) {
-        if (opt.penalty < 0) {
-          anyPenalty = true;
-          team.hp = Math.max(0, team.hp + opt.penalty);
-          triggerDamageAnimation(i, opt.penalty);
-        } else if (opt.bonus) {
-          team.hp = Math.min(100, team.hp + opt.bonus);
-          triggerDamageAnimation(i, opt.bonus);
-        }
-      }
-    }
-
-    if (anyPenalty) AudioEngine.playDamage();
-    else AudioEngine.playChime();
-
-    renderTeamHPStrip();
-    renderVotingStatusPanel();
-    renderOptionsGrid(currentData.options);
-
-    const revealBtn = document.getElementById('btn-reveal-results');
-    if (revealBtn) {
-      revealBtn.disabled = true;
-      revealBtn.innerText = '已揭曉全班投票與張力結果';
-    }
-
-    broadcastState('STATE_UPDATE', {
-      teams: GameState.teams,
-      currentRound: GameState.currentRound,
-      roundStatus: 'revealed',
-      r4Proposal: GameState.r4Proposal,
-      r4Decisions: GameState.r4Decisions,
-      tensionData: {
-        initialTension,
-        tensionDrop,
-        tensionRemaining,
-        tensionComment
-      }
-    });
+    listEl.innerHTML = html;
   }
 
   function advanceNextRound() {
     AudioEngine.playClick();
-    if (GameState.currentRound === 1) jumpToRound(2);
-    else if (GameState.currentRound === 2) jumpToRound(3);
-    else if (GameState.currentRound === 3) jumpToRound(4);
-    else if (GameState.currentRound === 4) jumpToRound('final');
-  }
-
-  function simulateRandomVotes() {
-    AudioEngine.playClick();
-    const optIds = ['A', 'B', 'C', 'D'];
-    for (let i = 1; i <= 5; i++) {
-      GameState.teams[i].currentChoice = optIds[Math.floor(Math.random() * optIds.length)];
-      GameState.teams[i].submitted = true;
-    }
-    renderTeamHPStrip();
-    renderVotingStatusPanel();
-    if (GameState.roundStatus === "revealed") { updateOptionsGridUI(); }
-  }
-
-  function updateOptionsGridUI() {
-    const currentData = DilemmasData[GameState.currentRound];
-    if (!currentData) return;
-    const votesCount = { A: 0, B: 0, C: 0, D: 0 };
-    for (let i = 1; i <= 5; i++) {
-      const choice = GameState.teams[i].currentChoice;
-      if (choice && votesCount[choice] !== undefined) votesCount[choice]++;
-    }
-    ['A', 'B', 'C', 'D'].forEach(id => {
-      const b = document.getElementById(`opt-votes-${id}`);
-      if (b) b.innerText = `${votesCount[id]} 組代表選擇`;
-    });
-  }
-
-  function startTimer() {
-    if (GameState.timerInterval) clearInterval(GameState.timerInterval);
-    GameState.timerRunning = true;
-    updateTimerButtonLabel();
-    GameState.timerInterval = setInterval(() => {
-      if (GameState.timerRemaining > 0) {
-        GameState.timerRemaining--;
-        updateTimerDisplay();
-      } else {
-        clearInterval(GameState.timerInterval);
-        GameState.timerRunning = false;
-        updateTimerButtonLabel();
-        AudioEngine.playDamage();
-      }
-    }, 1000);
-  }
-
-  function toggleTimer() {
-    AudioEngine.playClick();
-    if (GameState.timerRunning) {
-      clearInterval(GameState.timerInterval);
-      GameState.timerRunning = false;
+    if (GameState.currentRound < 3) {
+      jumpToRound(GameState.currentRound + 1);
     } else {
-      startTimer();
+      jumpToRound('final');
     }
-    updateTimerButtonLabel();
   }
 
-  function resetTimer() {
-    if (GameState.timerInterval) clearInterval(GameState.timerInterval);
-    GameState.timerRemaining = 120;
-    GameState.timerRunning = false;
-    updateTimerDisplay();
-    updateTimerButtonLabel();
-  }
-
-  function updateTimerDisplay() {
-    const el = document.getElementById('timer-display');
-    if (!el) return;
-    const mins = Math.floor(GameState.timerRemaining / 60);
-    const secs = GameState.timerRemaining % 60;
-    el.innerText = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-  }
-
-  function updateTimerButtonLabel() {
-    const btn = document.getElementById('btn-timer-toggle');
-    if (btn) btn.innerText = GameState.timerRunning ? '計時暫停' : '繼續計時';
-  }
-
-  function renderFinalLeaderboard() {
-    AudioEngine.playChime();
-    const list = document.getElementById('leaderboard-ranks-list');
-    if (!list) return;
-    const sorted = Object.keys(GameState.teams).map(id => ({
-      id,
-      ...GameState.teams[id]
-    })).sort((a, b) => b.hp - a.hp);
-
-    let html = '';
-    sorted.forEach((team, idx) => {
-      const rankNum = idx + 1;
-      html += `
-        <div class="rank-card ${rankNum === 1 ? 'rank-1' : ''}">
-          <span class="rank-badge">NO.${rankNum}</span>
-          <span class="rank-team-name">${team.name}</span>
-          <span class="rank-hp-score">${team.hp} / 100 CQ</span>
-        </div>
-      `;
-    });
-    list.innerHTML = html;
+  function jumpToRound(roundNum) {
+    AudioEngine.playClick();
+    loadRound(roundNum);
   }
 
   function restartGame() {
@@ -2137,28 +1978,84 @@
       GameState.teams[i].currentChoice = null;
     }
     jumpToRound(1);
-    broadcastState('STATE_UPDATE', {
-      teams: GameState.teams,
-      currentRound: 1,
-      roundStatus: 'voting'
-    });
   }
 
+  /* Simulations for testing */
+  function simulateRandomVotes() {
+    AudioEngine.playChime();
+    const optIds = ['A', 'B', 'C', 'D'];
+    for (let i = 1; i <= 4; i++) {
+      // Intentionally simulate some ties (e.g. Teams 1 and 3 choosing A)
+      const choice = (i === 3) ? GameState.teams[1].currentChoice || 'A' : optIds[Math.floor(Math.random() * optIds.length)];
+      GameState.teams[i].currentChoice = choice;
+      GameState.teams[i].submitted = true;
+    }
+    renderTeamHPStrip();
+    renderVotingStatusPanel();
+    broadcastState('TEAMS_CHOICES_READY');
+    showToast('已模擬第 1~4 組作答（含並列選項測試）！');
+  }
+
+  function simulateJuryRanking() {
+    AudioEngine.playChime();
+    if (GameState.currentRound === 3) {
+      GameState.juryRankings = { 1: 'tier1', 2: 'tier1', 3: 'tier2', 4: 'tier3' };
+    } else {
+      // Simulate ties in rank: e.g. Team 1 and Team 3 tied for Rank 1
+      GameState.juryRankings = { 1: 1, 2: 2, 3: 1, 4: 3 };
+    }
+    GameState.teams[5].submitted = true;
+    GameState.jurySubmitted = true;
+    renderTeamHPStrip();
+    renderVotingStatusPanel();
+    showToast('已模擬第 5 組裁判評定（含並列第 1 名）！');
+  }
+
+  /* Timer */
+  function startTimer() {
+    if (GameState.timerInterval) clearInterval(GameState.timerInterval);
+    GameState.timerInterval = setInterval(() => {
+      if (GameState.timerSeconds > 0) {
+        GameState.timerSeconds--;
+        updateTimerDisplay();
+      }
+    }, 1000);
+  }
+  function toggleTimer() {
+    AudioEngine.playClick();
+    if (GameState.timerInterval) {
+      clearInterval(GameState.timerInterval);
+      GameState.timerInterval = null;
+    } else {
+      startTimer();
+    }
+  }
+  function resetTimer() {
+    GameState.timerSeconds = 90;
+    updateTimerDisplay();
+  }
+  function updateTimerDisplay() {
+    const el = document.getElementById('timer-digits');
+    if (!el) return;
+    const m = Math.floor(GameState.timerSeconds / 60);
+    const s = GameState.timerSeconds % 60;
+    el.innerText = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+  }
+
+  /* QR Code & Modals */
   function openQRModal() {
     AudioEngine.playClick();
+    initQRCode();
     const modal = document.getElementById('qr-modal');
     if (modal) modal.style.display = 'flex';
-    initQRCode();
   }
-
   function closeQRModal() {
     AudioEngine.playClick();
     const modal = document.getElementById('qr-modal');
     if (modal) modal.style.display = 'none';
   }
-
   function initQRCode() {
-    const roomId = (typeof RealtimeSync !== 'undefined' && RealtimeSync.roomId) ? RealtimeSync.roomId : 'ob2026';
+    const roomId = RealtimeSync.roomId || 'ob2026';
     const targetUrl = window.location.origin + '/?room=' + encodeURIComponent(roomId);
     const textEl = document.getElementById('qr-url-text');
     if (textEl) textEl.innerText = targetUrl;
@@ -2181,25 +2078,31 @@
         return;
       } catch (e) {}
     }
-
     if (img) {
       img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(targetUrl);
       img.style.display = 'block';
       if (canvas) canvas.style.display = 'none';
     }
   }
-
   function copyPageUrl() {
     AudioEngine.playClick();
-    const roomId = (typeof RealtimeSync !== 'undefined' && RealtimeSync.roomId) ? RealtimeSync.roomId : 'ob2026';
+    const roomId = RealtimeSync.roomId || 'ob2026';
     const targetUrl = window.location.origin + '/?room=' + encodeURIComponent(roomId);
     if (navigator.clipboard) {
       navigator.clipboard.writeText(targetUrl).then(() => {
-        showToast('已複製學員手機作答網址！');
+        showToast('已複製學員手機加入網址！');
       });
     } else {
       prompt('請複製以下學員加入網址：', targetUrl);
     }
+  }
+
+  function updateHeadcountDisplay() {
+    const chip = document.getElementById('hud-total-headcount');
+    if (!chip) return;
+    let total = 0;
+    for (let i = 1; i <= 5; i++) total += GameState.teams[i].headcount;
+    chip.innerText = `全班在線：${total} 人`;
   }
 
   window.addEventListener('DOMContentLoaded', () => {

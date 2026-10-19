@@ -33,421 +33,633 @@
       --ios-radius-card: 18px;
       --ios-radius-pill: 9999px;
       --ios-radius-btn: 14px;
-
-      /* Legacy compatibility mappings */
-      --bg-canvas: var(--ios-bg);
-      --bg-surface: var(--ios-surface);
-      --bg-card: var(--ios-card);
-      --bg-card-hover: var(--ios-card-hover);
-      --bg-elevated: var(--ios-elevated);
-      --border-subtle: var(--ios-hairline);
-      --border-medium: var(--ios-hairline-strong);
-      --border-focus: var(--ios-blue);
-      --text-primary: var(--ios-label);
-      --text-secondary: var(--ios-secondary-label);
-      --text-muted: var(--ios-tertiary-label);
-      --accent-blue: var(--ios-blue);
-      --color-success: var(--ios-green);
-      --color-warning: var(--ios-amber);
-      --color-danger: var(--ios-red);
-      --font-sans: var(--ios-font);
-      --font-mono: var(--ios-mono);
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
 
     body {
       background: var(--ios-bg);
       color: var(--ios-label);
       font-family: var(--ios-font);
-      overflow-x: hidden;
       min-height: 100vh;
       display: flex;
-      justify-content: center;
-      align-items: flex-start;
+      flex-direction: column;
       -webkit-font-smoothing: antialiased;
+      padding-bottom: 96px; /* space for sticky bar */
     }
 
-    #app-container {
-      position: relative;
-      width: 100%;
-      max-width: 480px;
-      min-height: 100vh;
-      background: var(--ios-bg);
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 0 50px rgba(70, 55, 40, 0.08);
-      padding-bottom: 95px;
-    }
-
-    /* iOS Mobile Header */
-    header.mobile-header {
-      position: sticky;
-      top: 0;
-      z-index: 90;
-      background: rgba(247, 244, 237, 0.9);
-      border-bottom: 1px solid var(--ios-hairline);
-      backdrop-filter: blur(25px);
-      -webkit-backdrop-filter: blur(25px);
-      padding: 12px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
-    .mobile-header-top {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    .user-profile-badge {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      background: var(--ios-card);
-      border: 1px solid var(--ios-hairline);
-      padding: 4px 12px;
+    /* Apple Floating Toast */
+    #ios-toast {
+      position: fixed;
+      top: 16px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-120%);
+      background: rgba(28, 25, 23, 0.9);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      color: #ffffff;
+      padding: 10px 18px;
       border-radius: var(--ios-radius-pill);
-      font-size: 12px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      box-shadow: 0 2px 6px rgba(70, 55, 40, 0.05);
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      z-index: 9999;
+      pointer-events: none;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.35s ease;
+      opacity: 0;
+      max-width: 90vw;
+      text-align: center;
     }
-    .user-profile-badge:active { transform: scale(0.97); }
-    .user-name-text { font-weight: 600; color: var(--ios-label); }
-    .user-team-text { font-weight: 600; color: var(--ios-blue); font-family: var(--ios-mono); }
-    .header-round-indicator { font-size: 11px; font-weight: 500; color: var(--ios-secondary-label); }
-
-    /* Health Widget Card */
-    .mobile-team-hp-card {
-      background: var(--ios-card);
-      border: 1px solid var(--ios-hairline);
-      border-radius: 12px;
-      padding: 10px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      box-shadow: var(--ios-shadow);
-    }
-    .mobile-team-hp-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      font-size: 12px;
-      font-weight: 600;
-    }
-    .mobile-team-title { color: var(--ios-secondary-label); }
-    .mobile-team-hp-num { color: var(--ios-green); font-family: var(--ios-mono); font-size: 13px; font-weight: 700; }
-    .mobile-team-hp-track {
-      width: 100%;
-      height: 4px;
-      background: rgba(60, 50, 40, 0.08);
-      border-radius: var(--ios-radius-pill);
-      overflow: hidden;
-    }
-    .mobile-team-hp-fill {
-      height: 100%;
-      width: 100%;
-      background: var(--ios-green);
-      border-radius: var(--ios-radius-pill);
-      transition: width 0.6s ease, background 0.3s ease;
+    #ios-toast.active {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
     }
 
-    /* Mobile Arena */
-    main.mobile-arena {
+    /* Container */
+    #mobile-app {
+      width: 100%;
+      max-width: 540px;
+      margin: 0 auto;
+      padding: 14px 16px;
       display: flex;
       flex-direction: column;
-      padding: 16px;
       gap: 14px;
     }
-    .scenario-brief-card {
+
+    /* Header Bar */
+    .mobile-header {
       background: var(--ios-card);
       border: 1px solid var(--ios-hairline);
       border-radius: var(--ios-radius-card);
-      padding: 16px;
+      padding: 12px 16px;
       display: flex;
-      flex-direction: column;
-      gap: 10px;
+      justify-content: space-between;
+      align-items: center;
       box-shadow: var(--ios-shadow);
     }
-    .scenario-badge {
-      display: inline-flex;
+    .mobile-user-profile {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    .user-name-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ios-label);
+      display: flex;
       align-items: center;
-      gap: 4px;
+      gap: 6px;
+    }
+    .user-team-badge {
       font-size: 11px;
       font-weight: 600;
-      color: var(--ios-blue);
-      background: rgba(0, 113, 227, 0.1);
-      padding: 3px 10px;
+      padding: 2px 8px;
       border-radius: var(--ios-radius-pill);
-      border: 1px solid rgba(0, 113, 227, 0.25);
+      display: inline-block;
       width: fit-content;
     }
-    .scenario-title { font-size: 16px; font-weight: 700; color: var(--ios-label); letter-spacing: -0.01em; }
-    .scenario-dialogue {
-      background: var(--ios-bg);
-      border: 1px solid var(--ios-hairline);
-      border-left: 3px solid var(--ios-blue);
-      border-radius: 12px;
-      padding: 12px 14px;
-      font-size: 13px;
-      line-height: 1.6;
-      color: var(--ios-label);
+    .team-badge-decision {
+      background: rgba(0, 113, 227, 0.1);
+      color: var(--ios-blue);
+      border: 1px solid rgba(0, 113, 227, 0.25);
+    }
+    .team-badge-jury {
+      background: rgba(124, 58, 237, 0.12);
+      color: var(--ios-purple);
+      border: 1px solid rgba(124, 58, 237, 0.3);
     }
 
-    .mobile-vote-banner {
-      background: var(--ios-card);
-      border: 1px solid var(--ios-hairline);
-      border-left: 3px solid var(--ios-blue);
-      border-radius: 12px;
-      padding: 12px 14px;
+    .header-actions {
       display: flex;
-      flex-direction: column;
-      gap: 4px;
-      box-shadow: var(--ios-shadow);
+      align-items: center;
+      gap: 8px;
     }
-    .mobile-vote-banner-title { font-size: 13px; font-weight: 700; color: var(--ios-label); }
-    .mobile-vote-banner-desc { font-size: 12px; color: var(--ios-secondary-label); line-height: 1.5; }
+    .sync-status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 4px 10px;
+      border-radius: var(--ios-radius-pill);
+      background: var(--ios-surface);
+      font-size: 11.5px;
+      color: var(--ios-secondary-label);
+      font-weight: 600;
+    }
+    .sync-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #15803d;
+      box-shadow: 0 0 6px rgba(21, 128, 61, 0.6);
+    }
+    .room-tag-btn {
+      background: var(--ios-surface);
+      border: 1px solid var(--ios-hairline);
+      padding: 4px 8px;
+      border-radius: 8px;
+      font-size: 11px;
+      color: var(--ios-secondary-label);
+      cursor: pointer;
+    }
 
-    /* iOS Mobile Tension Card */
-    .ios-mobile-tension-card {
+    /* Round Tracker Banner */
+    .round-hero-banner {
       background: var(--ios-card);
       border: 1px solid var(--ios-hairline);
       border-radius: var(--ios-radius-card);
       padding: 14px 16px;
+      box-shadow: var(--ios-shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .round-tag-pill {
+      font-size: 11px;
+      font-weight: 700;
+      color: var(--ios-amber);
+      background: rgba(180, 83, 9, 0.1);
+      padding: 3px 10px;
+      border-radius: var(--ios-radius-pill);
+      width: fit-content;
+      letter-spacing: 0.3px;
+    }
+    .round-scenario-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--ios-label);
+      line-height: 1.35;
+    }
+    .round-status-pill {
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 2px 8px;
+      border-radius: 6px;
+      width: fit-content;
+    }
+    .status-pill-voting { background: rgba(0, 113, 227, 0.1); color: var(--ios-blue); }
+    .status-pill-revealed { background: rgba(21, 128, 61, 0.12); color: var(--ios-green); }
+
+    /* Team HP Micro Strip */
+    .team-hp-strip {
+      background: var(--ios-card);
+      border: 1px solid var(--ios-hairline);
+      border-radius: 12px;
+      padding: 10px 12px;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+      box-shadow: var(--ios-shadow);
+    }
+    .team-hp-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+    }
+    .team-hp-label { font-size: 10px; color: var(--ios-secondary-label); font-weight: 600; }
+    .team-hp-bar {
+      width: 100%;
+      height: 5px;
+      background: var(--ios-surface);
+      border-radius: var(--ios-radius-pill);
+      overflow: hidden;
+    }
+    .team-hp-fill {
+      height: 100%;
+      background: var(--ios-green);
+      transition: width 0.5s ease;
+    }
+    .team-hp-val { font-size: 10.5px; font-weight: 700; font-family: var(--ios-mono); color: var(--ios-label); }
+
+    /* Scenario Context & Dialogue Card */
+    .scenario-dialogue-card {
+      background: var(--ios-card);
+      border: 1px solid var(--ios-hairline);
+      border-radius: var(--ios-radius-card);
+      padding: 14px 16px;
+      box-shadow: var(--ios-shadow);
       display: flex;
       flex-direction: column;
       gap: 10px;
-      box-shadow: var(--ios-shadow);
     }
-    .ios-tension-top {
+    .speaker-label {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--ios-secondary-label);
+    }
+    .dialogue-content {
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: var(--ios-label);
+      background: var(--ios-bg);
+      border-radius: 12px;
+      padding: 12px 14px;
+      border: 1px solid var(--ios-hairline);
+      white-space: pre-line;
+    }
+
+    /* Decision Mode: Options List */
+    .options-section {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .section-title-row {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      flex-wrap: wrap;
-      gap: 8px;
+      padding: 0 4px;
     }
-    .ios-tension-pill {
+    .section-title {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--ios-secondary-label);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .section-tip {
+      font-size: 11.5px;
+      color: var(--ios-tertiary-label);
+    }
+
+    .option-card {
+      background: var(--ios-card);
+      border: 1.5px solid var(--ios-hairline);
+      border-radius: var(--ios-radius-card);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: var(--ios-shadow);
+      position: relative;
+    }
+    .option-card:active {
+      transform: scale(0.98);
+    }
+    .option-card.selected {
+      border-color: var(--ios-blue);
+      background: rgba(0, 113, 227, 0.04);
+      box-shadow: 0 4px 20px rgba(0, 113, 227, 0.12);
+    }
+    .option-card.locked-selected {
+      border-color: var(--ios-green);
+      background: rgba(21, 128, 61, 0.05);
+    }
+    .option-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .option-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ios-label);
+    }
+    .option-dimension-pill {
       font-size: 11px;
       font-weight: 600;
-      padding: 3px 10px;
+      padding: 2px 8px;
+      border-radius: var(--ios-radius-pill);
+      background: var(--ios-surface);
+      color: var(--ios-secondary-label);
+    }
+    .option-text {
+      font-size: 13px;
+      line-height: 1.55;
+      color: #383431;
+    }
+
+    /* Group Submission Anonymous Lock Card */
+    .group-lock-card {
+      background: var(--ios-card);
+      border: 1.5px solid rgba(21, 128, 61, 0.35);
+      border-radius: var(--ios-radius-card);
+      padding: 16px;
+      box-shadow: 0 4px 20px rgba(21, 128, 61, 0.08);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      text-align: center;
+    }
+    .group-lock-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ios-green);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .group-lock-desc {
+      font-size: 13px;
+      color: var(--ios-secondary-label);
+      line-height: 1.5;
+    }
+    .persuasion-pitch-box {
+      background: rgba(180, 83, 9, 0.08);
+      border: 1px dashed rgba(180, 83, 9, 0.35);
+      border-radius: 12px;
+      padding: 12px;
+      text-align: left;
+    }
+    .pitch-box-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--ios-amber);
+      margin-bottom: 4px;
+    }
+    .pitch-box-text {
+      font-size: 12px;
+      color: #57534e;
+      line-height: 1.5;
+    }
+
+    /* Jury Mode Components */
+    .jury-monitor-card {
+      background: var(--ios-card);
+      border: 1px solid rgba(124, 58, 237, 0.3);
+      border-radius: var(--ios-radius-card);
+      padding: 16px;
+      box-shadow: var(--ios-shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .jury-header-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .jury-badge-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ios-purple);
+    }
+    .jury-progress-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 4px;
+    }
+    .jury-team-chip {
+      font-size: 11.5px;
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-weight: 600;
+    }
+    .chip-done { background: rgba(21, 128, 61, 0.12); color: var(--ios-green); }
+    .chip-wait { background: var(--ios-surface); color: var(--ios-tertiary-label); }
+
+    .jury-preview-intel {
+      background: rgba(124, 58, 237, 0.06);
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-size: 12px;
+      color: var(--ios-secondary-label);
+      line-height: 1.5;
+    }
+
+    /* Evaluation Cards for Team 5 */
+    .jury-team-eval-card {
+      background: var(--ios-card);
+      border: 1px solid var(--ios-hairline-strong);
+      border-radius: var(--ios-radius-card);
+      padding: 14px 16px;
+      box-shadow: var(--ios-shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .eval-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .eval-team-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--ios-label);
+    }
+    .eval-choice-badge {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 2px 8px;
       border-radius: var(--ios-radius-pill);
       background: rgba(0, 113, 227, 0.1);
       color: var(--ios-blue);
-      border: 1px solid rgba(0, 113, 227, 0.25);
     }
-    .ios-tension-delta-badge {
-      font-size: 12px;
-      font-weight: 700;
-      font-family: var(--ios-mono);
-      padding: 3px 10px;
-      border-radius: var(--ios-radius-pill);
-      display: inline-flex;
-      align-items: center;
-    }
-    .delta-high-drop {
-      background: rgba(21, 128, 61, 0.12);
-      color: #15803d;
-      border: 1px solid rgba(21, 128, 61, 0.3);
-    }
-    .delta-no-drop {
-      background: rgba(220, 38, 38, 0.12);
-      color: #dc2626;
-      border: 1px solid rgba(220, 38, 38, 0.3);
-    }
-    .ios-tension-gauge-wrap {
-      display: flex;
-      flex-direction: column;
-      gap: 5px;
+    .eval-option-content {
+      font-size: 12.5px;
+      color: #44403c;
+      line-height: 1.5;
       background: var(--ios-bg);
-      padding: 10px 12px;
+      padding: 10px;
       border-radius: 10px;
       border: 1px solid var(--ios-hairline);
     }
-    .ios-tension-track {
+    .eval-blindspot-box {
+      background: rgba(180, 83, 9, 0.08);
+      border-left: 3px solid var(--ios-amber);
+      padding: 8px 10px;
+      border-radius: 0 8px 8px 0;
+      font-size: 11.5px;
+      color: #78350f;
+      line-height: 1.45;
+    }
+    .ranking-control-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .ranking-control-label {
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--ios-secondary-label);
+    }
+    .rank-buttons-group {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+    }
+    .rank-btn {
+      background: var(--ios-surface);
+      border: 1px solid var(--ios-hairline);
+      border-radius: 10px;
+      padding: 10px 0;
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--ios-secondary-label);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+    }
+    .rank-btn:active { transform: scale(0.96); }
+    .rank-btn.active {
+      background: var(--ios-purple);
+      color: #ffffff;
+      border-color: var(--ios-purple);
+      box-shadow: 0 2px 10px rgba(124, 58, 237, 0.3);
+    }
+
+    /* Tier Buttons for Round 3 */
+    .tier-buttons-group {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 6px;
+    }
+    .tier-btn {
+      background: var(--ios-surface);
+      border: 1px solid var(--ios-hairline);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ios-secondary-label);
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.15s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .tier-btn:active { transform: scale(0.98); }
+    .tier-btn.active {
+      background: var(--ios-purple);
+      color: #ffffff;
+      border-color: var(--ios-purple);
+      box-shadow: 0 2px 10px rgba(124, 58, 237, 0.3);
+    }
+
+    /* Revealed Debrief Card */
+    .revealed-debrief-card {
+      background: var(--ios-card);
+      border: 1.5px solid rgba(21, 128, 61, 0.3);
+      border-radius: var(--ios-radius-card);
+      padding: 16px;
+      box-shadow: var(--ios-shadow);
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .debrief-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .debrief-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--ios-green);
+    }
+    .debrief-rank-badge {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: var(--ios-radius-pill);
+      background: rgba(21, 128, 61, 0.12);
+      color: var(--ios-green);
+    }
+    .tension-metrics-box {
+      background: var(--ios-bg);
+      border-radius: 12px;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      border: 1px solid var(--ios-hairline);
+    }
+    .tension-metrics-row {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--ios-secondary-label);
+    }
+    .tension-track {
       width: 100%;
       height: 6px;
       background: rgba(60, 50, 40, 0.08);
       border-radius: var(--ios-radius-pill);
       overflow: hidden;
     }
-    .ios-tension-fill {
+    .tension-fill {
       height: 100%;
       border-radius: var(--ios-radius-pill);
-      transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+      background: var(--ios-green);
+      transition: width 0.8s ease;
     }
-    .ios-tension-labels {
-      display: flex;
-      justify-content: space-between;
-      font-size: 11px;
-      color: var(--ios-secondary-label);
-    }
-    .ios-tension-current-val {
-      color: var(--ios-label);
-      font-weight: 600;
-      font-family: var(--ios-mono);
-    }
-    .ios-tension-comment {
-      font-size: 12px;
-      color: #44403c;
-      line-height: 1.5;
-    }
-
-    /* Round 4 Special Mobile Components */
-    .r4-mobile-intel-box {
-      background: var(--ios-card);
-      border: 1px solid rgba(124, 58, 237, 0.3);
-      border-radius: 14px;
-      padding: 12px 14px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      box-shadow: var(--ios-shadow);
-    }
-    .r4-intel-heading { font-size: 13px; font-weight: 700; color: var(--ios-purple); }
-    .r4-intel-item {
-      font-size: 12px;
-      color: #292524;
-      line-height: 1.5;
-      background: var(--ios-bg);
-      padding: 8px 10px;
-      border-radius: 8px;
-      border-left: 3px solid var(--ios-purple);
-    }
-    .r4-mobile-wait {
-      background: var(--ios-card);
-      border: 1px dashed var(--ios-hairline);
-      border-radius: 14px;
-      padding: 16px;
-      font-size: 13px;
-      color: var(--ios-secondary-label);
-      text-align: center;
-      line-height: 1.55;
-      box-shadow: var(--ios-shadow);
-    }
-    .r4-prop-review-card {
-      background: var(--ios-card);
-      border: 1px solid rgba(124, 58, 237, 0.35);
-      border-radius: var(--ios-radius-card);
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      box-shadow: var(--ios-shadow);
-    }
-    .r4-prop-review-title { font-size: 14px; font-weight: 700; color: var(--ios-label); }
-    .r4-prop-review-text {
-      font-size: 13px;
-      color: #292524;
-      line-height: 1.6;
-      background: var(--ios-bg);
-      padding: 12px;
+    .revealed-blindspot-box {
+      background: rgba(180, 83, 9, 0.08);
       border-radius: 12px;
-      border: 1px solid var(--ios-hairline);
-    }
-    .r4-vote-btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
-    .r4-vote-btn {
       padding: 12px;
-      border-radius: var(--ios-radius-pill);
-      font-size: 13px;
-      font-weight: 700;
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.15s ease;
-      border: none;
-    }
-    .r4-vote-btn:active { transform: scale(0.97); }
-    .r4-vote-btn.accept { background: rgba(21, 128, 61, 0.14); color: #15803d; border: 1px solid rgba(21, 128, 61, 0.35); }
-    .r4-vote-btn.accept:hover, .r4-vote-btn.accept.selected { background: #15803d; color: #ffffff; }
-    .r4-vote-btn.reject { background: rgba(220, 38, 38, 0.14); color: #dc2626; border: 1px solid rgba(220, 38, 38, 0.35); }
-    .r4-vote-btn.reject:hover, .r4-vote-btn.reject.selected { background: #dc2626; color: #ffffff; }
-    .r4-constraint-box {
-      background: rgba(180, 83, 9, 0.1);
-      border: 1px solid rgba(180, 83, 9, 0.25);
-      border-radius: 10px;
-      padding: 8px 12px;
-      font-size: 12px;
-      color: #b45309;
-      line-height: 1.5;
-    }
-
-    /* Options List */
-    .mobile-options-container { display: flex; flex-direction: column; gap: 10px; }
-    .mobile-option-card {
-      background: var(--ios-card);
-      border: 1px solid var(--ios-hairline);
-      border-radius: var(--ios-radius-card);
-      padding: 14px 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      box-shadow: var(--ios-shadow);
-    }
-    .mobile-option-card:active { transform: scale(0.98); }
-    .mobile-option-card.selected {
-      border-color: var(--ios-blue);
-      background: rgba(0, 113, 227, 0.05);
-      box-shadow: 0 0 16px rgba(0, 113, 227, 0.15);
-    }
-    .mobile-option-card.my-team-chosen {
-      border-color: var(--ios-blue);
-      background: rgba(0, 113, 227, 0.08);
-    }
-    .mobile-option-title { font-size: 13.5px; font-weight: 700; color: var(--ios-label); }
-    .mobile-option-text { font-size: 12.5px; line-height: 1.55; color: #44403c; }
-    .mobile-reveal-box {
-      margin-top: 6px;
-      padding: 10px 12px;
-      border-radius: 10px;
-      font-size: 12px;
+      border-left: 3px solid var(--ios-amber);
+      font-size: 12.5px;
+      color: #78350f;
       line-height: 1.55;
-      display: none;
     }
-    .mobile-reveal-box.reveal-penalty { background: rgba(220, 38, 38, 0.08); border: 1px solid rgba(220, 38, 38, 0.25); color: #991b1b; }
-    .mobile-reveal-box.reveal-success { background: rgba(21, 128, 61, 0.08); border: 1px solid rgba(21, 128, 61, 0.25); color: #166534; }
 
-    /* iOS Sticky Bottom Submit Bar */
+    /* Sticky Bottom Bar */
     .mobile-bottom-bar {
       position: fixed;
       bottom: 0;
-      left: 50%;
-      transform: translateX(-50%);
+      left: 0;
       width: 100%;
-      max-width: 480px;
-      z-index: 100;
-      background: rgba(247, 244, 237, 0.94);
-      border-top: 1px solid var(--ios-hairline);
+      background: rgba(255, 255, 255, 0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border-top: 1px solid var(--ios-hairline-strong);
       padding: 12px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 -4px 20px rgba(70, 55, 40, 0.08);
-      backdrop-filter: blur(25px);
-      -webkit-backdrop-filter: blur(25px);
+      gap: 12px;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.05);
+      z-index: 900;
     }
-    .mobile-bottom-info { display: flex; flex-direction: column; gap: 2px; max-width: 60%; }
-    .mobile-selection-label { font-size: 10px; color: var(--ios-tertiary-label); }
-    .mobile-selection-val { font-size: 12.5px; font-weight: 600; color: var(--ios-label); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-    .mobile-submit-btn {
+    .bottom-info {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      max-width: 55%;
+    }
+    .bottom-info-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--ios-label);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .bottom-info-sub {
+      font-size: 11px;
+      color: var(--ios-tertiary-label);
+    }
+    .btn-submit-action {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: var(--ios-radius-pill);
       background: var(--ios-blue);
       color: #ffffff;
+      font-size: 13.5px;
+      font-weight: 700;
       border: none;
-      font-size: 13px;
-      font-weight: 600;
-      padding: 10px 20px;
-      border-radius: var(--ios-radius-pill);
       cursor: pointer;
-      white-space: nowrap;
-      transition: all 0.15s ease;
-      box-shadow: 0 2px 8px rgba(0, 113, 227, 0.25);
+      text-align: center;
+      transition: all 0.2s ease;
+      box-shadow: 0 4px 14px rgba(0, 113, 227, 0.25);
     }
-    .mobile-submit-btn:active { transform: scale(0.97); }
-    .mobile-submit-btn:disabled {
-      background: rgba(60, 50, 40, 0.12);
+    .btn-submit-action:active { transform: scale(0.97); }
+    .btn-submit-action:disabled {
+      background: var(--ios-surface);
       color: var(--ios-tertiary-label);
-      cursor: not-allowed;
       box-shadow: none;
+      cursor: not-allowed;
+    }
+    .btn-jury-action {
+      background: var(--ios-purple);
+      box-shadow: 0 4px 14px rgba(124, 58, 237, 0.25);
     }
 
     /* Onboarding Modal */
@@ -455,222 +667,243 @@
       position: fixed;
       top: 0;
       left: 0;
-      width: 100%;
-      height: 100%;
-      background: rgba(40, 35, 30, 0.45);
-      z-index: 200;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(28, 25, 23, 0.65);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      z-index: 10000;
       display: flex;
-      justify-content: center;
       align-items: center;
-      padding: 16px;
-      backdrop-filter: blur(15px);
+      justify-content: center;
+      padding: 20px;
     }
     .onboarding-card {
-      background: #ffffff;
-      border: 1px solid var(--ios-hairline-strong);
+      background: var(--ios-card);
       border-radius: 24px;
-      max-width: 380px;
       width: 100%;
+      max-width: 420px;
       padding: 24px 20px;
       display: flex;
       flex-direction: column;
       gap: 16px;
-      box-shadow: 0 12px 40px rgba(70, 55, 40, 0.18);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.2);
     }
-    .onboarding-title { font-size: 17px; font-weight: 700; color: var(--ios-label); text-align: center; }
-    .onboarding-desc { font-size: 12.5px; color: var(--ios-secondary-label); line-height: 1.5; text-align: center; }
-    .onboarding-form { display: flex; flex-direction: column; gap: 14px; }
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
-    .form-label { font-size: 12px; font-weight: 600; color: var(--ios-secondary-label); }
-    .form-input {
-      background: var(--ios-bg);
-      border: 1px solid var(--ios-hairline);
+    .onboarding-title {
+      font-size: 18px;
+      font-weight: 700;
       color: var(--ios-label);
-      font-size: 14px;
-      padding: 10px 14px;
-      border-radius: 12px;
-      outline: none;
-      transition: border-color 0.15s ease;
-    }
-    .form-input:focus { border-color: var(--ios-blue); }
-
-    .team-pills-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
-    .team-pill-btn {
-      background: var(--ios-bg);
-      border: 1px solid var(--ios-hairline);
-      color: var(--ios-secondary-label);
-      font-size: 12px;
-      font-weight: 600;
-      padding: 10px 4px;
-      border-radius: 12px;
-      cursor: pointer;
       text-align: center;
-      transition: all 0.15s ease;
     }
-    .team-pill-btn:active { transform: scale(0.96); }
-    .team-pill-btn.active {
-      background: var(--ios-blue);
-      border-color: var(--ios-blue);
-      color: #ffffff;
-      box-shadow: 0 2px 8px rgba(0, 113, 227, 0.25);
-    }
-
-    .onboarding-btn {
-      background: var(--ios-blue);
-      color: #ffffff;
-      border: none;
-      font-size: 14px;
-      font-weight: 600;
-      padding: 12px;
-      border-radius: var(--ios-radius-pill);
-      cursor: pointer;
-      text-align: center;
-      transition: all 0.15s ease;
-      box-shadow: 0 2px 8px rgba(0, 113, 227, 0.25);
-    }
-    .onboarding-btn:active { transform: scale(0.97); }
-
-    .footer-host-link {
-      font-size: 11px;
-      color: var(--ios-tertiary-label);
-      text-align: center;
-      margin-top: 10px;
-      cursor: pointer;
-      padding: 8px;
-    }
-
-    /* Sync Dot & Toast */
-    .mobile-sync-dot {
-      width: 7px;
-      height: 7px;
-      border-radius: 50%;
-      background: #15803d;
-      display: inline-block;
-      transition: background 0.3s;
-    }
-    .ios-toast {
-      position: fixed;
-      top: 18px;
-      left: 50%;
-      transform: translateX(-50%) translateY(-50px);
-      background: rgba(28, 25, 23, 0.92);
-      color: #ffffff;
-      padding: 9px 20px;
-      border-radius: 9999px;
+    .onboarding-subtitle {
       font-size: 13px;
-      font-weight: 500;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.18);
-      backdrop-filter: blur(16px);
-      -webkit-backdrop-filter: blur(16px);
-      opacity: 0;
-      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
-      z-index: 9999;
-      pointer-events: none;
-      white-space: nowrap;
+      color: var(--ios-secondary-label);
+      text-align: center;
+      line-height: 1.5;
     }
-    .ios-toast.show {
-      transform: translateX(-50%) translateY(0);
-      opacity: 1;
+    .onboarding-field {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .field-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--ios-secondary-label);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .input-text {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: var(--ios-radius-btn);
+      border: 1px solid var(--ios-hairline-strong);
+      background: var(--ios-bg);
+      font-size: 14px;
+      color: var(--ios-label);
+      outline: none;
+      font-family: inherit;
+    }
+    .input-text:focus { border-color: var(--ios-blue); }
+
+    .team-pills-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .team-pill-opt {
+      padding: 12px 14px;
+      border-radius: 12px;
+      border: 1.5px solid var(--ios-hairline);
+      background: var(--ios-bg);
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--ios-label);
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: all 0.15s ease;
+    }
+    .team-pill-opt.selected {
+      border-color: var(--ios-blue);
+      background: rgba(0, 113, 227, 0.08);
+      color: var(--ios-blue);
+    }
+    .team-pill-opt.jury-opt.selected {
+      border-color: var(--ios-purple);
+      background: rgba(124, 58, 237, 0.1);
+      color: var(--ios-purple);
+    }
+    .btn-join-confirm {
+      padding: 14px;
+      border-radius: var(--ios-radius-pill);
+      background: var(--ios-label);
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 700;
+      border: none;
+      cursor: pointer;
+      margin-top: 6px;
     }
   </style>
 </head>
 <body>
 
-<div id="ios-toast" class="ios-toast"></div>
+  <!-- Floating Toast -->
+  <div id="ios-toast"></div>
 
-<div id="app-container">
-  <header class="mobile-header">
-    <div class="mobile-header-top">
-      <div class="user-profile-badge" onclick="reopenOnboarding()">
-        <span class="user-name-text" id="hud-user-name">學員</span>
-        <span>|</span>
-        <span class="user-team-text" id="hud-user-team">第 1 組</span>
+  <!-- Onboarding Modal -->
+  <div id="onboarding-modal" class="onboarding-overlay">
+    <div class="onboarding-card">
+      <div class="onboarding-title">加入跨文化博弈對決</div>
+      <div class="onboarding-subtitle">請輸入您的姓名或暱稱，並選擇所屬組別</div>
+
+      <div class="onboarding-field">
+        <label class="field-label">學員姓名 / 暱稱</label>
+        <input type="text" id="input-name" class="input-text" placeholder="例如：Alex、小美" />
       </div>
-      <div style="display: flex; align-items: center; gap: 6px;">
-        <span class="mobile-sync-dot" id="mobile-sync-dot"></span>
-        <span style="font-size: 11px; color: var(--ios-secondary-label);" id="round-status-indicator">已連線大螢幕</span>
+
+      <div class="onboarding-field">
+        <label class="field-label">選擇組別</label>
+        <div class="team-pills-list">
+          <div class="team-pill-opt selected" onclick="selectOnboardingTeam(1)">
+            <span>第 1 組 · 決策組</span>
+            <span style="font-size:11px; opacity:0.8;">四選一代表決策</span>
+          </div>
+          <div class="team-pill-opt" onclick="selectOnboardingTeam(2)">
+            <span>第 2 組 · 決策組</span>
+            <span style="font-size:11px; opacity:0.8;">四選一代表決策</span>
+          </div>
+          <div class="team-pill-opt" onclick="selectOnboardingTeam(3)">
+            <span>第 3 組 · 決策組</span>
+            <span style="font-size:11px; opacity:0.8;">四選一代表決策</span>
+          </div>
+          <div class="team-pill-opt" onclick="selectOnboardingTeam(4)">
+            <span>第 4 組 · 決策組</span>
+            <span style="font-size:11px; opacity:0.8;">四選一代表決策</span>
+          </div>
+          <div class="team-pill-opt jury-opt" onclick="selectOnboardingTeam(5)">
+            <span>第 5 組 · 跨文化裁判組 (Jury)</span>
+            <span style="font-size:11px; opacity:0.8;">體感衝突排序裁決</span>
+          </div>
+        </div>
+      </div>
+
+      <button class="btn-join-confirm" onclick="confirmOnboarding()">進入博弈席位</button>
+    </div>
+  </div>
+
+  <!-- Main Mobile App -->
+  <div id="mobile-app">
+
+    <!-- Header -->
+    <header class="mobile-header">
+      <div class="mobile-user-profile">
+        <div class="user-name-title">
+          <span id="hud-user-name">學員</span>
+        </div>
+        <div id="hud-user-team" class="user-team-badge team-badge-decision">第 1 組 · 決策組</div>
+      </div>
+      <div class="header-actions">
+        <div class="sync-status-indicator">
+          <span class="sync-dot" id="mobile-sync-dot"></span>
+          <span id="hud-sync-text">即時同步</span>
+        </div>
+        <button class="room-tag-btn" onclick="promptSwitchRoom()" title="切換房間">房間</button>
+      </div>
+    </header>
+
+    <!-- Team HP Micro Strip -->
+    <div class="team-hp-strip" id="hud-hp-strip">
+      <div class="team-hp-item">
+        <span class="team-hp-label">第 1 組</span>
+        <div class="team-hp-bar"><div class="team-hp-fill" id="hp-bar-1" style="width: 100%;"></div></div>
+        <span class="team-hp-val" id="hp-val-1">100</span>
+      </div>
+      <div class="team-hp-item">
+        <span class="team-hp-label">第 2 組</span>
+        <div class="team-hp-bar"><div class="team-hp-fill" id="hp-bar-2" style="width: 100%;"></div></div>
+        <span class="team-hp-val" id="hp-val-2">100</span>
+      </div>
+      <div class="team-hp-item">
+        <span class="team-hp-label">第 3 組</span>
+        <div class="team-hp-bar"><div class="team-hp-fill" id="hp-bar-3" style="width: 100%;"></div></div>
+        <span class="team-hp-val" id="hp-val-3">100</span>
+      </div>
+      <div class="team-hp-item">
+        <span class="team-hp-label">第 4 組</span>
+        <div class="team-hp-bar"><div class="team-hp-fill" id="hp-bar-4" style="width: 100%;"></div></div>
+        <span class="team-hp-val" id="hp-val-4">100</span>
+      </div>
+      <div class="team-hp-item">
+        <span class="team-hp-label">裁判組</span>
+        <div class="team-hp-bar"><div class="team-hp-fill" id="hp-bar-5" style="width: 100%; background: var(--ios-purple);"></div></div>
+        <span class="team-hp-val" id="hp-val-5">100</span>
       </div>
     </div>
 
-    <div class="mobile-team-hp-card">
-      <div class="mobile-team-hp-header">
-        <span class="mobile-team-title" id="team-hp-title">本組 CQ 生命值</span>
-        <span class="mobile-team-hp-num" id="team-hp-num">100 CQ</span>
+    <!-- Round Hero Banner -->
+    <div class="round-hero-banner">
+      <div style="display: flex; justify-content: space-between; align-items: center;">
+        <span class="round-tag-pill" id="mobile-theme-tag">【第一回：單維度枷鎖】</span>
+        <span class="round-status-pill status-pill-voting" id="mobile-round-status">決策中</span>
       </div>
-      <div class="mobile-team-hp-track">
-        <div class="mobile-team-hp-fill" id="team-hp-fill"></div>
-      </div>
-    </div>
-  </header>
-
-  <main class="mobile-arena">
-    <div class="ios-status-card" id="mobile-banner-card" style="margin-bottom: 12px; padding: 10px 14px; background: rgba(0, 113, 227, 0.06); border: 1px solid rgba(0, 113, 227, 0.15); border-radius: 12px;">
-      <div id="mobile-banner-title" style="font-size: 13px; font-weight: 600; color: var(--ios-blue);">組內決策研討中</div>
-      <div id="mobile-banner-desc" style="font-size: 11.5px; color: var(--ios-secondary-label); margin-top: 2px;">每組投票獨立保密不互通，請組內取得共識後選取並送出。</div>
+      <div class="round-scenario-title" id="mobile-scenario-title">委婉留白時的追問藝術</div>
     </div>
 
-    <div class="scenario-brief-card">
-      <div class="scenario-badge" id="mobile-theme-tag">【認知維度】</div>
-      <h2 class="scenario-title" id="mobile-scenario-title">委婉留白時的追問藝術</h2>
-      <div class="scenario-dialogue" id="mobile-dialogue-text">載入中...</div>
+    <!-- Scenario Dialogue & Context -->
+    <div class="scenario-dialogue-card">
+      <div class="speaker-label" id="mobile-speaker-label">佐藤部長（審慎沉吟）：</div>
+      <div class="dialogue-content" id="mobile-dialogue-text">載入情境中...</div>
     </div>
 
-    <div id="mobile-tension-wrap" style="display: none; margin-bottom: 12px;"></div>
-    <div class="mobile-options-container" id="mobile-options-list"></div>
-
-    <div class="footer-host-link" onclick="window.location.href='/host'">
-      [ 簡報者切換至電腦主控台 ]
+    <!-- DYNAMIC CONTAINER: DECISION TEAM OR JURY -->
+    <div id="dynamic-role-container">
+      <!-- Injected by JavaScript based on MobileState.user.team -->
     </div>
-  </main>
 
-  <div class="mobile-bottom-bar">
-    <div class="mobile-bottom-info">
-      <span class="mobile-selection-label">本組研議之代表決策：</span>
-      <span class="mobile-selection-val" id="bottom-selected-text">尚未選取選項</span>
+  </div>
+
+  <!-- Sticky Bottom Bar -->
+  <div class="mobile-bottom-bar" id="mobile-bottom-bar">
+    <div class="bottom-info">
+      <div class="bottom-info-title" id="bottom-bar-title">請選擇決策方案</div>
+      <div class="bottom-info-sub" id="bottom-bar-sub">點擊上方卡片以選取</div>
     </div>
-    <button class="mobile-submit-btn" id="btn-bottom-submit" onclick="submitDecision()" disabled>
-      送出本組決策
+    <button class="btn-submit-action" id="btn-bottom-action" onclick="handleBottomActionClick()" disabled>
+      確認送出
     </button>
   </div>
-</div>
-
-<!-- Onboarding Modal (Requires Name + Team, NO expected team size displayed!) -->
-<div class="onboarding-overlay" id="onboarding-modal" style="display: none;">
-  <div class="onboarding-card">
-    <h3 class="onboarding-title">OB報告</h3>
-    <p class="onboarding-desc">請輸入您的姓名並點選所屬組別以加入決策會議：</p>
-    <div class="onboarding-form">
-      <div class="form-group">
-        <label class="form-label">您的姓名：</label>
-        <input type="text" class="form-input" id="input-name" placeholder="請輸入姓名（例如：王專員）" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">所屬組別：</label>
-        <div class="team-pills-grid" id="team-selector-pills">
-          <button type="button" class="team-pill-btn active" id="pill-team-1" onclick="selectTeamPill(1)">第 1 組</button>
-          <button type="button" class="team-pill-btn" id="pill-team-2" onclick="selectTeamPill(2)">第 2 組</button>
-          <button type="button" class="team-pill-btn" id="pill-team-3" onclick="selectTeamPill(3)">第 3 組</button>
-          <button type="button" class="team-pill-btn" id="pill-team-4" onclick="selectTeamPill(4)">第 4 組</button>
-          <button type="button" class="team-pill-btn" id="pill-team-5" onclick="selectTeamPill(5)">第 5 組</button>
-        </div>
-        <input type="hidden" id="input-team" value="1" />
-      </div>
-      <button class="onboarding-btn" onclick="confirmOnboarding()">進入會議</button>
-    </div>
-  </div>
-</div>
 
 <script>
-
+  /* Audio Feedback */
   const AudioEngine = {
     ctx: null,
     init() {
       if (!this.ctx) {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (AudioCtx) this.ctx = new AudioCtx();
-      }
-      if (this.ctx && this.ctx.state === 'suspended') {
-        this.ctx.resume();
       }
     },
     playClick() {
@@ -682,29 +915,12 @@
         osc.connect(gain);
         gain.connect(this.ctx.destination);
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(440, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.05);
-        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+        osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(300, this.ctx.currentTime + 0.04);
+        gain.gain.setValueAtTime(0.2, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.04);
         osc.start();
-        osc.stop(this.ctx.currentTime + 0.05);
-      } catch (e) {}
-    },
-    playDamage() {
-      try {
-        this.init();
-        if (!this.ctx) return;
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.type = 'sawtooth';
-        osc.frequency.setValueAtTime(260, this.ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(110, this.ctx.currentTime + 0.35);
-        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
-        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
-        osc.start();
-        osc.stop(this.ctx.currentTime + 0.35);
+        osc.stop(this.ctx.currentTime + 0.04);
       } catch (e) {}
     },
     playChime() {
@@ -717,229 +933,200 @@
           osc.connect(gain);
           gain.connect(this.ctx.destination);
           osc.type = 'triangle';
-          osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.08);
-          gain.gain.setValueAtTime(0.18, this.ctx.currentTime + idx * 0.08);
-          gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + idx * 0.08 + 0.3);
-          osc.start(this.ctx.currentTime + idx * 0.08);
-          osc.stop(this.ctx.currentTime + idx * 0.08 + 0.3);
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.07);
+          gain.gain.setValueAtTime(0.18, this.ctx.currentTime + idx * 0.07);
+          gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + idx * 0.07 + 0.28);
+          osc.start(this.ctx.currentTime + idx * 0.07);
+          osc.stop(this.ctx.currentTime + idx * 0.07 + 0.28);
         });
       } catch (e) {}
     }
   };
 
+  /* Toast Helper */
+  function showToast(text, duration = 2800) {
+    const el = document.getElementById('ios-toast');
+    if (!el) return;
+    el.innerText = text;
+    el.classList.add('active');
+    clearTimeout(window.__toastTimer);
+    window.__toastTimer = setTimeout(() => {
+      el.classList.remove('active');
+    }, duration);
+  }
 
+  /* Progressive Dilemma Data */
   const DilemmasData = {
     1: {
-      themeTag: "【第一回：認知維度】高語境解碼與深層常模辨識",
+      themeTag: "【第一回：單維度枷鎖】認知、動機、行為之單項極限試煉",
       title: "委婉留白時的追問藝術",
-      sceneKey: "midnightBoardroom",
       speaker: "佐藤部長（雙手交疊，緩緩喝了一口茶，審慎沉吟）：",
-      dialogue: `「……交付時程方面，我們現場會全力以赴進行慎重研討，只是部分細節可能還需要團隊內部進一步調研……」
-
-【背景形勢】：總部明日開盤前必須向華爾街做空機構與董事會提交進度，此時總部該如何接話？`,
+      dialogue: `「……交付時程方面，我們現場會全力以赴進行慎重研討，只是部分細節可能還需要團隊內部進一步調研……」\n\n【背景形勢】：總部明日開盤前必須向華爾街做空機構與董事會提交進度。此時受限於初期溝通管道，只能運用「單一維度能力」，總部該如何接話？`,
       options: [
         {
           id: "A",
+          dimension: "純 Head（認知分析）",
           title: "方案 A：進度量化追蹤策略",
           text: "「感謝佐藤部長的回饋。為確保全球供應鏈排程精準，請東京團隊在今日下午 5 點前，將調研里程碑量化為具體甘特圖並標註預計完工日。」",
-          penalty: -20,
-          blindspot: "文化盲點：日方高語境下「慎重研討」已是幾近無法如期完工的求救訊號。公開逼問硬性死線等於逼其當場認錯或撒謊，破壞深層信任。"
+          tensionDrop: "20%",
+          tensionRemaining: "80%",
+          blindspot: "【純 Head 盲點（認知極限）】：有腦無理性同理。日方高語境下「慎重研討」已是幾近無法完工的求救訊號。逼問硬性死線破壞深層信任，觸發日方被動防禦。"
         },
         {
           id: "B",
-          title: "方案 B：全球資源緊急調度策略",
-          text: "「總部充分理解東京團隊的沉重壓力。我們已批准協調 5 位矽谷資深架構師於明晨直飛東京現場，直接進駐協助分擔程式碼調校。」",
-          penalty: -25,
-          blindspot: "文化盲點：在日式職人與現場主義（Gemba）文化中，不請自來的總部專家等同官方審計接管，暗示東京團隊無能，激起全員防衛消極抵制。"
+          dimension: "純 Heart（動機共情）",
+          title: "方案 B：全員情感撫慰與信任承諾",
+          text: "「總部完全理解東京團隊連日加班的沉重壓力。請現場放寬心，我們相信日方的職人精神，時程若趕不上總部會為大家承擔市場壓力。」",
+          tensionDrop: "15%",
+          tensionRemaining: "85%",
+          blindspot: "【純 Heart 盲點（動機過載）】：有心無商業結構。華爾街明日開盤面臨做空狙擊，虛浮的安慰無法替代產能承諾，更讓日方覺得總部不了解製造嚴肅性。"
         },
         {
           id: "C",
-          title: "方案 C：全員民主共識決策機制",
-          text: "「為分擔管理層決策壓力，建議此時在大會中由美日全體研發工程師進行線上不記名投票，依第一線真實工時表決是否微調發布日。」",
-          penalty: -15,
-          blindspot: "文化盲點：破壞東亞長幼有序與組織和睦（和，Wa）。強迫基層在主管前公開表態會造成極大社交焦慮，且被日方視為總部推卸治理責任。"
+          dimension: "純 Body（行為調適）",
+          title: "方案 C：非正式日式晚茶場域重構",
+          text: "「立刻關閉所有公開遠距工單追蹤，美方團隊全員改用日式非正式晚茶餐敘管道，邀請東京管理層在私下氛圍中隨興交流。」",
+          tensionDrop: "25%",
+          tensionRemaining: "75%",
+          blindspot: "【純 Body 盲點（行為模仿）】：有身無腦亦無心。盲目採用日方社交習慣，但未觸及核心問題，在危機當頭強行社交顯得輕浮而本末倒置。"
         },
         {
           id: "D",
-          title: "方案 D：雙邊技術排程微調對齊",
-          text: "「非常理解公差調研的嚴謹性與技術深度。今日大會先行休會，會後由我方營運負責人親自致電佐藤部長，就底層架構參數先做個別溝通。」",
-          penalty: 0,
-          bonus: 5,
-          blindspot: "最優解：精準實踐「根回し（Nemawashi）」，為日方搭設心理安全階梯，真正被挪用晶圓的實情方能在私下電話中被如實吐露。"
+          dimension: "常規防禦（階層轉移）",
+          title: "方案 D：指派中立專案辦公室（PMO）介入",
+          text: "「要求兩地人資與專案辦公室（PMO）全面介入，召開跨文化協調會議，並由第三方專案經理重新裁定排程責任歸屬。」",
+          tensionDrop: "10%",
+          tensionRemaining: "90%",
+          blindspot: "【常規防禦盲點（程序推諉）】：缺乏 CQ 領導力。在緊急危機中逃避對話，將核心決策轉移至行政部門，兩邊團隊均感到未被尊重。"
         }
       ]
     },
 
     2: {
-      themeTag: "【第二回：動機維度】自尊維護與消解文化防衛",
+      themeTag: "【第二回：雙維度交織】真相醜聞曝光與兩兩結合突破",
       title: "晶圓遭挪用風暴與責任定調",
-      sceneKey: "confidentialLab",
       speaker: "東京工程團隊（遞交底層 log 數據與集體抗議連署書）：",
-      dialogue: `東京私下向調解人證實：延誤根本非技術問題（東京良率實測達 98.4%），而是總部董事關係戶私自插單強行挪走 30% 晶圓！東京團隊連續加班三週背黑鍋，如今卻被總部公開質疑工作效率低落，日本工程師全員抗議。
-
-【背景形勢】：調解席與總部該如何定調這起內部醜聞，並平息兩地怒火？`,
+      dialogue: `東京私下向調解人證實：延誤根本非技術問題（東京良率實測達 98.4%），而是總部董事關係戶私自插單強行挪走 30% 晶圓！東京團隊連續加班三週背黑鍋，如今卻被總部公開質疑工作效率低落，兩地工程師在 Slack 互罵互退群。\n\n【背景形勢】：衝突全面升級！此時解鎖「雙維度結合能力」，該如何定調這起內部醜聞並平息怒火？`,
       options: [
         {
           id: "A",
-          title: "方案 A：合規獨立審查與資安管控",
-          text: "「總部法務與合規長立即啟動內部專案調查，並針對代工廠及分部相關人員簽發全面保密協議（NDA），在調查結果出爐前嚴格隔離資訊。」",
-          penalty: -30,
-          blindspot: "文化盲點：法律霸凌（Legal Bullying）。將受害工程師視為潛在洩密犯罪嫌疑人，粉碎東京團隊最後的心理安全感，極易促使其向媒體揭弊。"
+          dimension: "Head + Heart",
+          title: "方案 A：真相內部專函澄清與名譽背書",
+          text: "「私下向東京核心幹部坦誠總部內部政治插單實情，正式發函為東京工程團隊之職人名譽背書；但要求雙方繼續在原有的 Slack 頻道完成最後交接。」",
+          tensionDrop: "45%",
+          tensionRemaining: "55%",
+          blindspot: "【缺少 Body 維度】：場域未重構。敵意已在公開頻道根深蒂固，不改變互動載體與行為協定，基層同仁仍處於防禦性對立。"
         },
         {
           id: "B",
-          title: "方案 B：專案特別津貼與全員激勵",
-          text: "「由總部提撥專案特別預算，為東京現場全體工程師發放每人雙倍專案激勵獎金與全員加成加班津貼，以實質回饋感謝大家的辛勞付出。」",
-          penalty: -20,
-          blindspot: "文化盲點：將名譽金錢化（Monetizing Dignity）。對恪守「職人精神（Shokunin）」的團隊而言，用金錢封口形同侮辱專業自尊。"
+          dimension: "Head + Body",
+          title: "方案 B：封閉匿名技術白板與獨立財務記帳",
+          text: "「立即關閉爆發爭執的公開頻道，改設匿名技術參數白板；同時重塑產能公式，將短少之 30% 晶圓獨立記帳，由總部財務承擔合規缺口。」",
+          tensionDrop: "50%",
+          tensionRemaining: "50%",
+          blindspot: "【缺少 Heart 維度】：名譽未復原。職人文化視名譽重於制度。缺乏高層真誠道歉與尊嚴平反，制度再完美也無法激發主動協同。"
         },
         {
           id: "C",
-          title: "方案 C：市場重大訊息公開澄清",
-          text: "「總部立即召開全球法人說明會，正式向公眾揭露該外部代工廠違約插單情事，並宣告啟動商務索賠，公開向市場還給東京團隊清白。」",
-          penalty: -25,
-          blindspot: "文化盲點：玉石俱焚（Pyrrhic Victory）。公開指責關係戶導致主管機關立案調查，全產品線被迫無限期凍結，市值崩跌造成全體雙輸。"
+          dimension: "Heart + Body",
+          title: "方案 C：高層現場鞠躬長談與雙向茶敘互訪",
+          text: "「總部技術高層帶隊親赴東京，在清酒餐敘與工會代表面對面深談並誠摯致歉，宣布建立平等的研發雙向互訪機制。」",
+          tensionDrop: "40%",
+          tensionRemaining: "60%",
+          blindspot: "【缺少 Head 維度】：商業架構真空。感動無法取代商業交期真相。做空機構即將發動攻擊，缺乏客觀數據與合約解套，全案依然面臨下市風險。"
         },
         {
           id: "D",
-          title: "方案 D：內部責任專函與戰略重整",
-          text: "「董事會正式出具內部專函確認研發團隊零過失，對外發表聲明將本次時程微調定調為『追求旗艦級極限品質之戰略升級』，公開向董事會表彰研發團隊。」",
-          penalty: 0,
-          bonus: 10,
-          blindspot: "最優解：動機 CQ 核心在於保護群體的自尊與自我效能感，精準擊中日方名譽與美方商業利益的唯一交集點。"
+          dimension: "利益換背書",
+          title: "方案 D：提撥 20% 專案獎金換取現場背書",
+          text: "「由總部提撥專案特別預算，為東京現場全員發放加成激勵獎金，換取日方簽署免責背書以利總部對外公布統一進度口徑。」",
+          tensionDrop: "10%",
+          tensionRemaining: "90%",
+          blindspot: "【現實利益陷阱】：名譽金錢化。對恪守職人名譽的團隊而言，金錢收買形同人格羞辱，直接踩中動機 CQ 最深層紅線。"
         }
       ]
     },
 
     3: {
-      themeTag: "【第三回：行為維度】跨國協作摩擦與溝通機制重構",
-      title: "跨國通訊口角升級與場域重構",
-      sceneKey: "hybridChashitsu",
-      speaker: "美日跨國 Slack 頻道（爭執紀錄截圖曝光）：",
-      dialogue: `兩地工程師在公開 Slack 頻道爆發激烈口角：美方工程師不斷使用大寫英文與 @here 催促進度，日方工程師感到被當眾公開審查羞辱，開始採取集體已讀不回與拒絕更新英文工單的被動防禦，跨國協作即將全面中斷。
-
-【背景形勢】：應採取何種形式與管道重構，徹底打破溝通死結？`,
+      themeTag: "【第三回：全維度大成】做空狙擊倒數 1 小時之系統協同終局",
+      title: "華爾街做空危機與跨太平洋聯合調解協定",
+      speaker: "全球董事會與跨國危機應變總部（最後通牒倒數）：",
+      dialogue: `華爾街做空機構報告預計 1 小時後全球發布，母公司盤前市值面臨蒸發；東京現場全體工程師抗議拒簽免責聲明，工會辭職信已整齊放在部長桌上。\n\n【背景形勢】：全案終局！此時必須整合「Head 理性商業治理 + Heart 文化名譽保證 + Body 敏捷對等管道」全維度能力，尋求化解破局之協定！`,
       options: [
         {
           id: "A",
-          title: "方案 A：敏捷看板全透明數位化監控",
-          text: "「全面導入 Jira 自動化即時追蹤機制，要求雙方每 2 小時自動同步任務進度與程式碼提交紀錄，建立客觀中立的全球燃盡圖。」",
-          penalty: -20,
-          blindspot: "文化盲點：監視焦慮（Surveillance Anxiety）。高語境文化會解讀為極度的「不信任」與微觀管理，觸發工程師「形式合規、消極怠工」。"
+          dimension: "平衡妥協型",
+          title: "方案 A：三維兼顧之現有排程硬衝方案",
+          text: "「總部啟動關係戶內部審查（Head），公開表彰東京工藝成就（Heart），設立常設協調室（Body）；但維持原有上市日期，現場以現有產能全力趕工。」",
+          tier: 2,
+          tensionDrop: "35%",
+          tensionRemaining: "65%",
+          blindspot: "【物理產能忽視】：偽全維度。口頭承諾雖好，但迴避了硬性產能缺口，依然將交付代價轉嫁給基層工程師。"
         },
         {
           id: "B",
-          title: "方案 B：確立層級責任與指揮鏈貫徹",
-          text: "「由總部全球執行副總向東京製造部長發布正式行政備忘錄，要求部長依組織層級督導下屬，落實日常溝通時效考核。」",
-          penalty: -25,
-          blindspot: "文化盲點：摧毀日本下意上達的「稟議制（Ringi）」與共識和諧。部長陷入忠誠與下屬信賴的夾縫，極易導致部長引咎辭職。"
+          dimension: "真·雙軌協同",
+          title: "方案 B：雙軌協定・旗艦限量典藏與良率名譽專案專函",
+          text: "「【Head】以 98.4% 極限良率將首批晶片重塑為『旗艦限量典藏版』溢價交付；【Heart】董事會簽署專案專函確認現場零過失，表彰職人工藝；【Body】建立兩地首席架構師每日 15 分鐘對等直通熱線。」",
+          tier: 1,
+          tensionDrop: "85%",
+          tensionRemaining: "15%",
+          blindspot: "【最優解（雙軌戰略協同）】：完全融合 Head（商業策略重新定調）、Heart（名譽與自尊絕對捍衛）與 Body（日常微觀對等熱線）。"
         },
         {
           id: "C",
-          title: "方案 C：非正式跨文化團隊凝聚交流",
-          text: "「規劃跨國同仁線上文化交流茶會，透過非正式輕鬆互動與生活話題分享，緩解近期專案衝刺引發的人際緊張。」",
-          penalty: -15,
-          blindspot: "文化盲點：輕浮無禮（Tone-Deaf Frivolity）。在面臨重大專案危機與信任破裂時強推休閒娛樂，被日方視為輕佻與極不專業，加劇心理反感。"
+          dimension: "程序審計型",
+          title: "方案 C：國際第三方獨立審計與專案凍結 60 天",
+          text: "「委託第三方獨立機構調查插單實情（Head），總部提撥尊嚴保障信託（Heart），改以律師專管系統對接（Body）；專案全面凍結 60 天等待調查報告。」",
+          tier: 3,
+          tensionDrop: "30%",
+          tensionRemaining: "70%",
+          blindspot: "【程序正義陷阱】：過度依賴外部中立程序，忽略了半導體商場的時效殘酷性，兩全其美卻輸掉整個市場。"
         },
         {
           id: "D",
-          title: "方案 D：設立去層級技術對等站會機制",
-          text: "「設立每日 15 分鐘『雙邊技術對等站會』，選派兼具跨文化背景之核心工程師擔任窗口，脫鉤考核流程，聚焦具體技術本體。」",
-          penalty: 0,
-          bonus: 5,
-          blindspot: "最優解：將溝通模式從「公開審訊」轉換為「同儕探討」，精準落實行為 CQ 中的語言與非語言行為靈活切換。"
-        }
-      ]
-    },
-
-    4: {
-      themeTag: "【第四回：全案巔峰情境模擬】三方非對稱協同大會審",
-      title: "華爾街做空危機與跨太平洋聯合調解協定",
-      sceneKey: "grandSummit",
-      isR4Special: true,
-
-      hqContext: {
-        title: "總部內部機密情境（第 1、2 組專屬）：華爾街做空暴跌與究責最後通牒",
-        briefing: `華爾街做空機構發布報告指控產能嚴重不足，母公司盤前股價暴跌 8.5%，各大投行與董事會要求 1 小時內發布全球重訊並指名究責，董事會揚言限期未決將撤換高層！
-
-（註：總部完全不知道東京現場其實產能被董事關係戶挪用的實情）`,
-        coreConstraint: "總部核心底線：必須在 1 小時內穩定市場預期與董事會信任，獲得可信的交付承諾或品質保證。"
-      },
-
-      tokyoContext: {
-        title: "公司現場機密情境（第 3、4 組專屬）：良率免責背書與工程師尊嚴防線",
-        briefing: `東京現場三週無休趕工良率達 98.4%，延誤全因董事關係戶挪抽 30% 產能。然而總部施壓要求現場簽署「免責背書」，若簽署未來若有瑕疵現場需負全責，若拒簽新產品可能夭折。工會與工程師全員憤怒抗議拒簽！
-
-（註：公司完全不知道總部在華爾街面臨刑事起訴與股票下市的即時生死危機）`,
-        coreConstraint: "公司核心底線：絕不背黑鍋簽署不平等免責條款，捍衛工程品質真相與團隊名譽。"
-      },
-
-      chameleonContext: {
-        title: "變色龍全域情報情境（第 5 組專屬）：跨文化仲裁與雙軌談判中心",
-        intelDossier: [
-          "【總部秘密難處】：盤前股價暴跌 8.5%，華爾街做空狙擊，限期 1 小時交代究責，否則高層撤換下台。",
-          "【公司秘密難處】：良率已達 98.4%，延誤純係關係戶抽單；總部逼簽免責背書，現場視為踐踏職人尊嚴。"
-        ],
-        mission: "變色龍獨家掌握雙方不可退讓的隱藏底線。請在 1 分鐘雙邊辯論後，選定並提出最佳調解協定，爭取雙方全體同意！"
-      },
-
-      proposals: [
-        {
-          id: "A",
-          title: "方案 A：責任對半均攤與時程歸零",
-          text: "「促成雙方即刻停火，各自承擔一半延誤責任，將專案交付時程歸零重新排程，彼此不再追究晶圓挪用細節。」",
-          blindspot: "致命缺陷（和稀泥無效妥協）：看似公平，但日方認為未查清晶圓挪用真相是栽贓，職人士氣徹底崩潰；總部投資人則認為管理層毫無合約約束力，母公司評級遭降，兩頭落空。",
-          penalty: -25
-        },
-        {
-          id: "B",
-          title: "方案 B：現實權力導向・由總部發布並事後補償分公司",
-          text: "「建議東京分公司配合總部簽署階段性背書以利對外發布，總部事後由全球研發預算提撥 20% 專案獎金補償東京團隊。」",
-          blindspot: "致命缺陷（將名譽金錢化）：將工程專業視為可買賣的商品。東京核心工程師視為收買侮辱而引發集體辭職潮，微米級封測工藝永久斷層。",
-          penalty: -30
-        },
-        {
-          id: "C",
-          title: "方案 C：聘請第三方獨立審計機構・凍結爭議 60 天",
-          text: "「建議董事會委託國際獨立第三方法律與技術機構進行中立調查，在 60 天內出具客觀責任報告後再行決定處分。」",
-          blindspot: "致命缺陷（程序正義陷阱）：錯失半導體市場 60 天發布黃金視窗，客戶直接以違約為由取消年度大單並索賠 2 億美元，專案直接夭折。",
-          penalty: -20
-        },
-        {
-          id: "D",
-          title: "方案 D：雙軌協定・技術條件書聯合簽名與旗艦品質聯席會",
-          text: "「對內由總部副總與東京部長聯名簽署『技術參數偏差專案專函』釐清現場零責任；對外由雙方共組『旗艦品質聯席委員會』，定調為工藝升級。」",
-          blindspot: "最優解（雙軌戰略協同）：精準守住現場專業與尊嚴防線，同時賦予總部對外合理的戰略說辭，建立長期平等的跨文化組織合作範式。",
-          penalty: 0,
-          bonus: 15
+          dimension: "權力失衡型",
+          title: "方案 D：總部全盤交出專案決策權予東京現場",
+          text: "「總部全面承認管理失職（Heart），將後續所有技術排程與發布決策全權委任東京現場主導（Head），總部退居純支援角色（Body）。」",
+          tier: 3,
+          tensionDrop: "20%",
+          tensionRemaining: "80%",
+          blindspot: "【權力失衡陷阱】：放棄總部應有的治理責任，引發總部董事會劇烈反彈，導致全體崩盤。"
         }
       ]
     }
   };
 
-
+  /* Mobile App State */
   const MobileState = {
     roomId: 'ob2026',
-    user: { name: '', team: 1 },
+    user: {
+      name: '',
+      team: 1 // 1..4 Decision, 5 Jury
+    },
     currentRound: 1,
-    roundStatus: 'voting',
-    r4Proposal: null,
-    r4Decision: null,
-    tensionData: null,
+    roundStatus: 'voting', // 'voting' | 'revealed'
     teams: {
-      1: { name: "第 1 組", faction: "hq", hp: 100, currentChoice: null, submitted: false },
-      2: { name: "第 2 組", faction: "hq", hp: 100, currentChoice: null, submitted: false },
-      3: { name: "第 3 組", faction: "tokyo", hp: 100, currentChoice: null, submitted: false },
-      4: { name: "第 4 組", faction: "tokyo", hp: 100, currentChoice: null, submitted: false },
-      5: { name: "第 5 組", faction: "chameleon", hp: 100, currentChoice: null, submitted: false }
-    }
+      1: { hp: 100, submitted: false, currentChoice: null },
+      2: { hp: 100, submitted: false, currentChoice: null },
+      3: { hp: 100, submitted: false, currentChoice: null },
+      4: { hp: 100, submitted: false, currentChoice: null },
+      5: { hp: 100, submitted: false }
+    },
+    // For Decision Teams: my locally selected option before sending
+    localSelectedChoice: null,
+    // For Jury: rankings assigned to teams 1..4 { 1: 1, 2: 2, 3: 1, 4: 3 } or tiers { 1: 'tier1', ... }
+    juryRankings: {},
+    jurySubmitted: false,
+    tensionData: null
   };
 
+  /* RealtimeSync: Mobile Client Side */
   const RealtimeSync = {
     roomId: 'ob2026',
-    isHost: false,
     sseSource: null,
     syncChannel: null,
+    pollTimer: null,
     processedMsgIds: new Set(),
 
     getRoomId() {
@@ -951,34 +1138,11 @@
       return 'ob2026';
     },
 
-    setRoomId(newId) {
-      if (!newId || !newId.trim()) return;
-      const clean = newId.trim().toLowerCase();
-      localStorage.setItem('ob_cq_room_id', clean);
-      const url = new URL(window.location.href);
-      url.searchParams.set('room', clean);
-      window.history.replaceState({}, '', url.toString());
-      this.roomId = clean;
-      MobileState.roomId = clean;
-      this.init();
-      showToast('已切換至房間【' + clean + '】！');
-    },
-
     updateStatusUI(connected) {
       const dot = document.getElementById('mobile-sync-dot');
-      const text = document.getElementById('round-status-indicator');
-      if (dot) {
-        dot.style.background = connected ? '#15803d' : '#dc2626';
-      }
-      if (text) {
-        if (connected) {
-          if (!text.innerText.includes('已送出') && !text.innerText.includes('開票')) {
-            text.innerText = `已連線大螢幕 · 房間 ${this.roomId}`;
-          }
-        } else {
-          text.innerText = `連線重試中 · 房間 ${this.roomId}`;
-        }
-      }
+      const text = document.getElementById('hud-sync-text');
+      if (dot) dot.style.background = connected ? '#15803d' : '#dc2626';
+      if (text) text.innerText = connected ? '即時同步' : '連線重試中';
     },
 
     init() {
@@ -986,30 +1150,28 @@
       MobileState.roomId = this.roomId;
       this.updateStatusUI(false);
 
-      // 1. BroadcastChannel (Same-device tabs)
+      // 1. BroadcastChannel
       try {
         if (this.syncChannel) this.syncChannel.close();
         this.syncChannel = new BroadcastChannel('ob_cq_channel_' + this.roomId);
         this.syncChannel.onmessage = (e) => this.handleIncoming(e.data);
       } catch (e) {}
 
-      // 2. Storage event fallback (Same-browser)
+      // 2. Storage event
       window.addEventListener('storage', (e) => {
         if (e.key === 'ob_cq_state_' + this.roomId && e.newValue) {
           try { this.handleIncoming(JSON.parse(e.newValue)); } catch (err) {}
         }
       });
 
-      // 3. Connect to ntfy.sh SSE stream for host broadcasts
+      // 3. SSE Connection to host state
       if (this.sseSource) {
         try { this.sseSource.close(); } catch (e) {}
       }
       const stateTopic = `ob_cq_state_${this.roomId}`;
       try {
         this.sseSource = new EventSource(`https://ntfy.sh/${stateTopic}/sse`);
-        this.sseSource.onopen = () => {
-          this.updateStatusUI(true);
-        };
+        this.sseSource.onopen = () => this.updateStatusUI(true);
         this.sseSource.onmessage = (e) => {
           try {
             const data = JSON.parse(e.data);
@@ -1022,15 +1184,15 @@
             }
           } catch (err) {}
         };
-        this.sseSource.onerror = () => {
-          this.updateStatusUI(false);
-        };
+        this.sseSource.onerror = () => this.updateStatusUI(false);
       } catch (err) {
         this.updateStatusUI(false);
       }
 
-      // 4. Query latest state on load to synchronize immediately
-      this.fetchLatestState();
+      // 4. Polling backup every 2.5s
+      if (this.pollTimer) clearInterval(this.pollTimer);
+      this.pollTimer = setInterval(() => this.pollState(10), 2500);
+      this.pollState(60);
     },
 
     handleIncoming(payload) {
@@ -1039,567 +1201,611 @@
       if (this.processedMsgIds.has(key)) return;
       this.processedMsgIds.add(key);
 
-      handleHostSync(payload);
+      handleHostStateMessage(payload);
     },
 
     send(packet) {
-      packet.msgId = packet.msgId || ('mob_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6));
+      packet.msgId = packet.msgId || ('mobile_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6));
       packet.timestamp = packet.timestamp || Date.now();
       packet.roomId = this.roomId;
       this.processedMsgIds.add(packet.msgId);
 
-      // Local BroadcastChannel
+      // Local broadcast
       if (this.syncChannel) {
         try { this.syncChannel.postMessage(packet); } catch (e) {}
       }
-
-      // Local storage
       try {
         localStorage.setItem('ob_cq_vote_' + this.roomId, JSON.stringify(packet));
       } catch (e) {}
 
-      // Cross-device push to host via ntfy.sh
+      // Remote POST to host
       const voteTopic = `ob_cq_vote_${this.roomId}`;
-      return fetch(`https://ntfy.sh/${voteTopic}`, {
+      fetch(`https://ntfy.sh/${voteTopic}`, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain' },
         body: JSON.stringify(packet)
-      }).catch(err => {
-        console.warn('Vote transmission error:', err);
-      });
+      }).catch(() => {});
     },
 
-    fetchLatestState() {
+    pollState(sinceSec = 10) {
       const stateTopic = `ob_cq_state_${this.roomId}`;
-      fetch(`https://ntfy.sh/${stateTopic}/json?poll=1&since=all`)
+      fetch(`https://ntfy.sh/${stateTopic}/json?poll=1&since=${sinceSec}s`)
         .then(res => res.text())
         .then(text => {
           if (!text) return;
           const lines = text.trim().split('\n');
-          for (let i = lines.length - 1; i >= 0; i--) {
-            const line = lines[i];
-            if (!line) continue;
+          lines.forEach(line => {
+            if (!line) return;
             try {
               const data = JSON.parse(line);
               if (data.event === 'message') {
+                const msgId = data.id;
+                if (msgId && this.processedMsgIds.has(msgId)) return;
+                if (msgId) this.processedMsgIds.add(msgId);
                 const payload = JSON.parse(data.message);
                 this.handleIncoming(payload);
-                break;
               }
             } catch (e) {}
-          }
+          });
         })
         .catch(() => {});
     }
   };
 
-  function showToast(text, duration = 3000) {
-    let t = document.getElementById('ios-toast');
-    if (!t) {
-      t = document.createElement('div');
-      t.id = 'ios-toast';
-      t.className = 'ios-toast';
-      document.body.appendChild(t);
-    }
-    t.innerText = text;
-    t.classList.add('show');
-    clearTimeout(t._hideTimer);
-    t._hideTimer = setTimeout(() => {
-      t.classList.remove('show');
-    }, duration);
-  }
+  /* Onboarding Logic */
+  let tempSelectedTeam = 1;
 
-  function initMobileApp() {
-    RealtimeSync.init();
-
-    // Check saved user
-    const saved = localStorage.getItem('atlas_mobile_user');
-    if (saved) {
-      try {
-        MobileState.user = JSON.parse(saved);
-        updateUserUI();
-      } catch (e) {
-        showOnboarding();
-      }
-    } else {
-      showOnboarding();
-    }
-
-    renderCurrentRound();
-  }
-
-  function showOnboarding() {
-    const modal = document.getElementById('onboarding-modal');
-    if (modal) modal.style.display = 'flex';
-    selectTeamPill(MobileState.user.team || 1);
-  }
-
-  function selectTeamPill(teamId) {
+  function selectOnboardingTeam(teamId) {
     AudioEngine.playClick();
-    document.getElementById('input-team').value = teamId;
-    for (let i = 1; i <= 5; i++) {
-      const p = document.getElementById(`pill-team-${i}`);
-      if (p) {
-        if (i === teamId) p.classList.add('active');
-        else p.classList.remove('active');
-      }
-    }
-  }
-
-  function reopenOnboarding() {
-    AudioEngine.playClick();
-    document.getElementById('input-name').value = MobileState.user.name || '';
-    const teamId = MobileState.user.team || 1;
-    document.getElementById('input-team').value = teamId;
-    selectTeamPill(teamId);
-    showOnboarding();
+    tempSelectedTeam = teamId;
+    document.querySelectorAll('.team-pill-opt').forEach((pill, idx) => {
+      pill.classList.toggle('selected', (idx + 1) === teamId);
+    });
   }
 
   function confirmOnboarding() {
     AudioEngine.playClick();
-    const name = document.getElementById('input-name').value.trim();
-    const team = parseInt(document.getElementById('input-team').value, 10);
-    if (!name) {
-      alert('請先輸入您的姓名！');
-      return;
-    }
-    MobileState.user = { name, team };
-    localStorage.setItem('atlas_mobile_user', JSON.stringify(MobileState.user));
+    const nameInput = document.getElementById('input-name');
+    let name = (nameInput && nameInput.value.trim()) ? nameInput.value.trim() : '學員代表';
+
+    MobileState.user.name = name;
+    MobileState.user.team = tempSelectedTeam;
+
+    localStorage.setItem('ob_cq_user_name', name);
+    localStorage.setItem('ob_cq_user_team', tempSelectedTeam);
+
     document.getElementById('onboarding-modal').style.display = 'none';
-    updateUserUI();
 
-    // Broadcast join event
-    broadcastToHost('TEAM_JOIN', { teamId: team, userName: name });
+    updateHUDProfile();
     renderCurrentRound();
+
+    // Send join message
+    RealtimeSync.send({
+      type: 'TEAM_JOIN',
+      teamId: MobileState.user.team,
+      name: MobileState.user.name
+    });
+
+    showToast(`歡迎進入席位：${MobileState.user.team === 5 ? '第 5 組 · 跨文化裁判組' : '第 ' + MobileState.user.team + ' 組 · 決策組'}`);
   }
 
-  function updateUserUI() {
-    document.getElementById('hud-user-name').innerText = MobileState.user.name || '學員';
-    document.getElementById('hud-user-team').innerText = `第 ${MobileState.user.team} 組`;
-    updateTeamHPUI();
-  }
-
-  function updateTeamHPUI() {
-    const team = MobileState.teams[MobileState.user.team];
-    if (!team) return;
-    document.getElementById('team-hp-title').innerText = `${team.name.split('（')[0]} 生命值`;
-    document.getElementById('team-hp-num').innerText = `${team.hp} CQ`;
-    const fill = document.getElementById('team-hp-fill');
-    if (fill) fill.style.width = `${Math.max(0, Math.min(100, team.hp))}%`;
-  }
-
-  function handleHostSync(msg) {
-    if (!msg || !msg.type) return;
-    if (msg.type === 'STATE_UPDATE' || msg.type === 'STATE_HEARTBEAT') {
-      if (msg.teams) {
-        for (let i = 1; i <= 5; i++) {
-          if (msg.teams[i]) {
-            MobileState.teams[i].hp = msg.teams[i].hp;
-            if (i !== MobileState.user.team) {
-              MobileState.teams[i].submitted = msg.teams[i].submitted;
-            }
-          }
-        }
-      }
-
-      const roundChanged = (msg.currentRound !== undefined && msg.currentRound !== MobileState.currentRound);
-      const statusChanged = (msg.roundStatus && msg.roundStatus !== MobileState.roundStatus);
-
-      if (roundChanged) {
-        MobileState.currentRound = msg.currentRound;
-        MobileState.roundStatus = msg.roundStatus || 'voting';
-        // Reset own team submission for the new round
-        MobileState.teams[MobileState.user.team].submitted = false;
-        MobileState.teams[MobileState.user.team].currentChoice = null;
-        MobileState.r4Proposal = null;
-        MobileState.r4Decision = null;
-        renderCurrentRound();
-        showToast(`簡報者已切換至第 ${msg.currentRound} 回合！`);
-      } else if (statusChanged) {
-        MobileState.roundStatus = msg.roundStatus;
-        if (msg.tensionData) MobileState.tensionData = msg.tensionData;
-        if (MobileState.roundStatus === 'revealed') {
-          applyMobileRevealedUI(msg.tensionData || MobileState.tensionData);
-          showToast('大螢幕已開票！請查看貴組 CQ 覆盤判定');
-        } else {
-          renderCurrentRound();
-        }
+  function updateHUDProfile() {
+    const nameEl = document.getElementById('hud-user-name');
+    const teamEl = document.getElementById('hud-user-team');
+    if (nameEl) nameEl.innerText = MobileState.user.name || '學員';
+    if (teamEl) {
+      if (MobileState.user.team === 5) {
+        teamEl.innerText = '第 5 組 · 跨文化裁判組 (Jury)';
+        teamEl.className = 'user-team-badge team-badge-jury';
       } else {
-        if (msg.r4Proposal && msg.r4Proposal !== MobileState.r4Proposal) {
-          MobileState.r4Proposal = msg.r4Proposal;
-          renderCurrentRound();
+        teamEl.innerText = `第 ${MobileState.user.team} 組 · 決策組`;
+        teamEl.className = 'user-team-badge team-badge-decision';
+      }
+    }
+  }
+
+  /* Host State Processing */
+  function handleHostStateMessage(msg) {
+    if (!msg || !msg.type) return;
+
+    // Check round or status changes
+    let needsRerender = false;
+
+    if (msg.currentRound !== undefined && msg.currentRound !== MobileState.currentRound) {
+      MobileState.currentRound = msg.currentRound;
+      MobileState.localSelectedChoice = null;
+      MobileState.juryRankings = {};
+      MobileState.jurySubmitted = false;
+      needsRerender = true;
+      showToast(`簡報者已切換至第 ${msg.currentRound} 回合！`);
+    }
+
+    if (msg.roundStatus && msg.roundStatus !== MobileState.roundStatus) {
+      MobileState.roundStatus = msg.roundStatus;
+      needsRerender = true;
+      if (msg.roundStatus === 'revealed') {
+        AudioEngine.playChime();
+        showToast('大螢幕已揭曉裁判評定與衝突指數！');
+      }
+    }
+
+    // Update Team HP & Submissions
+    if (msg.teams) {
+      for (let i = 1; i <= 5; i++) {
+        if (msg.teams[i]) {
+          MobileState.teams[i].hp = msg.teams[i].hp;
+          MobileState.teams[i].submitted = msg.teams[i].submitted;
         }
       }
       updateTeamHPUI();
-    } else if (msg.type === 'R4_PROPOSAL_OFFER') {
-      MobileState.r4Proposal = msg.proposalId;
-      AudioEngine.playChime();
-      renderCurrentRound();
-      showToast(`文化變色龍已提出【方案 ${msg.proposalId}】！請檢視並表態`);
-    } else if (msg.type === 'TEAM_SUBMIT') {
-      const { teamId, choiceId } = msg;
-      if (teamId === MobileState.user.team && MobileState.teams[teamId]) {
-        MobileState.teams[teamId].currentChoice = choiceId;
-        MobileState.teams[teamId].submitted = true;
-        updateSubmissionUI();
+    }
+
+    // Confidential team choices (available to Jury or to sync team submitted choice)
+    if (msg.teamChoices) {
+      for (let i = 1; i <= 4; i++) {
+        if (msg.teamChoices[i]) {
+          MobileState.teams[i].currentChoice = msg.teamChoices[i];
+        }
       }
+    }
+
+    if (msg.juryRankings) {
+      MobileState.juryRankings = msg.juryRankings;
+    }
+    if (msg.jurySubmitted !== undefined) {
+      MobileState.jurySubmitted = msg.jurySubmitted;
+    }
+    if (msg.tensionData) {
+      MobileState.tensionData = msg.tensionData;
+    }
+
+    renderCurrentRound();
+  }
+
+  function updateTeamHPUI() {
+    for (let i = 1; i <= 5; i++) {
+      const bar = document.getElementById(`hp-bar-${i}`);
+      const val = document.getElementById(`hp-val-${i}`);
+      const hp = (MobileState.teams[i] && MobileState.teams[i].hp !== undefined) ? MobileState.teams[i].hp : 100;
+      if (bar) bar.style.width = hp + '%';
+      if (val) val.innerText = hp;
     }
   }
 
-  function broadcastToHost(type, payload = {}) {
-    RealtimeSync.send({ type, ...payload });
-  }
-
+  /* Render Current Round */
   function renderCurrentRound() {
     const roundNum = MobileState.currentRound;
     const data = DilemmasData[roundNum];
     if (!data) return;
 
-    if (roundNum === 4) {
-      renderRound4Mobile(data);
-      return;
-    }
-
-    // Regular Rounds 1-3
-    document.getElementById('mobile-theme-tag').innerText = data.themeTag;
-    document.getElementById('mobile-scenario-title').innerText = data.title;
-    document.getElementById('mobile-dialogue-text').innerText = data.dialogue;
-
-    renderOptions(data.options);
-    updateSubmissionUI();
-    updateTeamHPUI();
-  }
-
-  function renderOptions(options) {
-    const list = document.getElementById('mobile-options-list');
-    const tensionWrap = document.getElementById('mobile-tension-wrap');
-    if (tensionWrap && MobileState.roundStatus === 'voting') tensionWrap.style.display = 'none';
-    if (!list) return;
-    let html = '';
-    const myTeam = MobileState.teams[MobileState.user.team];
-
-    options.forEach(opt => {
-      const isSelected = (myTeam.currentChoice === opt.id);
-      html += `
-        <div class="mobile-option-card ${isSelected ? 'selected' : ''}" id="m-opt-${opt.id}" onclick="selectMobileOption('${opt.id}')">
-          <div class="mobile-option-title">${opt.title}</div>
-          <div class="mobile-option-text">${opt.text}</div>
-          <!-- Strictly NO hints before or during voting -->
-          <div class="mobile-reveal-box ${opt.penalty < 0 ? 'reveal-penalty' : 'reveal-success'}" id="m-reveal-${opt.id}">
-            <strong>【CQ 判定結果】：${opt.penalty < 0 ? `${opt.penalty} 點 CQ` : `+${opt.bonus} 點 CQ (卓越決策)`}</strong><br>
-            <span>${opt.blindspot}</span>
-          </div>
-        </div>
-      `;
-    });
-    list.innerHTML = html;
-  }
-
-  function renderRound4Mobile(data) {
-    const userTeam = MobileState.user.team;
-    const themeTagEl = document.getElementById('mobile-theme-tag');
+    // Update Banner & Scenario
+    const tagEl = document.getElementById('mobile-theme-tag');
     const titleEl = document.getElementById('mobile-scenario-title');
+    const speakerEl = document.getElementById('mobile-speaker-label');
     const dialEl = document.getElementById('mobile-dialogue-text');
-    const list = document.getElementById('mobile-options-list');
-    const tensionWrap = document.getElementById('mobile-tension-wrap');
-    if (tensionWrap && MobileState.roundStatus === 'voting') tensionWrap.style.display = 'none';
-    const bottomBar = document.querySelector('.mobile-bottom-bar');
-    if (!list) return;
+    const statusPill = document.getElementById('mobile-round-status');
 
-    themeTagEl.innerText = data.themeTag;
+    if (tagEl) tagEl.innerText = data.themeTag;
+    if (titleEl) titleEl.innerText = data.title;
+    if (speakerEl) speakerEl.innerText = data.speaker;
+    if (dialEl) dialEl.innerText = data.dialogue.replace(/\\n/g, '\n');
 
-    if (userTeam === 1 || userTeam === 2) {
-      // HQ Perspective (Secret)
-      titleEl.innerText = data.hqContext.title;
-      dialEl.innerHTML = `${data.hqContext.briefing}<br><br><div class="r4-constraint-box"><strong>${data.hqContext.coreConstraint}</strong></div>`;
-      if (bottomBar) bottomBar.style.display = 'none';
-
-      // Proposal review area
-      const propId = MobileState.r4Proposal;
-      const proposal = propId ? data.proposals.find(p => p.id === propId) : null;
-
-      if (!proposal) {
-        list.innerHTML = `
-          <div class="r4-mobile-wait">
-            變色龍正在審閱全域情資並研擬調解協定中...<br>
-            <strong>【請先與公司代表進行 1 分鐘口頭辯論】</strong><br>
-            前半段為總部發言時間，請陳述市場做空壓力與不可退讓底線。
-          </div>
-        `;
+    if (statusPill) {
+      if (MobileState.roundStatus === 'revealed') {
+        statusPill.innerText = '評定已揭曉';
+        statusPill.className = 'round-status-pill status-pill-revealed';
       } else {
-        const myDec = MobileState.r4Decision;
-        list.innerHTML = `
-          <div class="r4-prop-review-card">
-            <div class="r4-prop-review-title">【收到變色龍最新調解方案：${proposal.title}】</div>
-            <div class="r4-prop-review-text">${proposal.text}</div>
-            <div style="font-size: 12px; color: var(--text-secondary);">請總部內部審議後表態：</div>
-            <div class="r4-vote-btn-group">
-              <button class="r4-vote-btn accept ${myDec === 'accept' ? 'selected' : ''}" onclick="submitR4Decision('accept')">可接受此提案</button>
-              <button class="r4-vote-btn reject ${myDec === 'reject' ? 'selected' : ''}" onclick="submitR4Decision('reject')">不接受此提案</button>
-            </div>
-            ${myDec ? `<div style="font-size: 11.5px; color: #38bdf8; text-align: center; margin-top: 4px;">貴組已表態：【${myDec === 'accept' ? '可接受' : '不接受'}】。等待開票！</div>` : ''}
-          </div>
-        `;
+        statusPill.innerText = '決策與評定中';
+        statusPill.className = 'round-status-pill status-pill-voting';
       }
-    } else if (userTeam === 3 || userTeam === 4) {
-      // Company Perspective (Secret)
-      titleEl.innerText = data.tokyoContext.title;
-      dialEl.innerHTML = `${data.tokyoContext.briefing}<br><br><div class="r4-constraint-box"><strong>${data.tokyoContext.coreConstraint}</strong></div>`;
-      if (bottomBar) bottomBar.style.display = 'none';
+    }
 
-      const propId = MobileState.r4Proposal;
-      const proposal = propId ? data.proposals.find(p => p.id === propId) : null;
+    const container = document.getElementById('dynamic-role-container');
+    if (!container) return;
 
-      if (!proposal) {
-        list.innerHTML = `
-          <div class="r4-mobile-wait">
-            變色龍正在審閱全域情資並研擬調解協定中...<br>
-            <strong>【請先與總部代表進行 1 分鐘口頭辯論】</strong><br>
-            後半段為公司發言時間，請陳述現場良率實情與責任底線。
-          </div>
-        `;
+    if (MobileState.user.team === 5) {
+      renderJuryView(container, data);
+    } else {
+      renderDecisionTeamView(container, data);
+    }
+  }
+
+  /* MODE A: DECISION TEAMS (Teams 1 - 4) */
+  function renderDecisionTeamView(container, data) {
+    const myTeam = MobileState.user.team;
+    const myTeamState = MobileState.teams[myTeam];
+    const isSubmitted = myTeamState && myTeamState.submitted;
+    const submittedChoiceId = myTeamState ? myTeamState.currentChoice : null;
+    const isRevealed = (MobileState.roundStatus === 'revealed');
+
+    let html = '';
+
+    if (isRevealed) {
+      // REVEALED STATE
+      const myChoice = data.options.find(o => o.id === (submittedChoiceId || MobileState.localSelectedChoice)) || data.options[0];
+      const isRound3 = (MobileState.currentRound === 3);
+      const rankings = MobileState.juryRankings || {};
+      const myRank = rankings[myTeam];
+
+      let rankDisplay = '第 1 名 · 體感衝突最低';
+      if (isRound3) {
+        if (myRank === 'tier1') rankDisplay = '卓越雙贏階層 (Tier 1)';
+        else if (myRank === 'tier2') rankDisplay = '局部妥協階層 (Tier 2)';
+        else rankDisplay = '嚴重破局階層 (Tier 3)';
       } else {
-        const myDec = MobileState.r4Decision;
-        list.innerHTML = `
-          <div class="r4-prop-review-card">
-            <div class="r4-prop-review-title">【收到變色龍最新調解方案：${proposal.title}】</div>
-            <div class="r4-prop-review-text">${proposal.text}</div>
-            <div style="font-size: 12px; color: var(--text-secondary);">請公司現場內部審議後表態：</div>
-            <div class="r4-vote-btn-group">
-              <button class="r4-vote-btn accept ${myDec === 'accept' ? 'selected' : ''}" onclick="submitR4Decision('accept')">可接受此提案</button>
-              <button class="r4-vote-btn reject ${myDec === 'reject' ? 'selected' : ''}" onclick="submitR4Decision('reject')">不接受此提案</button>
-            </div>
-            ${myDec ? `<div style="font-size: 11.5px; color: #34d399; text-align: center; margin-top: 4px;">貴組已表態：【${myDec === 'accept' ? '可接受' : '不接受'}】。等待開票！</div>` : ''}
-          </div>
-        `;
+        rankDisplay = myRank ? `並列第 ${myRank} 名` : '已完成體感衝突評定';
       }
-    } else if (userTeam === 5) {
-      // Chameleon Perspective (All-seeing Intel)
-      titleEl.innerText = data.chameleonContext.title;
-      dialEl.innerHTML = `
-        <div class="r4-mobile-intel-box">
-          <div class="r4-intel-heading">【獨家全域情報（僅變色龍掌握）】</div>
-          <div class="r4-intel-item">${data.chameleonContext.intelDossier[0]}</div>
-          <div class="r4-intel-item">${data.chameleonContext.intelDossier[1]}</div>
+
+      html = `
+        <div class="revealed-debrief-card">
+          <div class="debrief-header">
+            <span class="debrief-title">第 ${myTeam} 組 · 決策覆盤與裁判評定</span>
+            <span class="debrief-rank-badge">${rankDisplay}</span>
+          </div>
+
+          <div style="font-size: 13px; color: var(--ios-label);">
+            <strong>【貴組送出方案】：</strong>${myChoice.title}（${myChoice.dimension}）<br>
+            <span style="font-size: 12.5px; color: #44403c;">${myChoice.text}</span>
+          </div>
+
+          <div class="tension-metrics-box">
+            <div class="tension-metrics-row">
+              <span>起始衝突張力：98%</span>
+              <span style="color: var(--ios-green);">張力降低：${myChoice.tensionDrop}</span>
+              <span style="font-weight: 700;">殘餘張力：${myChoice.tensionRemaining}</span>
+            </div>
+            <div class="tension-track">
+              <div class="tension-fill" style="width: ${parseInt(myChoice.tensionRemaining || '50')}%;"></div>
+            </div>
+          </div>
+
+          <div class="revealed-blindspot-box">
+            <strong>【暗藏文化代價（裁判組揭密）】：</strong><br>
+            ${myChoice.blindspot}
+          </div>
         </div>
-        <p style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);">${data.chameleonContext.mission}</p>
       `;
 
-      if (bottomBar) bottomBar.style.display = 'flex';
-      const myChoice = MobileState.teams[5].currentChoice;
+      // Hide bottom action bar on reveal
+      const bottomBar = document.getElementById('mobile-bottom-bar');
+      if (bottomBar) bottomBar.style.display = 'none';
 
-      let html = '';
-      data.proposals.forEach(prop => {
-        const isSel = (myChoice === prop.id);
+    } else if (isSubmitted) {
+      // GROUP LOCKED STATE (Anonymous lock: "本組代表已送出：選項 X")
+      const myChoice = data.options.find(o => o.id === (submittedChoiceId || MobileState.localSelectedChoice)) || data.options[0];
+      const bottomBar = document.getElementById('mobile-bottom-bar');
+      if (bottomBar) bottomBar.style.display = 'none';
+
+      html = `
+        <div class="group-lock-card">
+          <div class="group-lock-title">
+            <span>本組代表決策已確認送出：方案 ${myChoice.id}</span>
+          </div>
+          <div class="group-lock-desc">
+            <strong>${myChoice.title}</strong><br>
+            ${myChoice.text}
+          </div>
+          <div class="persuasion-pitch-box">
+            <div class="pitch-box-title">進入 30 秒申辯說服席</div>
+            <div class="pitch-box-text">
+              貴組決策已同步傳送至第 5 組裁判！請推派發言代表向裁判組闡述決策理由，說服裁判組評定貴組為「衝突最低方案」！
+            </div>
+          </div>
+        </div>
+
+        <div class="options-section" style="opacity: 0.7; pointer-events: none; margin-top: 10px;">
+          <div class="section-title-row">
+            <span class="section-title">本回合四選一方案清單（已鎖定）</span>
+          </div>
+      `;
+
+      data.options.forEach(opt => {
+        const isChosen = (opt.id === myChoice.id);
         html += `
-          <div class="mobile-option-card ${isSel ? 'selected' : ''}" onclick="selectChameleonProposal('${prop.id}')">
-            <div class="mobile-option-title">${prop.title}</div>
-            <div class="mobile-option-text">${prop.text}</div>
+          <div class="option-card ${isChosen ? 'locked-selected' : ''}">
+            <div class="option-header-row">
+              <span class="option-title">${opt.title}</span>
+              <span class="option-dimension-pill">${opt.dimension}</span>
+            </div>
+            <div class="option-text">${opt.text}</div>
           </div>
         `;
       });
-      list.innerHTML = html;
+      html += `</div>`;
 
-      const submitBtn = document.getElementById('btn-bottom-submit');
-      const textLabel = document.getElementById('bottom-selected-text');
-      if (myChoice) {
-        textLabel.innerText = `選定方案：${myChoice}（隨時可調整重送）`;
-        submitBtn.innerText = '送出調解提案給雙方';
-        submitBtn.disabled = false;
-      } else {
-        textLabel.innerText = '請選定調解方案';
-        submitBtn.innerText = '送出調解提案給雙方';
-        submitBtn.disabled = true;
-      }
-    }
-  }
-
-  function selectChameleonProposal(propId) {
-    AudioEngine.playClick();
-    MobileState.teams[5].currentChoice = propId;
-    renderCurrentRound();
-  }
-
-  function submitR4Decision(decision) {
-    AudioEngine.playClick();
-    MobileState.r4Decision = decision;
-    MobileState.teams[MobileState.user.team].currentChoice = decision;
-    MobileState.teams[MobileState.user.team].submitted = true;
-    renderCurrentRound();
-
-    broadcastToHost('R4_DECISION', {
-      teamId: MobileState.user.team,
-      decision: decision
-    });
-  }
-
-
-  function selectMobileOption(choiceId) {
-    AudioEngine.playClick();
-    if (MobileState.roundStatus === 'revealed') return;
-    const myTeam = MobileState.teams[MobileState.user.team];
-    if (myTeam.submitted) return;
-
-    myTeam.currentChoice = choiceId;
-    document.querySelectorAll('.mobile-option-card').forEach(c => c.classList.remove('selected'));
-    const target = document.getElementById(`m-opt-${choiceId}`);
-    if (target) target.classList.add('selected');
-
-    updateSubmissionUI();
-  }
-
-  function updateSubmissionUI() {
-    const myTeam = MobileState.teams[MobileState.user.team];
-    const textLabel = document.getElementById('bottom-selected-text');
-    const submitBtn = document.getElementById('btn-bottom-submit');
-    const statusIndicator = document.getElementById('round-status-indicator');
-
-    const bannerTitle = document.getElementById('mobile-banner-title');
-    const bannerDesc = document.getElementById('mobile-banner-desc');
-
-    if (myTeam.submitted) {
-      textLabel.innerText = `本組已送出：選項 ${myTeam.currentChoice}`;
-      submitBtn.innerText = '已送出代表決策';
-      submitBtn.disabled = true;
-      statusIndicator.innerText = '已送出 · 請看大螢幕';
-      if (bannerTitle) bannerTitle.innerText = `貴組已送出代表決策：選項 ${myTeam.currentChoice}`;
-      if (bannerDesc) bannerDesc.innerText = '每組投票獨立保密不互通。請抬頭看前方大螢幕，等待報告者揭曉全班投票結果。';
-    } else if (myTeam.currentChoice) {
-      textLabel.innerText = `已選取：選項 ${myTeam.currentChoice}`;
-      submitBtn.innerText = '送出本組決策';
-      submitBtn.disabled = false;
-      statusIndicator.innerText = '請確認並送出';
-      if (bannerTitle) bannerTitle.innerText = '組內決策研討中';
-      if (bannerDesc) bannerDesc.innerText = '每組投票獨立保密不互通，請組內取得共識後選取並送出。';
     } else {
-      textLabel.innerText = '尚未選取選項';
-      submitBtn.innerText = '送出本組決策';
-      submitBtn.disabled = true;
-      statusIndicator.innerText = '決策研討中';
-      if (bannerTitle) bannerTitle.innerText = '組內決策研討中';
-      if (bannerDesc) bannerDesc.innerText = '每組投票獨立保密不互通，請組內取得共識後選取並送出。';
+      // ACTIVE VOTING STATE (Read options without blindspots, select & submit)
+      const bottomBar = document.getElementById('mobile-bottom-bar');
+      if (bottomBar) bottomBar.style.display = 'flex';
+
+      html = `
+        <div class="options-section">
+          <div class="section-title-row">
+            <span class="section-title">四選一策略應對方案</span>
+            <span class="section-tip">全組共用一隻手機送出代表決策</span>
+          </div>
+      `;
+
+      data.options.forEach(opt => {
+        const isSel = (MobileState.localSelectedChoice === opt.id);
+        html += `
+          <div class="option-card ${isSel ? 'selected' : ''}" onclick="selectDecisionOption('${opt.id}')">
+            <div class="option-header-row">
+              <span class="option-title">${opt.title}</span>
+              <span class="option-dimension-pill">${opt.dimension}</span>
+            </div>
+            <div class="option-text">${opt.text}</div>
+          </div>
+        `;
+      });
+      html += `</div>`;
+
+      updateBottomBarDecision();
+    }
+
+    container.innerHTML = html;
+  }
+
+  function selectDecisionOption(optId) {
+    AudioEngine.playClick();
+    MobileState.localSelectedChoice = optId;
+    renderCurrentRound();
+  }
+
+  function updateBottomBarDecision() {
+    const bottomBar = document.getElementById('mobile-bottom-bar');
+    const title = document.getElementById('bottom-bar-title');
+    const sub = document.getElementById('bottom-bar-sub');
+    const btn = document.getElementById('btn-bottom-action');
+    if (!bottomBar || !btn) return;
+
+    bottomBar.style.display = 'flex';
+    btn.className = 'btn-submit-action';
+
+    if (MobileState.localSelectedChoice) {
+      const data = DilemmasData[MobileState.currentRound];
+      const opt = data.options.find(o => o.id === MobileState.localSelectedChoice);
+      title.innerText = `選定方案：${opt.id} · ${opt.title}`;
+      sub.innerText = `代表第 ${MobileState.user.team} 組送出`;
+      btn.disabled = false;
+      btn.innerText = `代表本組確認送出`;
+    } else {
+      title.innerText = '請選定策略方案';
+      sub.innerText = '點擊上方選項進行選取';
+      btn.disabled = true;
+      btn.innerText = '確認送出';
     }
   }
 
-  function submitDecision() {
+  function submitTeamDecision() {
+    if (!MobileState.localSelectedChoice) return;
     AudioEngine.playChime();
-    const myTeam = MobileState.teams[MobileState.user.team];
-    if (!myTeam.currentChoice) return;
+    const myTeam = MobileState.user.team;
+    const choiceId = MobileState.localSelectedChoice;
 
-    if (MobileState.currentRound === 4 && MobileState.user.team === 5) {
-      MobileState.r4Proposal = myTeam.currentChoice;
-      myTeam.submitted = true;
-      broadcastToHost('CHAMELEON_PROPOSAL', {
-        proposalId: myTeam.currentChoice
-      });
-      showToast('已將【方案 ' + myTeam.currentChoice + '】送達總部與公司端！雙方正在審議中。');
-      renderCurrentRound();
+    MobileState.teams[myTeam].currentChoice = choiceId;
+    MobileState.teams[myTeam].submitted = true;
+
+    // Send to host and peers
+    RealtimeSync.send({
+      type: 'TEAM_SUBMIT',
+      teamId: myTeam,
+      choiceId: choiceId
+    });
+
+    renderCurrentRound();
+    showToast(`第 ${myTeam} 組代表決策已確認送出！請派員進行 30 秒申辯`);
+  }
+
+  /* MODE B: JURY (Team 5) */
+  function renderJuryView(container, data) {
+    const isRound3 = (MobileState.currentRound === 3);
+    const isRevealed = (MobileState.roundStatus === 'revealed');
+
+    let allSubmitted = true;
+    for (let i = 1; i <= 4; i++) {
+      if (!MobileState.teams[i].submitted) allSubmitted = false;
+    }
+
+    let html = `
+      <div class="jury-monitor-card">
+        <div class="jury-header-row">
+          <span class="jury-badge-title">第 5 組 · 跨文化裁判組專屬席</span>
+          <span style="font-size: 11.5px; color: var(--ios-purple); font-weight: 700;">
+            ${allSubmitted ? '第 1~4 組已全數送出' : '決策即時監控席'}
+          </span>
+        </div>
+        <div class="jury-progress-chips">
+    `;
+
+    for (let i = 1; i <= 4; i++) {
+      const isDone = MobileState.teams[i].submitted;
+      html += `
+        <span class="jury-team-chip ${isDone ? 'chip-done' : 'chip-wait'}">
+          第 ${i} 組：${isDone ? '已送出 (' + (MobileState.teams[i].currentChoice || '已鎖定') + ')' : '研議中...'}
+        </span>
+      `;
+    }
+
+    html += `
+        </div>
+        <div class="jury-preview-intel">
+          裁判提示：聆聽各組 30 秒申辯說服，並參考下方暗藏文化代價評定「體感衝突指數」。
+          ${isRound3 ? '（第 3 回合可評為同一階層）' : '（支援並列同名次，可給予相同排序）'}
+        </div>
+      </div>
+    `;
+
+    // Evaluation Cards for Teams 1 to 4
+    html += `<div style="display: flex; flex-direction: column; gap: 12px; margin-top: 10px;">`;
+
+    for (let tid = 1; tid <= 4; tid++) {
+      const choiceId = MobileState.teams[tid].currentChoice;
+      const opt = choiceId ? data.options.find(o => o.id === choiceId) : null;
+      const assignedRank = MobileState.juryRankings[tid];
+
+      html += `
+        <div class="jury-team-eval-card">
+          <div class="eval-card-header">
+            <span class="eval-team-title">第 ${tid} 組</span>
+            <span class="eval-choice-badge">${opt ? '已選方案 ' + opt.id : '尚未送出方案'}</span>
+          </div>
+      `;
+
+      if (opt) {
+        html += `
+          <div class="eval-option-content">
+            <strong>【${opt.title}】（${opt.dimension}）：</strong><br>
+            ${opt.text}
+          </div>
+          <div class="eval-blindspot-box">
+            <strong>【暗藏文化代價（裁判情資）】：</strong><br>
+            ${opt.blindspot}
+          </div>
+        `;
+      } else {
+        html += `
+          <div class="eval-option-content" style="color: var(--ios-tertiary-label); font-style: italic;">
+            該組正在熱烈研討中，方案送出後將即時揭露其暗藏代價...
+          </div>
+        `;
+      }
+
+      // Ranking Controls
+      html += `<div class="ranking-control-wrap">`;
+      if (isRound3) {
+        html += `
+          <div class="ranking-control-label">評定調解階層（可同階層）：</div>
+          <div class="tier-buttons-group">
+            <button class="tier-btn ${assignedRank === 'tier1' ? 'active' : ''}" onclick="setJuryTier(${tid}, 'tier1')">
+              <span>卓越雙贏階層 (Tier 1)</span>
+              <span style="font-size: 11px; opacity: 0.85;">化解做空並捍衛現場名譽</span>
+            </button>
+            <button class="tier-btn ${assignedRank === 'tier2' ? 'active' : ''}" onclick="setJuryTier(${tid}, 'tier2')">
+              <span>局部妥協階層 (Tier 2)</span>
+              <span style="font-size: 11px; opacity: 0.85;">三維兼顧但忽視實體產能</span>
+            </button>
+            <button class="tier-btn ${assignedRank === 'tier3' ? 'active' : ''}" onclick="setJuryTier(${tid}, 'tier3')">
+              <span>嚴重破局階層 (Tier 3)</span>
+              <span style="font-size: 11px; opacity: 0.85;">程序審計拖延或權力失衡</span>
+            </button>
+          </div>
+        `;
+      } else {
+        html += `
+          <div class="ranking-control-label">評定體感衝突排序（支援並列同名次）：</div>
+          <div class="rank-buttons-group">
+            <button class="rank-btn ${assignedRank === 1 ? 'active' : ''}" onclick="setJuryRank(${tid}, 1)">第 1 名<br><span style="font-size:10px;font-weight:normal;">衝突最低</span></button>
+            <button class="rank-btn ${assignedRank === 2 ? 'active' : ''}" onclick="setJuryRank(${tid}, 2)">第 2 名</button>
+            <button class="rank-btn ${assignedRank === 3 ? 'active' : ''}" onclick="setJuryRank(${tid}, 3)">第 3 名</button>
+            <button class="rank-btn ${assignedRank === 4 ? 'active' : ''}" onclick="setJuryRank(${tid}, 4)">第 4 名<br><span style="font-size:10px;font-weight:normal;">衝突最高</span></button>
+          </div>
+        `;
+      }
+      html += `</div></div>`;
+    }
+
+    html += `</div>`;
+    container.innerHTML = html;
+
+    updateBottomBarJury();
+  }
+
+  function setJuryRank(teamId, rank) {
+    AudioEngine.playClick();
+    MobileState.juryRankings[teamId] = rank;
+    renderCurrentRound();
+  }
+
+  function setJuryTier(teamId, tierKey) {
+    AudioEngine.playClick();
+    MobileState.juryRankings[teamId] = tierKey;
+    renderCurrentRound();
+  }
+
+  function updateBottomBarJury() {
+    const bottomBar = document.getElementById('mobile-bottom-bar');
+    const title = document.getElementById('bottom-bar-title');
+    const sub = document.getElementById('bottom-bar-sub');
+    const btn = document.getElementById('btn-bottom-action');
+    if (!bottomBar || !btn) return;
+
+    if (MobileState.roundStatus === 'revealed') {
+      bottomBar.style.display = 'none';
       return;
     }
 
-    myTeam.submitted = true;
-    updateSubmissionUI();
+    bottomBar.style.display = 'flex';
+    btn.className = 'btn-submit-action btn-jury-action';
 
-    broadcastToHost('TEAM_SUBMIT', {
-      teamId: MobileState.user.team,
-      choiceId: myTeam.currentChoice,
-      userName: MobileState.user.name
+    const rankedCount = Object.keys(MobileState.juryRankings).length;
+    if (rankedCount >= 1) {
+      title.innerText = `裁判評定席（已評定 ${rankedCount}/4 組）`;
+      sub.innerText = '支援並列同名次，可直接送出';
+      btn.disabled = false;
+      btn.innerText = MobileState.jurySubmitted ? '修改重送裁判裁決' : '確認送出體感衝突評定';
+    } else {
+      title.innerText = '裁判評定席';
+      sub.innerText = '請為各組點選衝突名次或階層';
+      btn.disabled = true;
+      btn.innerText = '送出裁判裁決';
+    }
+  }
+
+  function submitJuryVerdict() {
+    AudioEngine.playChime();
+    MobileState.jurySubmitted = true;
+
+    // Send rankings to host
+    RealtimeSync.send({
+      type: 'JURY_RANK_SUBMIT',
+      rankings: MobileState.juryRankings
     });
 
-    showToast(`決策已送達簡報大螢幕：選項 ${myTeam.currentChoice}`);
+    renderCurrentRound();
+    showToast('裁判裁決已送出！大螢幕即時同步呈現');
   }
 
-  function applyMobileRevealedUI(tensionData) {
-    const currentData = DilemmasData[MobileState.currentRound];
-    if (!currentData) return;
-    const myTeam = MobileState.teams[MobileState.user.team];
-    const bannerTitle = document.getElementById('mobile-banner-title');
-    const bannerDesc = document.getElementById('mobile-banner-desc');
-
-    if (bannerTitle) bannerTitle.innerText = `【開票完成】貴組選擇：選項 ${myTeam.currentChoice || '未作答'}`;
-    if (bannerDesc) bannerDesc.innerText = '全班各組投票統計分佈僅於前方大螢幕報告者主控台顯示。貴組之 CQ 判定、對話張力變化與決策覆盤如下：';
-
-    // Render iOS Mobile Tension Card
-    const tensionWrap = document.getElementById('mobile-tension-wrap');
-    if (tensionWrap) {
-      tensionWrap.style.display = 'block';
-
-      if (MobileState.currentRound === 4) {
-        const isAgreement = tensionData ? tensionData.isAgreement : true;
-        const prop = currentData.proposals.find(p => p.id === MobileState.r4Proposal) || currentData.proposals[3];
-        const initialTension = currentData.initialTension || "98%";
-        const tensionDrop = isAgreement ? prop.tensionDrop : "0%";
-        const tensionRemaining = isAgreement ? prop.tensionRemaining : "100%";
-        const tensionComment = isAgreement ? prop.tensionComment : "談判破局！華爾街做空狙擊，東京集體辭職，對話張力飆升至 100% 毀滅性爆點！";
-        const isDrop = isAgreement && (prop.tensionDrop !== "0%");
-
-        tensionWrap.innerHTML = `
-          <div class="ios-mobile-tension-card">
-            <div class="ios-tension-top">
-              <span class="ios-tension-pill">對話張力即時公布</span>
-              <span class="ios-tension-delta-badge ${isDrop ? 'delta-high-drop' : 'delta-no-drop'}">
-                ${isDrop ? `張力降低 ${tensionDrop}` : `張力未降低（極限緊繃）`}
-              </span>
-            </div>
-            <div class="ios-tension-gauge-wrap">
-              <div class="ios-tension-track">
-                <div class="ios-tension-fill" style="width: ${parseInt(tensionRemaining)}%; background: ${isDrop ? 'var(--ios-green)' : 'var(--ios-red)'};"></div>
-              </div>
-              <div class="ios-tension-labels">
-                <span>起始張力：${initialTension}</span>
-                <span class="ios-tension-current-val">目前張力：${tensionRemaining}</span>
-              </div>
-            </div>
-            <div class="ios-tension-comment"><strong>【調解張力解析】：</strong>${tensionComment}</div>
-          </div>
-        `;
-      } else {
-        let opt = currentData.options.find(o => o.id === myTeam.currentChoice);
-        if (!opt) opt = currentData.options[0];
-        const initialTension = currentData.initialTension || "85%";
-        const isDrop = (opt.tensionDrop !== "0%");
-
-        tensionWrap.innerHTML = `
-          <div class="ios-mobile-tension-card">
-            <div class="ios-tension-top">
-              <span class="ios-tension-pill">對話張力即時公布</span>
-              <span class="ios-tension-delta-badge ${isDrop ? 'delta-high-drop' : 'delta-no-drop'}">
-                ${isDrop ? `貴組使張力降低 ${opt.tensionDrop}` : `張力未降低（加劇緊繃）`}
-              </span>
-            </div>
-            <div class="ios-tension-gauge-wrap">
-              <div class="ios-tension-track">
-                <div class="ios-tension-fill" style="width: ${parseInt(opt.tensionRemaining)}%; background: ${isDrop ? 'var(--ios-green)' : 'var(--ios-red)'};"></div>
-              </div>
-              <div class="ios-tension-labels">
-                <span>起始張力：${initialTension}</span>
-                <span class="ios-tension-current-val">目前張力：${opt.tensionRemaining}</span>
-              </div>
-            </div>
-            <div class="ios-tension-comment"><strong>【貴組決策張力解析】：</strong>${opt.tensionComment}</div>
-          </div>
-        `;
-      }
+  /* Bottom Bar Action Dispatcher */
+  function handleBottomActionClick() {
+    if (MobileState.user.team === 5) {
+      submitJuryVerdict();
+    } else {
+      submitTeamDecision();
     }
-
-    let opts = currentData.options;
-    if (opts) {
-      opts.forEach(opt => {
-        const box = document.getElementById(`m-reveal-${opt.id}`);
-        const card = document.getElementById(`m-opt-${opt.id}`);
-        if (box) {
-          box.style.display = 'block';
-        }
-        if (card && opt.id === myTeam.currentChoice) {
-          card.classList.add('my-team-chosen');
-        }
-      });
-    }
-    document.getElementById('round-status-indicator').innerText = '開票完成 · 請看大螢幕';
   }
 
+  function promptSwitchRoom() {
+    const curr = MobileState.roomId || 'ob2026';
+    const nextRoom = prompt('請輸入要切換的博弈房間代碼：', curr);
+    if (nextRoom && nextRoom.trim()) {
+      RealtimeSync.setRoomId(nextRoom.trim().toLowerCase());
+    }
+  }
+
+  /* Initialization */
   window.addEventListener('DOMContentLoaded', () => {
-    initMobileApp();
+    RealtimeSync.init();
+
+    // Restore saved user info if exists
+    const savedName = localStorage.getItem('ob_cq_user_name');
+    const savedTeam = localStorage.getItem('ob_cq_user_team');
+
+    if (savedName && savedTeam) {
+      MobileState.user.name = savedName;
+      MobileState.user.team = parseInt(savedTeam);
+      document.getElementById('onboarding-modal').style.display = 'none';
+      updateHUDProfile();
+      renderCurrentRound();
+
+      RealtimeSync.send({
+        type: 'TEAM_JOIN',
+        teamId: MobileState.user.team,
+        name: MobileState.user.name
+      });
+    } else {
+      document.getElementById('onboarding-modal').style.display = 'flex';
+    }
   });
 </script>
 
