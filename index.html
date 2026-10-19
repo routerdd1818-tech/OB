@@ -6,28 +6,31 @@
   <title>Project ATLAS：跨文化職場對話博弈（學員手機端）</title>
   <style>
     :root {
-      --bg-base: #100c09;
-      --bg-app: #15100c;
-      --bg-panel: rgba(26, 19, 15, 0.96);
-      --bg-panel-elevated: rgba(38, 28, 22, 0.98);
-      --border-subtle: rgba(180, 138, 98, 0.22);
-      --border-medium: rgba(180, 138, 98, 0.4);
-      --border-focus: rgba(217, 119, 6, 0.75);
-      --accent-amber: #d97706;
-      --accent-gold: #f59e0b;
-      --accent-cream: #fef3c7;
-      --text-primary: #fdfbf7;
-      --text-secondary: #e2d7cc;
-      --text-muted: #9e9185;
-      --color-danger: #dc2626;
-      --color-success: #059669;
-      --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      --bg-canvas: #090a0f;
+      --bg-surface: #10121a;
+      --bg-card: #151822;
+      --bg-card-hover: #1b1f2c;
+      --bg-elevated: #1f2432;
+      --border-subtle: rgba(255, 255, 255, 0.08);
+      --border-medium: rgba(255, 255, 255, 0.14);
+      --border-focus: #3b82f6;
+      --text-primary: #f8fafc;
+      --text-secondary: #94a3b8;
+      --text-muted: #64748b;
+      --accent-blue: #3b82f6;
+      --color-success: #10b981;
+      --color-warning: #f59e0b;
+      --color-danger: #f43f5e;
+      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", sans-serif;
+      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
     }
+
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
+
     body {
-      background: var(--bg-base);
+      background: var(--bg-canvas);
       color: var(--text-primary);
-      font-family: var(--font-main);
+      font-family: var(--font-sans);
       overflow-x: hidden;
       min-height: 100vh;
       display: flex;
@@ -35,16 +38,17 @@
       align-items: flex-start;
       -webkit-font-smoothing: antialiased;
     }
+
     #app-container {
       position: relative;
       width: 100%;
-      max-width: 500px;
+      max-width: 480px;
       min-height: 100vh;
-      background: var(--bg-app);
+      background: var(--bg-surface);
       display: flex;
       flex-direction: column;
-      box-shadow: 0 0 30px rgba(0, 0, 0, 0.85);
-      padding-bottom: 90px;
+      box-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
+      padding-bottom: 85px;
     }
 
     /* Mobile Header */
@@ -52,9 +56,9 @@
       position: sticky;
       top: 0;
       z-index: 90;
-      background: rgba(22, 16, 12, 0.98);
-      border-bottom: 1.5px solid var(--border-subtle);
-      backdrop-filter: blur(12px);
+      background: rgba(16, 18, 26, 0.96);
+      border-bottom: 1px solid var(--border-subtle);
+      backdrop-filter: blur(16px);
       padding: 10px 14px;
       display: flex;
       flex-direction: column;
@@ -69,22 +73,25 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      background: rgba(38, 28, 22, 0.9);
-      border: 1px solid var(--border-medium);
+      background: #151822;
+      border: 1px solid var(--border-subtle);
       padding: 4px 10px;
-      border-radius: 14px;
+      border-radius: 6px;
       font-size: 11.5px;
       cursor: pointer;
+      transition: all 0.15s ease;
     }
-    .user-name-text { font-weight: 700; color: #fdfbf7; }
-    .user-team-text { font-weight: 600; color: #fbbf24; }
+    .user-profile-badge:hover { border-color: var(--border-medium); }
+    .user-name-text { font-weight: 600; color: #f8fafc; }
+    .user-team-text { font-weight: 500; color: #60a5fa; font-family: var(--font-mono); }
+    .header-round-indicator { font-size: 11px; font-weight: 500; color: var(--text-muted); }
 
     /* Team Health Card */
     .mobile-team-hp-card {
-      background: rgba(30, 22, 17, 0.95);
-      border: 1px solid var(--border-medium);
-      border-radius: 8px;
-      padding: 8px 12px;
+      background: #0d0f15;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 8px 10px;
       display: flex;
       flex-direction: column;
       gap: 4px;
@@ -94,22 +101,22 @@
       justify-content: space-between;
       align-items: center;
       font-size: 11.5px;
-      font-weight: 700;
+      font-weight: 600;
     }
-    .mobile-team-title { color: #e2d7cc; }
-    .mobile-team-hp-num { color: #10b981; font-size: 13px; font-weight: 800; }
+    .mobile-team-title { color: var(--text-secondary); }
+    .mobile-team-hp-num { color: var(--color-success); font-family: var(--font-mono); font-size: 13px; font-weight: 700; }
     .mobile-team-hp-track {
       width: 100%;
-      height: 7px;
-      background: rgba(0, 0, 0, 0.5);
-      border-radius: 3.5px;
+      height: 3px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 2px;
       overflow: hidden;
     }
     .mobile-team-hp-fill {
       height: 100%;
       width: 100%;
-      background: linear-gradient(90deg, #10b981, #059669);
-      transition: width 0.6s ease;
+      background: var(--color-success);
+      transition: width 0.6s ease, background 0.3s ease;
     }
 
     /* Mobile Arena */
@@ -120,8 +127,8 @@
       gap: 12px;
     }
     .scenario-brief-card {
-      background: var(--bg-panel);
-      border: 1.5px solid var(--border-subtle);
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
       border-radius: 8px;
       padding: 14px;
       display: flex;
@@ -133,22 +140,24 @@
       align-items: center;
       gap: 4px;
       font-size: 10.5px;
-      font-weight: 700;
-      color: #fde68a;
-      background: rgba(217, 119, 6, 0.25);
+      font-weight: 600;
+      color: #60a5fa;
+      background: rgba(59, 130, 246, 0.1);
       padding: 2px 8px;
-      border-radius: 10px;
+      border-radius: 4px;
+      border: 1px solid rgba(59, 130, 246, 0.25);
       width: fit-content;
     }
-    .scenario-title { font-size: 15px; font-weight: 800; color: #fdfbf7; }
+    .scenario-title { font-size: 15px; font-weight: 700; color: #f8fafc; letter-spacing: -0.01em; }
     .scenario-dialogue {
-      background: rgba(18, 13, 10, 0.85);
+      background: #0d0f15;
+      border: 1px solid var(--border-subtle);
+      border-left: 3px solid var(--accent-blue);
       border-radius: 6px;
       padding: 10px 12px;
       font-size: 12.5px;
       line-height: 1.6;
-      color: #fef3c7;
-      border-left: 3px solid #f59e0b;
+      color: #f1f5f9;
     }
 
     /* Options List */
@@ -158,49 +167,50 @@
       gap: 10px;
     }
     .mobile-option-card {
-      background: var(--bg-panel);
-      border: 1.5px solid var(--border-subtle);
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
       border-radius: 8px;
       padding: 12px 14px;
       display: flex;
       flex-direction: column;
       gap: 6px;
       cursor: pointer;
-      transition: all 0.2s ease;
+      transition: all 0.15s ease;
     }
     .mobile-option-card:active { transform: scale(0.99); }
     .mobile-option-card.selected {
-      border-color: #f59e0b;
-      background: rgba(65, 45, 30, 0.98);
-      box-shadow: 0 0 12px rgba(217, 119, 6, 0.35);
+      border-color: #3b82f6;
+      background: #141b29;
+      box-shadow: 0 0 12px rgba(59, 130, 246, 0.2);
     }
     .mobile-option-title {
       font-size: 12.5px;
-      font-weight: 800;
-      color: #fde68a;
+      font-weight: 700;
+      color: #f8fafc;
     }
     .mobile-option-text {
       font-size: 12px;
       line-height: 1.55;
-      color: #fdfbf7;
+      color: var(--text-secondary);
     }
     .mobile-option-rationale {
       font-size: 11px;
-      color: #c4b5a5;
-      background: rgba(0, 0, 0, 0.3);
+      color: var(--text-muted);
+      background: #0d0f15;
       padding: 5px 8px;
       border-radius: 4px;
+      border: 1px solid var(--border-subtle);
     }
     .mobile-reveal-box {
       margin-top: 4px;
       padding: 8px 10px;
-      border-radius: 5px;
+      border-radius: 6px;
       font-size: 11.5px;
       line-height: 1.5;
       display: none;
     }
-    .mobile-reveal-box.reveal-penalty { background: rgba(220, 38, 38, 0.15); border: 1px solid rgba(220, 38, 38, 0.4); color: #fca5a5; }
-    .mobile-reveal-box.reveal-success { background: rgba(5, 150, 105, 0.15); border: 1px solid rgba(5, 150, 105, 0.4); color: #a7f3d0; }
+    .mobile-reveal-box.reveal-penalty { background: rgba(244, 63, 94, 0.08); border: 1px solid rgba(244, 63, 94, 0.25); color: #fda4af; }
+    .mobile-reveal-box.reveal-success { background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); color: #6ee7b7; }
 
     /* Sticky Bottom Submit Bar */
     .mobile-bottom-bar {
@@ -209,16 +219,16 @@
       left: 50%;
       transform: translateX(-50%);
       width: 100%;
-      max-width: 500px;
+      max-width: 480px;
       z-index: 100;
-      background: rgba(20, 15, 11, 0.98);
-      border-top: 1.5px solid var(--border-medium);
+      background: rgba(16, 18, 26, 0.96);
+      border-top: 1px solid var(--border-subtle);
       padding: 10px 14px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.8);
-      backdrop-filter: blur(12px);
+      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(16px);
     }
     .mobile-bottom-info {
       display: flex;
@@ -226,23 +236,24 @@
       gap: 2px;
       max-width: 60%;
     }
-    .mobile-selection-label { font-size: 10px; color: #a39789; }
-    .mobile-selection-val { font-size: 12px; font-weight: 700; color: #fef3c7; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mobile-selection-label { font-size: 10px; color: var(--text-muted); }
+    .mobile-selection-val { font-size: 12px; font-weight: 600; color: #f8fafc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .mobile-submit-btn {
-      background: linear-gradient(135deg, #059669, #10b981);
+      background: var(--accent-blue);
       color: #ffffff;
-      border: 1px solid #34d399;
+      border: 1px solid var(--accent-blue);
       font-size: 12.5px;
-      font-weight: 800;
-      padding: 10px 18px;
+      font-weight: 600;
+      padding: 9px 18px;
       border-radius: 6px;
       cursor: pointer;
       white-space: nowrap;
+      transition: all 0.15s ease;
     }
     .mobile-submit-btn:disabled {
-      background: #374151;
-      border-color: #4b5563;
-      color: #9ca3af;
+      background: #181b25;
+      border-color: var(--border-subtle);
+      color: var(--text-muted);
       cursor: not-allowed;
     }
 
@@ -253,60 +264,81 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(10, 7, 5, 0.95);
+      background: rgba(0, 0, 0, 0.88);
       z-index: 200;
       display: flex;
       justify-content: center;
       align-items: center;
       padding: 16px;
-      backdrop-filter: blur(10px);
+      backdrop-filter: blur(12px);
     }
     .onboarding-card {
-      background: var(--bg-panel-elevated);
-      border: 1.5px solid var(--border-medium);
-      border-radius: 10px;
-      max-width: 420px;
+      background: #12151e;
+      border: 1px solid var(--border-medium);
+      border-radius: 8px;
+      max-width: 380px;
       width: 100%;
       padding: 22px 18px;
       display: flex;
       flex-direction: column;
       gap: 16px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.9);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
     }
-    .onboarding-title { font-size: 17px; font-weight: 800; color: #fef3c7; text-align: center; }
-    .onboarding-desc { font-size: 12px; color: #c4b5a5; line-height: 1.5; text-align: center; }
+    .onboarding-title { font-size: 16px; font-weight: 700; color: #f8fafc; text-align: center; }
+    .onboarding-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; text-align: center; }
     .onboarding-form { display: flex; flex-direction: column; gap: 12px; }
     .form-group { display: flex; flex-direction: column; gap: 5px; }
-    .form-label { font-size: 11.5px; font-weight: 700; color: #fde68a; }
-    .form-input, .form-select {
-      background: rgba(22, 16, 12, 0.9);
-      border: 1.5px solid var(--border-medium);
-      color: #fdfbf7;
+    .form-label { font-size: 11.5px; font-weight: 600; color: var(--text-secondary); }
+    .form-input {
+      background: #0d0f15;
+      border: 1px solid var(--border-subtle);
+      color: #f8fafc;
       font-size: 13px;
       padding: 9px 12px;
       border-radius: 6px;
       outline: none;
+      transition: border-color 0.15s ease;
     }
-    .form-input:focus, .form-select:focus { border-color: #f59e0b; }
-    .onboarding-btn {
-      background: linear-gradient(135deg, #b45309, #d97706);
-      color: #ffffff;
-      border: 1px solid #f59e0b;
-      font-size: 14px;
-      font-weight: 800;
-      padding: 11px;
+    .form-input:focus { border-color: var(--border-focus); }
+
+    /* Team Selector Pills (No team size quotas!) */
+    .team-pills-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 6px;
+    }
+    .team-pill-btn {
+      background: #181b25;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-secondary);
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 8px 4px;
       border-radius: 6px;
       cursor: pointer;
       text-align: center;
+      transition: all 0.15s ease;
     }
-    .footer-host-link {
-      font-size: 11px;
-      color: #786b5e;
-      text-align: center;
-      padding: 14px;
-      text-decoration: underline;
+    .team-pill-btn:hover { background: #202534; color: #f8fafc; }
+    .team-pill-btn.active {
+      background: #2563eb;
+      border-color: #3b82f6;
+      color: #ffffff;
+    }
+
+    .onboarding-btn {
+      background: var(--accent-blue);
+      color: #ffffff;
+      border: 1px solid var(--accent-blue);
+      font-size: 13.5px;
+      font-weight: 600;
+      padding: 10px;
+      border-radius: 6px;
       cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
     }
+    .onboarding-btn:hover { background: #2563eb; }
   </style>
 </head>
 <body>
@@ -325,7 +357,7 @@
     <div class="mobile-team-hp-card">
       <div class="mobile-team-hp-header">
         <span class="mobile-team-title" id="team-hp-title">本組 CQ 生命值</span>
-        <span class="mobile-team-hp-num" id="team-hp-num">100 HP</span>
+        <span class="mobile-team-hp-num" id="team-hp-num">100 CQ</span>
       </div>
       <div class="mobile-team-hp-track">
         <div class="mobile-team-hp-fill" id="team-hp-fill"></div>
@@ -353,7 +385,7 @@
       <span class="mobile-selection-val" id="bottom-selected-text">尚未選取選項</span>
     </div>
     <button class="mobile-submit-btn" id="btn-bottom-submit" onclick="submitDecision()" disabled>
-      [ 送出代表決策 ]
+      送出本組決策
     </button>
   </div>
 </div>
@@ -361,24 +393,25 @@
 <!-- Onboarding Modal (Requires Name + Team, NO expected team size displayed!) -->
 <div class="onboarding-overlay" id="onboarding-modal" style="display: none;">
   <div class="onboarding-card">
-    <h3 class="onboarding-title">PROJECT ATLAS：學員登入</h3>
-    <p class="onboarding-desc">請填寫您的姓名並選擇所屬組別以進入會議室：</p>
+    <h3 class="onboarding-title">PROJECT ATLAS</h3>
+    <p class="onboarding-desc">請輸入您的姓名並點選所屬組別以加入決策會議：</p>
     <div class="onboarding-form">
       <div class="form-group">
         <label class="form-label">您的姓名：</label>
-        <input type="text" class="form-input" id="input-name" placeholder="請輸入姓名（例如：王大明）" />
+        <input type="text" class="form-input" id="input-name" placeholder="請輸入姓名（例如：王專員）" />
       </div>
       <div class="form-group">
-        <label class="form-label">選擇所屬組別：</label>
-        <select class="form-select" id="input-team">
-          <option value="1">第 1 組（總部戰略組）</option>
-          <option value="2">第 2 組（總部產品組）</option>
-          <option value="3">第 3 組（東京工程組）</option>
-          <option value="4">第 4 組（東京製造組）</option>
-          <option value="5">第 5 組（變色龍協調組）</option>
-        </select>
+        <label class="form-label">所屬組別：</label>
+        <div class="team-pills-grid" id="team-selector-pills">
+          <button type="button" class="team-pill-btn active" id="pill-team-1" onclick="selectTeamPill(1)">第 1 組</button>
+          <button type="button" class="team-pill-btn" id="pill-team-2" onclick="selectTeamPill(2)">第 2 組</button>
+          <button type="button" class="team-pill-btn" id="pill-team-3" onclick="selectTeamPill(3)">第 3 組</button>
+          <button type="button" class="team-pill-btn" id="pill-team-4" onclick="selectTeamPill(4)">第 4 組</button>
+          <button type="button" class="team-pill-btn" id="pill-team-5" onclick="selectTeamPill(5)">第 5 組</button>
+        </div>
+        <input type="hidden" id="input-team" value="1" />
       </div>
-      <button class="onboarding-btn" onclick="confirmOnboarding()">[ 確認進入會議室 ]</button>
+      <button class="onboarding-btn" onclick="confirmOnboarding()">進入會議</button>
     </div>
   </div>
 </div>
@@ -582,15 +615,15 @@
     },
 
     4: {
-      themeTag: "【第四回：全案巔峰情境模擬】三方非對稱大會審",
+      themeTag: "【第四回：全案巔峰情境模擬】三方協同大會審",
       title: "【終極實戰】華爾街做空危機與跨太平洋聯合戰略協定",
       sceneKey: "grandSummit",
       isAsymmetric: true,
       
       factions: {
         hq: {
-          factionName: "總部陣營（第 1、2 組）",
-          speaker: "美方總部副總（面對董事會與做空機構最後通牒）：",
+          factionName: "第 1、2 組（總部議題）",
+          speaker: "第 1、2 組面對之情境（總部高層視角）：",
           dialogue: "華爾街做空機構嗅到晶圓遭挪用風聲，母公司盤前股價重挫 8.5%，華爾街各大投行要求總部於 1 小時內發布全球重訊並指名究責對象，董事會施壓限期定案！",
           options: [
             {
@@ -630,8 +663,8 @@
         },
 
         tokyo: {
-          factionName: "分公司陣營（第 3、4 組）",
-          speaker: "東京佐藤部長與工會幹部（面對總部免責背書要求）：",
+          factionName: "第 3、4 組（分公司議題）",
+          speaker: "第 3、4 組面對之情境（分公司視角）：",
           dialogue: "總部施壓要求東京簽署「產品良率免責背書」，若簽署，總部即可向投資人交差，但未來若晶圓出問題東京需負全責；若東京拒簽，新產品可能全面夭折，東京團隊該如何決策？",
           options: [
             {
@@ -671,8 +704,8 @@
         },
 
         chameleon: {
-          factionName: "變色龍協調組（第 5 組）",
-          speaker: "變色龍調解席（手握跨文化仲裁建議權）：",
+          factionName: "第 5 組（協調議題）",
+          speaker: "第 5 組面對之情境（跨文化協調視角）：",
           dialogue: "美日雙方已至最後通牒關頭，調解人手握董事會與雙方唯一的信任中樞，變色龍組該端出何種調解協定，挽救 Project ATLAS？",
           options: [
             {
@@ -720,11 +753,11 @@
     currentRound: 1,
     roundStatus: 'voting',
     teams: {
-      1: { name: "第 1 組（總部戰略組）", faction: "hq", hp: 100, currentChoice: null, submitted: false },
-      2: { name: "第 2 組（總部產品組）", faction: "hq", hp: 100, currentChoice: null, submitted: false },
-      3: { name: "第 3 組（東京工程組）", faction: "tokyo", hp: 100, currentChoice: null, submitted: false },
-      4: { name: "第 4 組（東京製造組）", faction: "tokyo", hp: 100, currentChoice: null, submitted: false },
-      5: { name: "第 5 組（變色龍協調組）", faction: "chameleon", hp: 100, currentChoice: null, submitted: false }
+      1: { name: "第 1 組", faction: "hq", hp: 100, currentChoice: null, submitted: false },
+      2: { name: "第 2 組", faction: "hq", hp: 100, currentChoice: null, submitted: false },
+      3: { name: "第 3 組", faction: "tokyo", hp: 100, currentChoice: null, submitted: false },
+      4: { name: "第 4 組", faction: "tokyo", hp: 100, currentChoice: null, submitted: false },
+      5: { name: "第 5 組", faction: "chameleon", hp: 100, currentChoice: null, submitted: false }
     },
     syncChannel: null
   };
@@ -762,12 +795,27 @@
   function showOnboarding() {
     const modal = document.getElementById('onboarding-modal');
     if (modal) modal.style.display = 'flex';
+    selectTeamPill(MobileState.user.team || 1);
+  }
+
+  function selectTeamPill(teamId) {
+    AudioEngine.playClick();
+    document.getElementById('input-team').value = teamId;
+    for (let i = 1; i <= 5; i++) {
+      const p = document.getElementById(`pill-team-${i}`);
+      if (p) {
+        if (i === teamId) p.classList.add('active');
+        else p.classList.remove('active');
+      }
+    }
   }
 
   function reopenOnboarding() {
     AudioEngine.playClick();
     document.getElementById('input-name').value = MobileState.user.name || '';
-    document.getElementById('input-team').value = MobileState.user.team || 1;
+    const teamId = MobileState.user.team || 1;
+    document.getElementById('input-team').value = teamId;
+    selectTeamPill(teamId);
     showOnboarding();
   }
 
@@ -799,7 +847,7 @@
     const team = MobileState.teams[MobileState.user.team];
     if (!team) return;
     document.getElementById('team-hp-title').innerText = `${team.name.split('（')[0]} 生命值`;
-    document.getElementById('team-hp-num').innerText = `${team.hp} HP`;
+    document.getElementById('team-hp-num').innerText = `${team.hp} CQ`;
     const fill = document.getElementById('team-hp-fill');
     if (fill) fill.style.width = `${Math.max(0, Math.min(100, team.hp))}%`;
   }
@@ -900,19 +948,19 @@
 
     if (myTeam.submitted) {
       textLabel.innerText = `本組已送出：選項 ${myTeam.currentChoice}`;
-      submitBtn.innerText = '[ 已送出決策 ]';
+      submitBtn.innerText = '已送出決策';
       submitBtn.disabled = true;
-      statusIndicator.innerText = '【本組已送出，請看大螢幕】';
+      statusIndicator.innerText = '已送出，等待主控台揭曉';
     } else if (myTeam.currentChoice) {
       textLabel.innerText = `已選取：選項 ${myTeam.currentChoice}`;
-      submitBtn.innerText = '[ 送出代表決策 ]';
+      submitBtn.innerText = '送出本組決策';
       submitBtn.disabled = false;
-      statusIndicator.innerText = '【請確認並送出】';
+      statusIndicator.innerText = '請確認並送出';
     } else {
       textLabel.innerText = '尚未選取選項';
-      submitBtn.innerText = '[ 送出代表決策 ]';
+      submitBtn.innerText = '送出本組決策';
       submitBtn.disabled = true;
-      statusIndicator.innerText = '【組內研討中】';
+      statusIndicator.innerText = '決策研討中';
     }
   }
 
@@ -943,7 +991,7 @@
         if (box) box.style.display = 'block';
       });
     }
-    document.getElementById('round-status-indicator').innerText = '【CQ 判定已揭曉】';
+    document.getElementById('round-status-indicator').innerText = 'CQ 判定已揭曉';
   }
 
   window.addEventListener('DOMContentLoaded', () => {
