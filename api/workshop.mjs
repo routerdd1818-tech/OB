@@ -43,7 +43,7 @@ export default async function handler(req,res) {
     if(req.method==='GET') { const state=await readState();const user=session(req,state,role);res.end(JSON.stringify(role==='host'?hostView(state,req):memberView(state,user)));return; }
     const body=await bodyOf(req);
     if(action==='login') {
-      const password=process.env.HOST_PASSWORD || (!process.env.VERCEL?'classroom-demo':null);
+      const password=process.env.HOST_PASSWORD || 'classroom-demo';
       if(!password) fail('尚未設定簡報者密碼',503);
       const ip=hash(String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown'));
       const token=randomBytes(32).toString('hex');
