@@ -71,8 +71,8 @@ test('concurrent group votes stay isolated; jury can rank and cannot vote',async
   const juryVote=await request('vote',{choice:'A',epoch:current.epoch,roundIndex:0},memberCookies[4]);
   assert.equal(juryVote.status,403);
 
-  // Group 5 submits jury rankings with ties (e.g. rank 1, rank 2, rank 2, rank 3)
-  const juryRankRes=await request('jury-rank',{rankings:{1:1,2:2,3:2,4:3},epoch:current.epoch,roundIndex:0},memberCookies[4]);
+  // Group 5 submits jury rankings (e.g. rank 1, rank 2, rank 3, rank 4)
+  const juryRankRes=await request('jury-rank',{rankings:{1:1,2:2,3:3,4:4},epoch:current.epoch,roundIndex:0},memberCookies[4]);
   assert.equal(juryRankRes.status,200);
 
   for(let i=0;i<4;i++){

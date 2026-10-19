@@ -121,11 +121,67 @@ export default async function handler(req,res) {
           const result=outcome(state.round,vote);
           if(result){
             const before=group.anger ?? group.cq ?? 25;
-            const delta=result.angerDelta ?? (result.cq ? -result.cq : 25);
+            const rank=state.juryRankings?.[state.round]?.[group.id];
+            let delta;
+            let juryVerdict='';
+
+            if(rank!==undefined && rank!==null && rank!=='') {
+              // Anger delta is completely determined by Group 5's jury ranking!
+              if(state.round===3) {
+                if(vote.choice==='X') {
+                  delta = 50;
+                  juryVerdict = '三方談判破局 (+50 怒氣)';
+                } else if(rank==='tier1') {
+                  delta = -20;
+                  juryVerdict = '卓越雙贏 Tier 1 · 說服極佳 (-20 怒氣)';
+                } else if(rank==='tier2') {
+                  delta = 10;
+                  juryVerdict = '局部妥協 Tier 2 · 勉強達成 (+10 怒氣)';
+                } else if(rank==='tier3') {
+                  delta = 40;
+                  juryVerdict = '嚴重破局 Tier 3 · 協商失敗 (+40 怒氣)';
+                } else {
+                  delta = 10;
+                  juryVerdict = '裁判評定完成 (+10 怒氣)';
+                }
+              } else {
+                const rNum = Number(rank);
+                if(rNum===1) {
+                  delta = -15;
+                  juryVerdict = '裁判首選 · 說服成功 (-15 怒氣)';
+                } else if(rNum===2) {
+                  delta = 5;
+                  juryVerdict = '良性協調 · 輕微摩擦 (+5 怒氣)';
+                } else if(rNum===3) {
+                  delta = 25;
+                  juryVerdict = '說服不足 · 防衛升溫 (+25 怒氣)';
+                } else if(rNum===4) {
+                  delta = 45;
+                  juryVerdict = '激化衝突 · 怒火飆升 (+45 怒氣)';
+                } else {
+                  delta = 10;
+                  juryVerdict = '裁判評定完成 (+10 怒氣)';
+                }
+              }
+            } else {
+              // Fallback if jury did not rank
+              delta = result.angerDelta ?? (result.cq ? -result.cq : 15);
+              juryVerdict = '裁判未特別評定 · 依情境模型計算';
+            }
+
             const after=Math.min(100,Math.max(0,before+delta));
             group.anger=after;
             group.cq=after;
-            state.results[state.round][group.id]={...result,angerBefore:before,angerAfter:after,actualDelta:after-before,cqBefore:before,cqAfter:after,juryRank:state.juryRankings?.[state.round]?.[group.id]||null};
+            state.results[state.round][group.id]={
+              ...result,
+              angerBefore:before,
+              angerAfter:after,
+              actualDelta:after-before,
+              cqBefore:before,
+              cqAfter:after,
+              juryRank:rank||null,
+              juryVerdict
+            };
           }
         }
         state.phase='revealed';state.deadline=null;state.remaining=null;
