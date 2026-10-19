@@ -187,6 +187,110 @@
       box-shadow: 0 0 15px rgba(59, 130, 246, 0.25);
     }
 
+    
+    /* Round 4 Special Mobile Components */
+    .r4-mobile-intel-box {
+      background: #090a14;
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      border-radius: 8px;
+      padding: 12px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .r4-intel-heading {
+      font-size: 13px;
+      font-weight: 700;
+      color: #a5b4fc;
+    }
+    .r4-intel-item {
+      font-size: 12px;
+      color: #cbd5e1;
+      line-height: 1.55;
+      background: rgba(255, 255, 255, 0.03);
+      padding: 6px 10px;
+      border-radius: 4px;
+      border-left: 3px solid #6366f1;
+    }
+    .r4-mobile-wait {
+      background: #0d0f15;
+      border: 1px dashed var(--border-subtle);
+      border-radius: 6px;
+      padding: 14px;
+      font-size: 12.5px;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.5;
+    }
+    .r4-prop-review-card {
+      background: #0f111a;
+      border: 1px solid rgba(99, 102, 241, 0.35);
+      border-radius: 8px;
+      padding: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .r4-prop-review-title {
+      font-size: 13.5px;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+    .r4-prop-review-text {
+      font-size: 12.5px;
+      color: #cbd5e1;
+      line-height: 1.6;
+      background: #08090f;
+      padding: 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+    }
+    .r4-vote-btn-group {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 4px;
+    }
+    .r4-vote-btn {
+      padding: 11px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s ease;
+      border: 1px solid transparent;
+    }
+    .r4-vote-btn.accept {
+      background: rgba(16, 185, 129, 0.15);
+      border-color: rgba(16, 185, 129, 0.4);
+      color: #34d399;
+    }
+    .r4-vote-btn.accept:hover, .r4-vote-btn.accept.selected {
+      background: #059669;
+      color: #ffffff;
+      border-color: #10b981;
+    }
+    .r4-vote-btn.reject {
+      background: rgba(244, 63, 94, 0.15);
+      border-color: rgba(244, 63, 94, 0.4);
+      color: #fb7185;
+    }
+    .r4-vote-btn.reject:hover, .r4-vote-btn.reject.selected {
+      background: #e11d48;
+      color: #ffffff;
+      border-color: #f43f5e;
+    }
+    .r4-constraint-box {
+      background: rgba(245, 158, 11, 0.08);
+      border: 1px solid rgba(245, 158, 11, 0.25);
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 11.5px;
+      color: #fde68a;
+      line-height: 1.5;
+    }
+
     /* Options List */
     .mobile-options-container {
       display: flex;
@@ -513,17 +617,18 @@
 
   const DilemmasData = {
     1: {
-      themeTag: "【主題一：認知維度】高語境解碼與深層常模辨識",
-      title: "【實戰第一回】委婉留白時的追問藝術",
+      themeTag: "【第一回：認知維度】高語境解碼與深層常模辨識",
+      title: "委婉留白時的追問藝術",
       sceneKey: "midnightBoardroom",
       speaker: "佐藤部長（雙手交疊，緩緩喝了一口茶，審慎沉吟）：",
-      dialogue: "「……交付時程方面，我們現場會全力以赴進行慎重研討，只是部分細節可能還需要團隊內部進一步調研……」\n\n【背景形勢】：總部明日開盤前必須向華爾街做空機構與董事會提交進度，此時總部該如何接話？",
+      dialogue: "「……交付時程方面，我們現場會全力以赴進行慎重研討，只是部分細節可能還需要團隊內部進一步調研……」
+
+【背景形勢】：總部明日開盤前必須向華爾街做空機構與董事會提交進度，此時總部該如何接話？",
       options: [
         {
           id: "A",
           title: "方案 A：進度量化追蹤策略",
           text: "「感謝佐藤部長的回饋。為確保全球供應鏈排程精準，請東京團隊在今日下午 5 點前，將調研里程碑量化為具體甘特圖並標註預計完工日。」",
-          rationale: "表面合理性：標準專案管理（PMP）SMART 原則，界定清晰交付物與期限，對董事會與投資人忠實負責。",
           penalty: -20,
           blindspot: "文化盲點：日方高語境下「慎重研討」已是幾近無法如期完工的求救訊號。公開逼問硬性死線等於逼其當場認錯或撒謊，破壞深層信任。"
         },
@@ -531,7 +636,6 @@
           id: "B",
           title: "方案 B：全球資源緊急調度策略",
           text: "「總部充分理解東京團隊的沉重壓力。我們已批准協調 5 位矽谷資深架構師於明晨直飛東京現場，直接進駐協助分擔程式碼調校。」",
-          rationale: "表面合理性：高管資源傾斜、頂尖專家技術賦能、主動替海外第一線同仁分擔極限工作量。",
           penalty: -25,
           blindspot: "文化盲點：在日式職人與現場主義（Gemba）文化中，不請自來的總部專家等同官方審計接管，暗示東京團隊無能，激起全員防衛消極抵制。"
         },
@@ -539,7 +643,6 @@
           id: "C",
           title: "方案 C：全員民主共識決策機制",
           text: "「為分擔管理層決策壓力，建議此時在大會中由美日全體研發工程師進行線上不記名投票，依第一線真實工時表決是否微調發布日。」",
-          rationale: "表面合理性：扁平化治理、心理安全感、打破科層官僚壁壘、汲取第一線集體智慧。",
           penalty: -15,
           blindspot: "文化盲點：破壞東亞長幼有序與組織和睦（和，Wa）。強迫基層在主管前公開表態會造成極大社交焦慮，且被日方視為總部推卸治理責任。"
         },
@@ -547,7 +650,6 @@
           id: "D",
           title: "方案 D：雙邊技術排程微調對齊",
           text: "「非常理解公差調研的嚴謹性與技術深度。今日大會先行休會，會後由我方營運負責人親自致電佐藤部長，就底層架構參數先做個別溝通。」",
-          rationale: "管理實效：不在公開大會讓對方下不了台，移至非公開場域建立心理安全通道，探求水面下的真正技術瓶頸。",
           penalty: 0,
           bonus: 5,
           blindspot: "最優解：精準實踐「根回し（Nemawashi）」，為日方搭設心理安全階梯，真正被挪用晶圓的實情方能在私下電話中被如實吐露。"
@@ -556,17 +658,18 @@
     },
 
     2: {
-      themeTag: "【主題二：動機維度】自尊維護與消解文化防衛",
-      title: "【實戰第二回】晶圓遭挪用風暴與責任定調",
+      themeTag: "【第二回：動機維度】自尊維護與消解文化防衛",
+      title: "晶圓遭挪用風暴與責任定調",
       sceneKey: "confidentialLab",
       speaker: "東京工程團隊（遞交底層 log 數據與集體抗議連署書）：",
-      dialogue: "東京私下向調解人證實：延誤根本非技術問題（東京良率實測達 98.4%），而是總部董事關係戶私自插單強行挪走 30% 晶圓！東京團隊連續加班三週背黑鍋，如今卻被總部公開質疑工作效率低落，日本工程師全員抗議。\n\n【背景形勢】：調解席與總部該如何定調這起內部醜聞，並平息兩地怒火？",
+      dialogue: "東京私下向調解人證實：延誤根本非技術問題（東京良率實測達 98.4%），而是總部董事關係戶私自插單強行挪走 30% 晶圓！東京團隊連續加班三週背黑鍋，如今卻被總部公開質疑工作效率低落，日本工程師全員抗議。
+
+【背景形勢】：調解席與總部該如何定調這起內部醜聞，並平息兩地怒火？",
       options: [
         {
           id: "A",
           title: "方案 A：合規獨立審查與資安管控",
           text: "「總部法務與合規長立即啟動內部專案調查，並針對代工廠及分部相關人員簽發全面保密協議（NDA），在調查結果出爐前嚴格隔離資訊。」",
-          rationale: "表面合理性：標準企業風險控管（Risk Management）與法規遵循流程，防止未授權資訊外流影響股價或涉及內線爭議。",
           penalty: -30,
           blindspot: "文化盲點：法律霸凌（Legal Bullying）。將受害工程師視為潛在洩密犯罪嫌疑人，粉碎東京團隊最後的心理安全感，極易促使其向媒體揭弊。"
         },
@@ -574,7 +677,6 @@
           id: "B",
           title: "方案 B：專案特別津貼與全員激勵",
           text: "「由總部提撥專案特別預算，為東京現場全體工程師發放每人雙倍專案激勵獎金與全員加成加班津貼，以實質回饋感謝大家的辛勞付出。」",
-          rationale: "表面合理性：務實的實質激勵手段，直接把預算發給第一線同仁，以豐厚經濟補償撫慰加班辛勞。",
           penalty: -20,
           blindspot: "文化盲點：將名譽金錢化（Monetizing Dignity）。對恪守「職人精神（Shokunin）」的團隊而言，用金錢封口形同侮辱專業自尊。"
         },
@@ -582,7 +684,6 @@
           id: "C",
           title: "方案 C：市場重大訊息公開澄清",
           text: "「總部立即召開全球法人說明會，正式向公眾揭露該外部代工廠違約插單情事，並宣告啟動商務索賠，公開向市場還給東京團隊清白。」",
-          rationale: "表面合理性：黑白分明、追求絕對正義與公開透明，展現高層保護海外下屬的魄力。",
           penalty: -25,
           blindspot: "文化盲點：玉石俱焚（Pyrrhic Victory）。公開指責關係戶導致主管機關立案調查，全產品線被迫無限期凍結，市值崩跌造成全體雙輸。"
         },
@@ -590,7 +691,6 @@
           id: "D",
           title: "方案 D：內部責任專函與戰略重整",
           text: "「董事會正式出具內部專函確認研發團隊零過失，對外發表聲明將本次時程微調定調為『追求旗艦級極限品質之戰略升級』，公開向董事會表彰研發團隊。」",
-          rationale: "管理實效：對內釐清是非曲直以撫慰軍心，對外將時程調整轉化為品牌工藝溢價，兼顧商業全局與團隊自尊。",
           penalty: 0,
           bonus: 10,
           blindspot: "最優解：動機 CQ 核心在於保護群體的自尊與自我效能感，精準擊中日方名譽與美方商業利益的唯一交集點。"
@@ -599,17 +699,18 @@
     },
 
     3: {
-      themeTag: "【主題三：行為維度】跨國協作摩擦與溝通機制重構",
-      title: "【實戰第三回】跨國通訊口角升級與場域重構",
+      themeTag: "【第三回：行為維度】跨國協作摩擦與溝通機制重構",
+      title: "跨國通訊口角升級與場域重構",
       sceneKey: "hybridChashitsu",
       speaker: "美日跨國 Slack 頻道（爭執紀錄截圖曝光）：",
-      dialogue: "兩地工程師在公開 Slack 頻道爆發激烈口角：美方工程師不斷使用大寫英文與 @here 催促進度，日方工程師感到被當眾公開審查羞辱，開始採取集體已讀不回與拒絕更新英文工單的被動防禦，跨國協作即將全面中斷。\n\n【背景形勢】：應採取何種形式與管道重構，徹底打破溝通死結？",
+      dialogue: "兩地工程師在公開 Slack 頻道爆發激烈口角：美方工程師不斷使用大寫英文與 @here 催促進度，日方工程師感到被當眾公開審查羞辱，開始採取集體已讀不回與拒絕更新英文工單的被動防禦，跨國協作即將全面中斷。
+
+【背景形勢】：應採取何種形式與管道重構，徹底打破溝通死結？",
       options: [
         {
           id: "A",
           title: "方案 A：敏捷看板全透明數位化監控",
           text: "「全面導入 Jira 自動化即時追蹤機制，要求雙方每 2 小時自動同步任務進度與程式碼提交紀錄，建立客觀中立的全球燃盡圖。」",
-          rationale: "表面合理性：現代敏捷專案管理核心，進度全透明，以純客觀數據消除跨國溝通中的主觀猜忌與資訊延遲。",
           penalty: -20,
           blindspot: "文化盲點：監視焦慮（Surveillance Anxiety）。高語境文化會解讀為極度的「不信任」與微觀管理，觸發工程師「表面合規、實質怠工」。"
         },
@@ -617,7 +718,6 @@
           id: "B",
           title: "方案 B：確立層級責任與指揮鏈貫徹",
           text: "「由總部全球執行副總向東京製造部長發布正式行政備忘錄，要求部長依組織層級督導下屬，落實日常溝通時效考核。」",
-          rationale: "表面合理性：危機時期的強勢決斷力（Decisive Leadership），由上而下確立權責鏈，符合科層組織管理標準。",
           penalty: -25,
           blindspot: "文化盲點：摧毀日本下意上達的「稟議制（Ringi）」與共識和諧。部長陷入忠誠與下屬信賴的夾縫，極易導致部長引咎辭職。"
         },
@@ -625,7 +725,6 @@
           id: "C",
           title: "方案 C：非正式跨文化團隊凝聚交流",
           text: "「規劃跨國同仁線上文化交流茶會，透過非正式輕鬆互動與生活話題分享，緩解近期專案衝刺引發的人際緊張。」",
-          rationale: "表面合理性：經典團隊建設（Team Building），提倡放鬆身心、增進跨文化同仁私人情誼。",
           penalty: -15,
           blindspot: "文化盲點：輕浮無禮（Tone-Deaf Frivolity）。在面臨重大專案危機與信任破裂時強推休閒娛樂，被日方視為輕佻與極不專業，加劇心理反感。"
         },
@@ -633,7 +732,6 @@
           id: "D",
           title: "方案 D：設立去層級技術對等站會機制",
           text: "「設立每日 15 分鐘『雙邊技術對等站會』，選派兼具跨文化背景之核心工程師擔任窗口，脫鉤考核流程，聚焦具體技術本體。」",
-          rationale: "管理實效：建立安全的微型對話場域，藉由具備高行為調適力的人員調適溝通語境，大幅降低交易成本。",
           penalty: 0,
           bonus: 5,
           blindspot: "最優解：將溝通模式從「公開審訊」轉換為「同儕探討」，精準落實行為 CQ 中的語言與非語言行為靈活切換。"
@@ -642,135 +740,67 @@
     },
 
     4: {
-      themeTag: "【第四回：全案巔峰情境模擬】三方協同大會審",
-      title: "【終極實戰】華爾街做空危機與跨太平洋聯合戰略協定",
+      themeTag: "【第四回：全案巔峰情境模擬】三方非對稱協同大會審",
+      title: "華爾街做空危機與跨太平洋聯合調解協定",
       sceneKey: "grandSummit",
-      isAsymmetric: true,
-      
-      factions: {
-        hq: {
-          factionName: "第 1、2 組（總部議題）",
-          speaker: "第 1、2 組面對之情境（總部高層視角）：",
-          dialogue: "華爾街做空機構嗅到晶圓遭挪用風聲，母公司盤前股價重挫 8.5%，華爾街各大投行要求總部於 1 小時內發布全球重訊並指名究責對象，董事會施壓限期定案！",
-          options: [
-            {
-              id: "A",
-              title: "方案 A：契約責任追訴與止血策略",
-              text: "「依供應鏈採購合約向代工廠發出法律存證信函並啟動求償程序，對外發布公告澄清延誤主因為第三方供應商違約。」",
-              rationale: "表面合理性：迅速釐清法律責任、向市場展現問責決心、藉由法律行動挽救當前股價。",
-              penalty: -30,
-              blindspot: "文化盲點：東亞半導體圈極度重視長期供應商體系（Keiretsu）。公開指控等於與東亞供應鏈決裂，未來無封測廠敢承接總部訂單。"
-            },
-            {
-              id: "B",
-              title: "方案 B：全球架構重組與技術集中化",
-              text: "「推動全球研發架構集中化重組，將底層核心代碼與韌體驗收權限統一收歸總部中央團隊管轄。」",
-              rationale: "表面合理性：消滅海外分部指揮壁壘、強化全球中央統治力、保護核心智慧財產權。",
-              penalty: -25,
-              blindspot: "文化盲點：激起東京工程師集體辭職潮，微公差組裝工藝失傳，新產品陷入永久無法量產的死局。"
-            },
-            {
-              id: "C",
-              title: "方案 C：預期管理與財務對衝方案",
-              text: "「向市場發布前瞻性樂觀營運指引以穩定當前股價，同時規劃內部留任激勵基金安撫海外團隊。」",
-              rationale: "表面合理性：極端危機下的資本運作策略，用預期管理平息市場恐慌，以實質利益撫慰基層。",
-              penalty: -35,
-              blindspot: "文化盲點：前瞻指引過度美化，東京工程師視為造假欺詐而向美國監管機構揭弊，總部高層面臨刑事起訴。"
-            },
-            {
-              id: "D",
-              title: "方案 D：全球聯席協同委員會架構",
-              text: "「對外宣布成立由美日雙方技術主管共同主持之『全球旗艦品質聯席委員會』，將時程微調定調為多中心深度驗證之必要程序。」",
-              rationale: "管理實效：超越單向殖民審計，賦予海外分部對等權力地位，化被動代工為命運共同體。",
-              penalty: 0,
-              bonus: 10,
-              blindspot: "最優解：給予東京實質決策話語權，對外塑造跨國合作共贏典範，贏得市場長期溢價信賴。"
-            }
-          ]
-        },
+      isR4Special: true,
 
-        tokyo: {
-          factionName: "第 3、4 組（分公司議題）",
-          speaker: "第 3、4 組面對之情境（分公司視角）：",
-          dialogue: "總部施壓要求東京簽署「產品良率免責背書」，若簽署，總部即可向投資人交差，但未來若晶圓出問題東京需負全責；若東京拒簽，新產品可能全面夭折，東京團隊該如何決策？",
-          options: [
-            {
-              id: "A",
-              title: "方案 A：公開專業聲明與主權捍衛",
-              text: "「正式出具聲明拒絕簽署背書，召開日媒專業記者會揭露產能挪用事件，以透明度保護分部聲譽。」",
-              rationale: "表面合理性：捍衛絕對真相與職人道德潔癖、公開透明向產業公眾自清。",
-              penalty: -30,
-              blindspot: "文化盲點：道德上雖正確，但直接摧毀母公司市值與商業信任，分部亦隨之面臨關閉撤裁。"
-            },
-            {
-              id: "B",
-              title: "方案 B：組織大局優先與簽署背書",
-              text: "「基於公司整體生存大局，由部長代表簽署免責背書，事後再尋求內部管道逐步爭取資源。」",
-              rationale: "表面合理性：顧全大局、避免衝突激化、向高層展現服從忠誠與組織承諾。",
-              penalty: -25,
-              blindspot: "文化盲點：盲目屈從讓職人信念瓦解，未來若出問題東京成為官方唯一代罪羔羊。"
-            },
-            {
-              id: "C",
-              title: "方案 C：提升驗收門檻之嚴格品質防禦",
-              text: "「同意簽署原則性意向，但同時全面提高現場出廠檢測標準，在所有公差未達最高標準前嚴格暫緩放行。」",
-              rationale: "表面合理性：技術合規防衛、以嚴格把關為由被動防禦自身免於瑕疵責任。",
-              penalty: -20,
-              blindspot: "文化盲點：被動攻擊（Passive-Aggressive）。隱性消極抵制讓總部感受到欺騙，徹底破壞互信。"
-            },
-            {
-              id: "D",
-              title: "方案 D：技術條件書綁定與共同簽署專函",
-              text: "「出具正式技術條件專函，詳列晶圓公差校準之必備工程參數，並要求總部工程副總共同聯名簽署驗收報告。」",
-              rationale: "管理實效：以客觀數據設立防線，要求權責對等共同聯名，既不退讓專業底線亦不中斷商業合作。",
-              penalty: 0,
-              bonus: 10,
-              blindspot: "最優解：守住專業底線同時保留商業推進通道，促使總部必須認真對待技術實況。"
-            }
-          ]
-        },
+      hqContext: {
+        title: "總部內部機密情境（第 1、2 組專屬）：華爾街做空暴跌與究責最後通牒",
+        briefing: "華爾街做空機構發布報告指控產能嚴重不足，母公司盤前股價暴跌 8.5%，各大投行與董事會要求 1 小時內發布全球重訊並指名究責，董事會揚言限期未決將撤換高層！
 
-        chameleon: {
-          factionName: "第 5 組（協調議題）",
-          speaker: "第 5 組面對之情境（跨文化協調視角）：",
-          dialogue: "美日雙方已至最後通牒關頭，調解人手握董事會與雙方唯一的信任中樞，第 5 組該端出何種調解協定，挽救此跨國專案？",
-          options: [
-            {
-              id: "A",
-              title: "方案 A：平衡權責與強制歸零重啟",
-              text: "「要求雙方即刻停止相互指責，各承擔一半延誤責任，將進度時鐘歸零重新啟動日常排程。」",
-              rationale: "表面合理性：維持表象平靜、快刀斬亂麻消除檯面衝突、權責各半貌似公平。",
-              penalty: -25,
-              blindspot: "文化盲點：表面平息未能化解深層尊嚴與信任創傷，問題隨時以更大破壞力反撲。"
-            },
-            {
-              id: "B",
-              title: "方案 B：現實資源導向之實質妥協建議",
-              text: "「向東京分析全球母公司資源實力現實，建議東京接受內部補償協議並配合總部現階段發布進程。」",
-              rationale: "表面合理性：務實權力政治考量、依附資源優勢方推動妥協，求取企業生存。",
-              penalty: -30,
-              blindspot: "文化盲點：協調方喪失中立，淪為強勢總部的附庸，永久失去東亞團隊的信任與尊重。"
-            },
-            {
-              id: "C",
-              title: "方案 C：建立獨立第三方調研專案機制",
-              text: "「建議董事會聘請獨立管理顧問與技術第三方介入調查，在 60 天內出具客觀事實報告後再行定奪。」",
-              rationale: "表面合理性：程序正義、以客觀第三方調研中和兩造偏見、避免倉促做錯決策。",
-              penalty: -20,
-              blindspot: "文化盲點：錯失危機處置的黃金視窗，公司因無法按時出貨直接面臨客戶鉅額求償與發布夭折。"
-            },
-            {
-              id: "D",
-              title: "方案 D：雙軌制內部專函與外部價值重構",
-              text: "「促成董事會內部機密專函釐清工程零責任，對外定調為工藝旗艦升級，並建立常態化雙邊技術站會。」",
-              rationale: "管理實效：精準調和各方核心訴求，撫慰日方自尊、滿足美方商業價值，重構對等通道。",
-              penalty: 0,
-              bonus: 15,
-              blindspot: "最優解：達成全贏調解，完美拯救專案並建立可持續的跨文化組織協作範式。"
-            }
-          ]
+（註：總部完全不知道東京現場其實產能被董事關係戶挪用的實情）",
+        coreConstraint: "總部核心底線：必須在 1 小時內穩定市場預期與董事會信任，獲得可信的交付承諾或品質保證。"
+      },
+
+      tokyoContext: {
+        title: "公司現場機密情境（第 3、4 組專屬）：良率免責背書與工程師尊嚴防線",
+        briefing: "東京現場三週無休趕工良率達 98.4%，延誤全因董事關係戶挪抽 30% 產能。然而總部施壓要求現場簽署「免責背書」，若簽署未來若有瑕疵現場需負全責，若拒簽新產品可能夭折。工會與工程師全員憤怒抗議拒簽！
+
+（註：公司完全不知道總部在華爾街面臨刑事起訴與股票下市的即時生死危機）",
+        coreConstraint: "公司核心底線：絕不背黑鍋簽署不平等免責條款，捍衛工程品質真相與團隊名譽。"
+      },
+
+      chameleonContext: {
+        title: "變色龍全域情報情境（第 5 組專屬）：跨文化仲裁與雙軌談判中心",
+        intelDossier: [
+          "【總部秘密難處】：盤前股價暴跌 8.5%，華爾街做空狙擊，限期 1 小時交代究責，否則高層撤換下台。",
+          "【公司秘密難處】：良率已達 98.4%，延誤純係關係戶抽單；總部逼簽免責背書，現場視為踐踏職人尊嚴。"
+        ],
+        mission: "變色龍獨家掌握雙方不可退讓的隱藏底線。請在 1 分鐘雙邊辯論後，選定並提出最佳調解協定，爭取雙方全體同意！"
+      },
+
+      proposals: [
+        {
+          id: "A",
+          title: "方案 A：責任對半均攤與時程歸零",
+          text: "「促成雙方即刻停火，各自承擔一半延誤責任，將專案交付時程歸零重新排程，彼此不再追究晶圓挪用細節。」",
+          blindspot: "致命缺陷（和稀泥無效妥協）：看似公平，但日方認為未查清晶圓挪用真相是栽贓，職人士氣徹底崩潰；總部投資人則認為管理層毫無合約約束力，母公司評級遭降，兩頭落空。",
+          penalty: -25
+        },
+        {
+          id: "B",
+          title: "方案 B：現實權力導向・由總部發布並事後補償分公司",
+          text: "「建議東京分公司配合總部簽署階段性背書以利對外發布，總部事後由全球研發預算提撥 20% 專案獎金補償東京團隊。」",
+          blindspot: "致命缺陷（將名譽金錢化）：將工程專業視為可買賣的商品。東京核心工程師視為收買侮辱而引發集體辭職潮，微米級封測工藝永久斷層。",
+          penalty: -30
+        },
+        {
+          id: "C",
+          title: "方案 C：聘請第三方獨立審計機構・凍結爭議 60 天",
+          text: "「建議董事會委託國際獨立第三方法律與技術機構進行中立調查，在 60 天內出具客觀責任報告後再行決定處分。」",
+          blindspot: "致命缺陷（程序正義陷阱）：錯失半導體市場 60 天發布黃金視窗，客戶直接以違約為由取消年度大單並索賠 2 億美元，專案直接夭折。",
+          penalty: -20
+        },
+        {
+          id: "D",
+          title: "方案 D：雙軌協定・技術條件書聯合簽名與旗艦品質聯席會",
+          text: "「對內由總部副總與東京部長聯名簽署『技術參數偏差專案專函』釐清現場零責任；對外由雙方共組『旗艦品質聯席委員會』，定調為工藝升級。」",
+          blindspot: "最優解（雙軌戰略協同）：精準守住現場專業與尊嚴防線，同時賦予總部對外合理的戰略說辭，建立長期平等的跨文化組織合作範式。",
+          penalty: 0,
+          bonus: 15
         }
-      }
+      ]
     }
   };
 
@@ -779,6 +809,8 @@
     user: { name: '', team: 1 },
     currentRound: 1,
     roundStatus: 'voting',
+    r4Proposal: null,
+    r4Decision: null,
     teams: {
       1: { name: "第 1 組", faction: "hq", hp: 100, currentChoice: null, submitted: false },
       2: { name: "第 2 組", faction: "hq", hp: 100, currentChoice: null, submitted: false },
@@ -885,14 +917,19 @@
       if (msg.teams) MobileState.teams = msg.teams;
       if (msg.currentRound) MobileState.currentRound = msg.currentRound;
       if (msg.roundStatus) MobileState.roundStatus = msg.roundStatus;
+      if (msg.r4Proposal) MobileState.r4Proposal = msg.r4Proposal;
       updateTeamHPUI();
       renderCurrentRound();
       if (MobileState.roundStatus === 'revealed') {
         applyMobileRevealedUI();
       }
+    } else if (msg.type === 'R4_PROPOSAL_OFFER') {
+      MobileState.r4Proposal = msg.proposalId;
+      AudioEngine.playChime();
+      renderCurrentRound();
     } else if (msg.type === 'TEAM_SUBMIT') {
       const { teamId, choiceId } = msg;
-      // Votes from other teams are strictly ignored on mobile (isolated voting)
+      // Isolated voting: strictly ignore other teams' choices
       if (teamId === MobileState.user.team && MobileState.teams[teamId]) {
         MobileState.teams[teamId].currentChoice = choiceId;
         MobileState.teams[teamId].submitted = true;
@@ -914,17 +951,17 @@
     const data = DilemmasData[roundNum];
     if (!data) return;
 
-    let factionData = null;
-    if (data.isAsymmetric) {
-      const userFaction = MobileState.teams[MobileState.user.team].faction;
-      factionData = data.factions[userFaction];
+    if (roundNum === 4) {
+      renderRound4Mobile(data);
+      return;
     }
 
-    document.getElementById('mobile-theme-tag').innerText = data.themeTag + (factionData ? ` - ${factionData.factionName}` : '');
+    // Regular Rounds 1-3
+    document.getElementById('mobile-theme-tag').innerText = data.themeTag;
     document.getElementById('mobile-scenario-title').innerText = data.title;
-    document.getElementById('mobile-dialogue-text').innerText = factionData ? factionData.dialogue : data.dialogue;
+    document.getElementById('mobile-dialogue-text').innerText = data.dialogue;
 
-    renderOptions(factionData ? factionData.options : data.options);
+    renderOptions(data.options);
     updateSubmissionUI();
     updateTeamHPUI();
   }
@@ -941,7 +978,7 @@
         <div class="mobile-option-card ${isSelected ? 'selected' : ''}" id="m-opt-${opt.id}" onclick="selectMobileOption('${opt.id}')">
           <div class="mobile-option-title">${opt.title}</div>
           <div class="mobile-option-text">${opt.text}</div>
-          <div class="mobile-option-rationale">${opt.rationale}</div>
+          <!-- Strictly NO hints before or during voting -->
           <div class="mobile-reveal-box ${opt.penalty < 0 ? 'reveal-penalty' : 'reveal-success'}" id="m-reveal-${opt.id}">
             <strong>【CQ 判定結果】：${opt.penalty < 0 ? `${opt.penalty} 點 CQ` : `+${opt.bonus} 點 CQ (卓越決策)`}</strong><br>
             <span>${opt.blindspot}</span>
@@ -951,6 +988,143 @@
     });
     list.innerHTML = html;
   }
+
+  function renderRound4Mobile(data) {
+    const userTeam = MobileState.user.team;
+    const themeTagEl = document.getElementById('mobile-theme-tag');
+    const titleEl = document.getElementById('mobile-scenario-title');
+    const dialEl = document.getElementById('mobile-dialogue-text');
+    const list = document.getElementById('mobile-options-list');
+    const bottomBar = document.querySelector('.mobile-bottom-bar');
+    if (!list) return;
+
+    themeTagEl.innerText = data.themeTag;
+
+    if (userTeam === 1 || userTeam === 2) {
+      // HQ Perspective (Secret)
+      titleEl.innerText = data.hqContext.title;
+      dialEl.innerHTML = `${data.hqContext.briefing}<br><br><div class="r4-constraint-box"><strong>${data.hqContext.coreConstraint}</strong></div>`;
+      if (bottomBar) bottomBar.style.display = 'none';
+
+      // Proposal review area
+      const propId = MobileState.r4Proposal;
+      const proposal = propId ? data.proposals.find(p => p.id === propId) : null;
+
+      if (!proposal) {
+        list.innerHTML = `
+          <div class="r4-mobile-wait">
+            變色龍正在審閱全域情資並研擬調解協定中...<br>
+            <strong>【請先與公司代表進行 1 分鐘口頭辯論】</strong><br>
+            前半段為總部發言時間，請陳述市場做空壓力與不可退讓底線。
+          </div>
+        `;
+      } else {
+        const myDec = MobileState.r4Decision;
+        list.innerHTML = `
+          <div class="r4-prop-review-card">
+            <div class="r4-prop-review-title">【收到變色龍最新調解方案：${proposal.title}】</div>
+            <div class="r4-prop-review-text">${proposal.text}</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">請總部內部審議後表態：</div>
+            <div class="r4-vote-btn-group">
+              <button class="r4-vote-btn accept ${myDec === 'accept' ? 'selected' : ''}" onclick="submitR4Decision('accept')">可接受此提案</button>
+              <button class="r4-vote-btn reject ${myDec === 'reject' ? 'selected' : ''}" onclick="submitR4Decision('reject')">不接受此提案</button>
+            </div>
+            ${myDec ? `<div style="font-size: 11.5px; color: #38bdf8; text-align: center; margin-top: 4px;">貴組已表態：【${myDec === 'accept' ? '可接受' : '不接受'}】。等待開票！</div>` : ''}
+          </div>
+        `;
+      }
+    } else if (userTeam === 3 || userTeam === 4) {
+      // Company Perspective (Secret)
+      titleEl.innerText = data.tokyoContext.title;
+      dialEl.innerHTML = `${data.tokyoContext.briefing}<br><br><div class="r4-constraint-box"><strong>${data.tokyoContext.coreConstraint}</strong></div>`;
+      if (bottomBar) bottomBar.style.display = 'none';
+
+      const propId = MobileState.r4Proposal;
+      const proposal = propId ? data.proposals.find(p => p.id === propId) : null;
+
+      if (!proposal) {
+        list.innerHTML = `
+          <div class="r4-mobile-wait">
+            變色龍正在審閱全域情資並研擬調解協定中...<br>
+            <strong>【請先與總部代表進行 1 分鐘口頭辯論】</strong><br>
+            後半段為公司發言時間，請陳述現場良率實情與責任底線。
+          </div>
+        `;
+      } else {
+        const myDec = MobileState.r4Decision;
+        list.innerHTML = `
+          <div class="r4-prop-review-card">
+            <div class="r4-prop-review-title">【收到變色龍最新調解方案：${proposal.title}】</div>
+            <div class="r4-prop-review-text">${proposal.text}</div>
+            <div style="font-size: 12px; color: var(--text-secondary);">請公司現場內部審議後表態：</div>
+            <div class="r4-vote-btn-group">
+              <button class="r4-vote-btn accept ${myDec === 'accept' ? 'selected' : ''}" onclick="submitR4Decision('accept')">可接受此提案</button>
+              <button class="r4-vote-btn reject ${myDec === 'reject' ? 'selected' : ''}" onclick="submitR4Decision('reject')">不接受此提案</button>
+            </div>
+            ${myDec ? `<div style="font-size: 11.5px; color: #34d399; text-align: center; margin-top: 4px;">貴組已表態：【${myDec === 'accept' ? '可接受' : '不接受'}】。等待開票！</div>` : ''}
+          </div>
+        `;
+      }
+    } else if (userTeam === 5) {
+      // Chameleon Perspective (All-seeing Intel)
+      titleEl.innerText = data.chameleonContext.title;
+      dialEl.innerHTML = `
+        <div class="r4-mobile-intel-box">
+          <div class="r4-intel-heading">【獨家全域情報（僅變色龍掌握）】</div>
+          <div class="r4-intel-item">${data.chameleonContext.intelDossier[0]}</div>
+          <div class="r4-intel-item">${data.chameleonContext.intelDossier[1]}</div>
+        </div>
+        <p style="margin-top: 8px; font-size: 12px; color: var(--text-secondary);">${data.chameleonContext.mission}</p>
+      `;
+
+      if (bottomBar) bottomBar.style.display = 'flex';
+      const myChoice = MobileState.teams[5].currentChoice;
+
+      let html = '';
+      data.proposals.forEach(prop => {
+        const isSel = (myChoice === prop.id);
+        html += `
+          <div class="mobile-option-card ${isSel ? 'selected' : ''}" onclick="selectChameleonProposal('${prop.id}')">
+            <div class="mobile-option-title">${prop.title}</div>
+            <div class="mobile-option-text">${prop.text}</div>
+          </div>
+        `;
+      });
+      list.innerHTML = html;
+
+      const submitBtn = document.getElementById('btn-bottom-submit');
+      const textLabel = document.getElementById('bottom-selected-text');
+      if (myChoice) {
+        textLabel.innerText = `選定方案：${myChoice}（隨時可調整重送）`;
+        submitBtn.innerText = '送出調解提案給雙方';
+        submitBtn.disabled = false;
+      } else {
+        textLabel.innerText = '請選定調解方案';
+        submitBtn.innerText = '送出調解提案給雙方';
+        submitBtn.disabled = true;
+      }
+    }
+  }
+
+  function selectChameleonProposal(propId) {
+    AudioEngine.playClick();
+    MobileState.teams[5].currentChoice = propId;
+    renderCurrentRound();
+  }
+
+  function submitR4Decision(decision) {
+    AudioEngine.playClick();
+    MobileState.r4Decision = decision;
+    MobileState.teams[MobileState.user.team].currentChoice = decision;
+    MobileState.teams[MobileState.user.team].submitted = true;
+    renderCurrentRound();
+
+    broadcastToHost('R4_DECISION', {
+      teamId: MobileState.user.team,
+      decision: decision
+    });
+  }
+
 
   function selectMobileOption(choiceId) {
     AudioEngine.playClick();
@@ -1003,6 +1177,18 @@
     AudioEngine.playChime();
     const myTeam = MobileState.teams[MobileState.user.team];
     if (!myTeam.currentChoice) return;
+
+    if (MobileState.currentRound === 4 && MobileState.user.team === 5) {
+      MobileState.r4Proposal = myTeam.currentChoice;
+      myTeam.submitted = true;
+      broadcastToHost('CHAMELEON_PROPOSAL', {
+        proposalId: myTeam.currentChoice
+      });
+      alert('已將【方案 ' + myTeam.currentChoice + '】送達總部與公司端！雙方正在手機審議中。');
+      renderCurrentRound();
+      return;
+    }
+
     myTeam.submitted = true;
     updateSubmissionUI();
 
