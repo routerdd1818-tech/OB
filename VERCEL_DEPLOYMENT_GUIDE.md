@@ -5,13 +5,27 @@
 
 ---
 
+## 雙端獨立網址架構（重點說明）
+
+部署完成後，系統將具備兩個相互獨立、各司其職的乾淨網址：
+
+1. **學員參與者網址（手機端掃碼進入）**：
+   * **網址格式**：`https://<您的專案名稱>.vercel.app/`
+   * **對應檔案**：`index.html`
+   * **功能**：專門為手機直式螢幕優化，學員初次進入需輸入姓名並選取組別（第 1 組至第 5 組，**不顯示一組應有多少人**），組內研討 2 分鐘後送出該組代表決策。
+2. **簡報者主控台網址（電腦大螢幕投影）**：
+   * **網址格式**：`https://<您的專案名稱>.vercel.app/host`
+   * **對應檔案**：`host.html`
+   * **功能**：專門為電腦寬螢幕（16:9 投影）優化，即時掌握 5 組 100 點 CQ 生命值血條與各組已送出狀態，內建倒數計時器、節奏主控（揭曉判定與進入下一回），並可投影學員端專屬加入 QR Code。
+
+---
+
 ## 快速準備：專案目錄檔案結構
 
-專案目錄內已備妥上線所需的核心檔案，並已配置好 `.gitignore`（自動排除本地的作業 Word 檔與大容量 PDF，僅上傳網頁主程式）：
-
-- **`index.html`**：主要網頁入口（包含雙軌同步研商、觀點辯論、即時不滿指數評測、CQ 身心腦拼裝與大螢幕開票系統）。
-- **`vercel.json`**：Vercel 全域路由與靜態重寫配置檔。
-- **`.gitignore`**：防呆過濾檔（避免將本機的課程筆記、報告 docx 及 40MB 的 PDF 誤傳至雲端）。
+- **`index.html`**：學員手機端入口（含登入驗證、情境題、4 個專業選項、代表送出決策）。
+- **`host.html`**：簡報者大螢幕主控台（含 5 組血條監控、計時器、情境背景與 CQ 判定覆盤）。
+- **`vercel.json`**：Vercel 全域路由與靜態重寫配置檔（設定 `/host -> host.html` 與 `/ -> index.html`）。
+- **`.gitignore`**：防呆過濾檔（自動排除 docx 與大型 pdf）。
 
 ---
 
@@ -29,25 +43,20 @@
 4. 點擊綠色的 **「Create repository」**。
 
 ### 步驟 2：在 Mac 終端機（Terminal）將專案推送至 GitHub
-打開 Mac 的「終端機」（Terminal），依序複製貼上以下指令（記得將 `<您的GitHub帳號>` 與 `<倉庫名稱>` 換成您的真實名稱）：
+打開 Mac 的「終端機」（Terminal），依序執行以下指令（將 `<您的GitHub帳號>` 換成您的真實名稱）：
 
 ```bash
-cd /Users/routertt/Documents/OB
+cd /Users/routertt/Documents/OB/project-atlas
 
-# 1. 初始化 Git 倉庫
-git init
-
-# 2. 將網頁程式加入版本控制（.gitignore 已自動排除 docx 與大型 pdf）
+# 1. 確保 git 倉庫狀態乾淨
 git add .
+git commit -m "feat: complete split host and participant URLs with non-obvious subtle dilemmas"
 
-# 3. 建立首次提交
-git commit -m "feat: complete Project ATLAS with parallel war room and professional OB terminology"
-
-# 4. 綁定 GitHub main 分支
+# 2. 綁定 GitHub main 分支
 git branch -M main
 git remote add origin https://github.com/<您的GitHub帳號>/project-atlas-cq.git
 
-# 5. 推送上傳至 GitHub
+# 3. 推送上傳至 GitHub
 git push -u origin main
 ```
 
@@ -58,46 +67,24 @@ git push -u origin main
 2. 在 Vercel 控制台（Dashboard）點擊右上角的 **「Add New...」➔「Project」**。
 3. 在「Import Git Repository」列表中，找到剛才建立的 **`project-atlas-cq`**，點擊 **「Import」**。
 4. 在「Configure Project」設定畫面中：
-   - **Framework Preset**：選擇 **`Other`**。
-   - **Root Directory**：維持預設的 `./`。
-   - **Build and Output Settings**：維持預設（不需要任何構建指令）。
-5. 點擊下方的 **「Deploy」**！
-6. 等待約 10~15 秒，畫面即會噴發彩帶祝賀，並提供您的專屬線上網址（例如：`https://project-atlas-cq.vercel.app`）！
+   - **Framework Preset**：選擇 **Other**。
+   - **Root Directory**：維持 `./`（預設值）。
+   - **Build and Output Settings**：維持預設（無需任何 build command）。
+5. 點擊藍色的 **「Deploy」** 按鈕！
+6. 等待約 5~10 秒，頁面即會跳出彩帶畫面「Congratulations!」，代表部署成功！
 
 ---
 
-## 部署方案二：使用 Vercel CLI 終端機指令（1 分鐘極速發布）
+## 課堂現場使用指引
 
-如果您希望不透過 GitHub、直接從本機終端機推送到 Vercel：
-
-打開 Mac 終端機，執行以下指令：
-
-```bash
-cd /Users/routertt/Documents/OB
-
-# 直接使用 npx 執行 vercel 部署（免預先安裝套件）
-npx vercel --prod
-```
-
-終端機會出現幾道快速引導詢問，請直接依序回答：
-1. `Set up and deploy "~/Documents/OB"?` ➔ 輸入 `y` 按 Enter。
-2. `Which scope do you want to deploy to?` ➔ 按 Enter（選擇您的個人帳號）。
-3. `Link to existing project?` ➔ 輸入 `n` 按 Enter。
-4. `What’s your project’s name?` ➔ 輸入 `project-atlas-cq`（或直接按 Enter）。
-5. `In which directory is your code located?` ➔ 直接按 Enter（預設 `./`）。
-
-Vercel 就會直接將 `index.html` 發布至雲端，終端機最後會直接列印出您的專屬正式網址！
-
----
-
-## 課堂現場展示與手機掃碼連線注意事項
-
-1. **大螢幕動態 QR Code 自動連動**：
-   - 當您使用 Vercel 網址開啟大螢幕時（例如 `https://project-atlas-cq.vercel.app`），系統開場大廳的 QR Code 就會**自動以該網址即時生成 QR Code**！
-   - 現場學員只需拿起手機相機對準投影幕掃描，即可直接進入該線上網址進行選組與投票。
-2. **大螢幕投影比例**：
-   - 系統已內建向量 SVG 背景與彈性排版，無論投影機為 16:9、16:10 或 4K 解析度均會滿版自適應。
-3. **音效播放提示**：
-   - 瀏覽器為符合現代安全性規範，需要由使用者在畫面上進行第一次點擊（例如點擊「開始遊戲」或組別選項）以啟動 Web Audio 合成音效引擎。
-4. **離線緊急備援機制**：
-   - 即使教室臨時斷網，您也可以直接在 Mac 上雙擊開啟本地的 `index.html`，所有向量畫面、計時器、音效與決策邏輯依然 100% 完整運作。
+1. **投影機投射大螢幕**：
+   * 簡報者在電腦瀏覽器開啟：`https://<您的專案名稱>.vercel.app/host`。
+   * 點擊右上角的 **「[ 課堂掃碼 ]」**，畫面中央即會浮現手機加入 QR Code。
+2. **學員手機掃碼加入**：
+   * 學員使用手機鏡頭掃描投影幕上的 QR Code，手機自動連至：`https://<您的專案名稱>.vercel.app/`。
+   * 學員在手機上輸入姓名、選取組別（第 1 組至第 5 組，無預設人數限制）。
+   * 大螢幕即時統計並顯示簽到在線總人數。
+3. **進行對話生存博弈**：
+   * 簡報者宣布開始組內研商（計時 2 分鐘）。
+   * 各組學員在手機上討論 4 個看似合理的商務方案，選取後點擊「[ 確認送出代表決策 ]」。
+   * 大螢幕顯示各組完成決策後，簡報者點擊「[ 揭曉各組選擇與 CQ 判定 ]」，觸發扣血動效與深入覆盤！

@@ -1,0 +1,1561 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Project ATLAS：跨文化職場對話博弈（簡報者主控台）</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+  <style>
+    :root {
+      --bg-base: #0f0b08;
+      --bg-app: #140f0c;
+      --bg-panel: rgba(26, 19, 15, 0.96);
+      --bg-panel-elevated: rgba(38, 28, 22, 0.98);
+      --border-subtle: rgba(180, 138, 98, 0.22);
+      --border-medium: rgba(180, 138, 98, 0.4);
+      --border-focus: rgba(217, 119, 6, 0.75);
+      --accent-amber: #d97706;
+      --accent-gold: #f59e0b;
+      --accent-cream: #fef3c7;
+      --text-primary: #fdfbf7;
+      --text-secondary: #e2d7cc;
+      --text-muted: #9e9185;
+      --color-danger: #dc2626;
+      --color-success: #059669;
+      --font-main: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; }
+    body {
+      background: var(--bg-base);
+      color: var(--text-primary);
+      font-family: var(--font-main);
+      overflow-x: hidden;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      -webkit-font-smoothing: antialiased;
+    }
+    #app-container {
+      position: relative;
+      width: 100%;
+      max-width: 1280px;
+      min-height: 100vh;
+      background: var(--bg-app);
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 0 50px rgba(0, 0, 0, 0.85);
+    }
+    header.hud-bar {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      padding: 12px 20px 10px;
+      display: flex;
+      flex-direction: column;
+      background: rgba(20, 15, 12, 0.98);
+      border-bottom: 1.5px solid var(--border-subtle);
+      backdrop-filter: blur(16px);
+      gap: 10px;
+    }
+    .hud-top-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .brand-group { display: flex; align-items: center; gap: 10px; }
+    .logo-badge {
+      background: linear-gradient(135deg, #78350f, #92400e);
+      color: #fef3c7;
+      font-weight: 800;
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      letter-spacing: 1px;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+    .project-title { font-weight: 700; font-size: 15px; color: #fdfbf7; }
+    .hud-actions-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .hud-stat-chip {
+      background: rgba(38, 28, 22, 0.85);
+      border: 1px solid var(--border-subtle);
+      border-radius: 14px;
+      padding: 4px 12px;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: #fde68a;
+    }
+    .hud-btn {
+      background: rgba(45, 34, 27, 0.85);
+      border: 1.5px solid rgba(217, 119, 6, 0.45);
+      color: #fde68a;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 18px;
+      cursor: pointer;
+      transition: all 0.2s;
+      min-height: 30px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .hud-btn:hover { background: rgba(75, 53, 38, 0.95); border-color: #f59e0b; color: #fef3c7; }
+
+    /* 5 Teams Strip */
+    .teams-hp-strip {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+      background: rgba(18, 13, 10, 0.85);
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-subtle);
+    }
+    .team-hp-card {
+      background: rgba(32, 23, 18, 0.9);
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 6px 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: all 0.3s;
+      position: relative;
+    }
+    .team-hp-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .team-hp-name { color: #e2d7cc; display: flex; align-items: center; gap: 4px; }
+    .team-faction-tag { font-size: 9px; font-weight: 700; padding: 1px 4px; border-radius: 3px; }
+    .faction-hq { background: rgba(217, 119, 6, 0.25); color: #fde68a; border: 1px solid rgba(217, 119, 6, 0.4); }
+    .faction-tokyo { background: rgba(56, 189, 248, 0.2); color: #bae6fd; border: 1px solid rgba(56, 189, 248, 0.4); }
+    .faction-chameleon { background: rgba(16, 185, 129, 0.2); color: #a7f3d0; border: 1px solid rgba(16, 185, 129, 0.4); }
+    .team-headcount-badge { font-size: 9.5px; font-weight: 600; color: #fbbf24; background: rgba(245, 158, 11, 0.18); padding: 1px 4px; border-radius: 3px; }
+    .team-hp-val { color: #fef3c7; font-weight: 800; font-size: 12px; }
+    .team-hp-track { width: 100%; height: 6px; background: rgba(0, 0, 0, 0.5); border-radius: 3px; overflow: hidden; }
+    .team-hp-fill { height: 100%; width: 100%; background: linear-gradient(90deg, #10b981, #059669); transition: width 0.6s ease; }
+    .team-submission-status { font-size: 9.5px; color: #a39789; display: flex; justify-content: space-between; align-items: center; }
+    .status-badge { padding: 1px 5px; border-radius: 3px; font-weight: 600; }
+    .status-pending { background: rgba(180, 138, 98, 0.2); color: #d6c7b7; }
+    .status-submitted { background: rgba(5, 150, 105, 0.25); color: #6ee7b7; }
+
+    /* Damage indicator floating text */
+    .hp-damage-float {
+      position: absolute;
+      top: -12px;
+      right: 6px;
+      color: #ef4444;
+      font-weight: 800;
+      font-size: 12px;
+      opacity: 0;
+      pointer-events: none;
+      animation: floatDamage 1.2s ease-out forwards;
+    }
+    @keyframes floatDamage {
+      0% { opacity: 0; transform: translateY(0); }
+      30% { opacity: 1; transform: translateY(-8px); }
+      80% { opacity: 1; transform: translateY(-14px); }
+      100% { opacity: 0; transform: translateY(-20px); }
+    }
+
+    /* Stepper */
+    .step-tracker { display: flex; align-items: center; gap: 6px; overflow-x: auto; padding: 2px 0; width: 100%; }
+    .step-pill {
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 5px 12px;
+      border-radius: 14px;
+      background: rgba(45, 34, 27, 0.7);
+      color: #c4b5a5;
+      border: 1px solid transparent;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: all 0.2s;
+    }
+    .step-pill:hover { background: rgba(65, 49, 39, 0.9); color: #fdfbf7; }
+    .step-pill.active {
+      background: linear-gradient(135deg, #78350f, #92400e);
+      color: #fef3c7;
+      border-color: #f59e0b;
+      font-weight: 700;
+    }
+
+    /* Main Area */
+    main.game-arena { flex: 1; display: flex; flex-direction: column; padding: 18px 20px; gap: 16px; }
+    #scene-backdrop-wrap {
+      position: relative;
+      width: 100%;
+      min-height: 260px;
+      border-radius: 10px;
+      overflow: hidden;
+      border: 1.5px solid var(--border-subtle);
+      background: #0d0a08;
+      box-shadow: inset 0 0 30px rgba(0,0,0,0.8);
+      display: flex;
+      align-items: flex-end;
+    }
+    #scene-svg-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0.65;
+      pointer-events: none;
+    }
+    #scene-svg-container svg { width: 100%; height: 100%; object-fit: cover; }
+    .scene-overlay-content {
+      position: relative;
+      z-index: 10;
+      width: 100%;
+      padding: 16px 20px;
+      background: linear-gradient(0deg, rgba(16, 12, 9, 0.97) 25%, rgba(16, 12, 9, 0.75) 75%, transparent 100%);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .round-meta-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      color: #fde68a;
+      background: rgba(217, 119, 6, 0.25);
+      padding: 3px 10px;
+      border-radius: 12px;
+      border: 1px solid rgba(217, 119, 6, 0.4);
+      width: fit-content;
+    }
+    .round-mandate-title { font-size: 18px; font-weight: 800; color: #fdfbf7; }
+    .dialogue-bubble {
+      background: rgba(28, 20, 15, 0.92);
+      border: 1.5px solid var(--border-medium);
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 13.5px;
+      line-height: 1.65;
+      color: #fef3c7;
+    }
+    .speaker-tag { font-weight: 700; color: #f59e0b; margin-right: 6px; }
+
+    /* Host Controls Ribbon */
+    .host-control-ribbon {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+      background: var(--bg-panel);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 10px 16px;
+    }
+    .timer-display-box { display: flex; align-items: center; gap: 10px; }
+    .timer-label { font-size: 12px; color: #c4b5a5; font-weight: 600; }
+    .timer-digits {
+      font-family: monospace, Courier;
+      font-size: 20px;
+      font-weight: 800;
+      color: #fde68a;
+      background: rgba(0,0,0,0.4);
+      padding: 2px 10px;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+    }
+    .host-btn-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .action-btn-primary {
+      background: linear-gradient(135deg, #b45309, #d97706);
+      color: #ffffff;
+      border: 1px solid #f59e0b;
+      font-weight: 700;
+      font-size: 12.5px;
+      padding: 7px 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .action-btn-primary:hover { background: linear-gradient(135deg, #d97706, #f59e0b); box-shadow: 0 0 12px rgba(245, 158, 11, 0.4); }
+    .action-btn-secondary {
+      background: rgba(45, 34, 27, 0.85);
+      color: #e2d7cc;
+      border: 1px solid var(--border-medium);
+      font-weight: 600;
+      font-size: 12px;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .action-btn-secondary:hover { background: rgba(65, 49, 39, 0.95); color: #ffffff; }
+
+    /* Options Grid */
+    .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+    .option-card {
+      background: var(--bg-panel);
+      border: 1.5px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .option-header { display: flex; justify-content: space-between; align-items: center; }
+    .option-tag-badge {
+      font-weight: 800;
+      font-size: 12px;
+      padding: 2px 8px;
+      border-radius: 4px;
+      background: rgba(217, 119, 6, 0.2);
+      color: #fde68a;
+      border: 1px solid rgba(217, 119, 6, 0.4);
+    }
+    .option-votes-badge { font-size: 11px; color: #a39789; font-weight: 600; }
+    .option-text-main { font-size: 13.5px; line-height: 1.6; color: #fdfbf7; }
+    .option-rationale-preview {
+      font-size: 12px;
+      color: #c4b5a5;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 6px 10px;
+      border-radius: 5px;
+      border-left: 3px solid var(--accent-amber);
+    }
+    .option-reveal-box { margin-top: 6px; padding: 10px 12px; border-radius: 6px; font-size: 12px; line-height: 1.55; display: none; }
+    .option-reveal-box.reveal-penalty { background: rgba(220, 38, 38, 0.15); border: 1px solid rgba(220, 38, 38, 0.4); color: #fca5a5; }
+    .option-reveal-box.reveal-success { background: rgba(5, 150, 105, 0.15); border: 1px solid rgba(5, 150, 105, 0.4); color: #a7f3d0; }
+
+    /* Leaderboard */
+    .leaderboard-container {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: var(--bg-panel);
+      border: 1.5px solid var(--border-medium);
+      border-radius: 10px;
+      padding: 24px;
+    }
+    .leaderboard-title { font-size: 20px; font-weight: 800; color: #fef3c7; text-align: center; }
+    .rank-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(36, 26, 20, 0.9);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 12px 18px;
+    }
+    .rank-card.rank-1 { border-color: #f59e0b; background: rgba(75, 50, 25, 0.9); box-shadow: 0 0 15px rgba(245, 158, 11, 0.3); }
+    .rank-badge { font-weight: 800; font-size: 14px; color: #fde68a; width: 55px; }
+    .rank-team-name { font-weight: 700; font-size: 14px; flex: 1; color: #fdfbf7; }
+    .rank-hp-score { font-weight: 800; font-size: 16px; color: #10b981; }
+    .theory-synthesis-box {
+      background: rgba(18, 13, 10, 0.85);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .theory-heading { font-size: 13.5px; font-weight: 700; color: #f59e0b; }
+    .theory-desc { font-size: 12.5px; line-height: 1.6; color: #c4b5a5; }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.85);
+      z-index: 200;
+      display: none;
+      justify-content: center;
+      align-items: center;
+      padding: 16px;
+      backdrop-filter: blur(8px);
+    }
+    .modal-card {
+      background: var(--bg-panel-elevated);
+      border: 1.5px solid var(--border-medium);
+      border-radius: 10px;
+      max-width: 480px;
+      width: 100%;
+      padding: 24px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .modal-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-subtle); padding-bottom: 10px; }
+    .modal-title { font-size: 16px; font-weight: 800; color: #fef3c7; }
+    .modal-close-btn { background: none; border: none; color: #a39789; font-size: 18px; cursor: pointer; }
+    .qr-preview-box { display: flex; flex-direction: column; align-items: center; padding: 16px; background: #ffffff; border-radius: 8px; }
+
+    /* Faction filter bar */
+    .r4-faction-filter-bar {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(30, 22, 17, 0.9);
+      border: 1px solid var(--border-subtle);
+      padding: 6px 12px;
+      border-radius: 6px;
+      margin-top: 6px;
+    }
+    .r4-filter-btn {
+      background: rgba(45, 34, 27, 0.85);
+      border: 1px solid var(--border-subtle);
+      color: #c4b5a5;
+      font-size: 11.5px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    .r4-filter-btn.active { background: #78350f; border-color: #f59e0b; color: #ffffff; }
+
+    @keyframes pulseDamaged {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.04); }
+      100% { transform: scale(1); }
+    }
+    .damaged-anim { animation: pulseDamaged 0.5s ease-in-out; }
+  </style>
+</head>
+<body>
+
+<div id="app-container">
+  <header class="hud-bar">
+    <div class="hud-top-row">
+      <div class="brand-group">
+        <span class="logo-badge">PROJECT ATLAS</span>
+        <span class="project-title">跨文化職場對話博弈（簡報者主控台）</span>
+      </div>
+      <div class="hud-actions-group">
+        <span class="hud-stat-chip" id="hud-total-headcount">全班在線：5 組</span>
+        <button class="hud-btn" onclick="openQRModal()">[ 課堂掃碼 ]</button>
+      </div>
+    </div>
+
+    <div class="teams-hp-strip" id="teams-hp-strip"></div>
+
+    <nav class="step-tracker" id="step-tracker">
+      <button class="step-pill active" id="pill-r1" onclick="jumpToRound(1)">第一回：認知維度 (Head)</button>
+      <button class="step-pill" id="pill-r2" onclick="jumpToRound(2)">第二回：動機維度 (Heart)</button>
+      <button class="step-pill" id="pill-r3" onclick="jumpToRound(3)">第三回：行為維度 (Body)</button>
+      <button class="step-pill" id="pill-r4" onclick="jumpToRound(4)">第四回：三方非對稱巔峰模擬</button>
+      <button class="step-pill" id="pill-final" onclick="jumpToRound('final')">終局結算與 CQ 生存榜</button>
+    </nav>
+  </header>
+
+  <main class="game-arena">
+    <section id="round-stage-container">
+      <div id="scene-backdrop-wrap">
+        <div id="scene-svg-container"></div>
+        <div class="scene-overlay-content">
+          <div class="round-meta-badge" id="round-theme-tag">【主題一：認知維度】</div>
+          <h2 class="round-mandate-title" id="round-mandate-title">委婉留白時的追問藝術</h2>
+          <div class="dialogue-bubble" id="round-dialogue-box">
+            <span class="speaker-tag" id="speaker-tag">佐藤部長：</span>
+            <span id="dialogue-text">載入中...</span>
+          </div>
+
+          <div class="r4-faction-filter-bar" id="r4-filter-bar" style="display: none;">
+            <span style="font-size: 11px; color: #fde68a; font-weight: 700;">檢視陣營視角：</span>
+            <button class="r4-filter-btn active" id="btn-filter-hq" onclick="setR4HostFilter('hq')">總部視角 (第1,2組)</button>
+            <button class="r4-filter-btn" id="btn-filter-tokyo" onclick="setR4HostFilter('tokyo')">東京分部視角 (第3,4組)</button>
+            <button class="r4-filter-btn" id="btn-filter-chameleon" onclick="setR4HostFilter('chameleon')">變色龍調解視角 (第5組)</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="host-control-ribbon">
+        <div class="timer-display-box">
+          <span class="timer-label">組內研商倒數：</span>
+          <span class="timer-digits" id="timer-display">02:00</span>
+          <button class="action-btn-secondary" onclick="toggleTimer()" id="btn-timer-toggle">[計時暫停]</button>
+          <button class="action-btn-secondary" onclick="resetTimer()">[重設 2 分]</button>
+        </div>
+
+        <div class="host-btn-group">
+          <button class="action-btn-primary" id="btn-reveal-results" onclick="revealRoundResults()">
+            [ 揭曉各組選擇與 CQ 判定 ]
+          </button>
+          <button class="action-btn-secondary" id="btn-next-round" onclick="advanceNextRound()">
+            [ 進入下一回合 ]
+          </button>
+          <button class="action-btn-secondary" onclick="simulateRandomVotes()" title="自動模擬各組代表決策以利單機展示">
+            [ 模擬各組作答 ]
+          </button>
+          <button class="action-btn-secondary" onclick="simulateClassCheckin()" title="模擬全班學員掃碼簽到">
+            [ 模擬簽到人數 ]
+          </button>
+        </div>
+      </div>
+
+      <div class="options-grid" id="options-grid"></div>
+    </section>
+
+    <section class="leaderboard-container" id="leaderboard-stage" style="display: none;">
+      <h2 class="leaderboard-title">PROJECT ATLAS：跨文化 CQ 生存排行榜</h2>
+      <p style="text-align: center; color: #c4b5a5; font-size: 13px;">
+        經過四輪高階跨文化商業困境之嚴苛洗禮，全班 5 組最終留存 CQ 生命值結算如下：
+      </p>
+      <div class="leaderboard-list" id="leaderboard-ranks-list"></div>
+      <div class="theory-synthesis-box">
+        <h3 class="theory-heading">【組織行為學理論覆盤：跨文化智商 Christopher Earley & Soon Ang (2004)】</h3>
+        <p class="theory-desc">
+          <strong>1. 認知 CQ (Head)：</strong>洞察高語境溝通中的弦外之音。當對方表達「慎重研討」時，能解讀出委婉的阻礙警訊，而非用西方標準 KPI 進行公開逼迫。<br><br>
+          <strong>2. 動機 CQ (Heart)：</strong>在跨文化衝突爆發時，克制法律審計與金錢封口的傲慢，同理對方的「群體名譽與職人尊嚴」，找到雙方共同價值觀的最大公約數。<br><br>
+          <strong>3. 行為 CQ (Body)：</strong>能隨情境靈活調適溝通管道，揚棄冰冷的公開工單監控與輕浮的無效社交，透過「非正式對等磋商」搭建真正的心理安全通道。<br><br>
+          <strong>4. 系統協同 (Chameleon Leadership)：</strong>當總部、分公司各自受困於合規審計與尊嚴防衛時，具備變色龍特質的協調者能重構雙軌治理機制，達成商業利益與文化尊嚴的雙贏終局。
+        </p>
+      </div>
+      <div style="text-align: center; margin-top: 10px;">
+        <button class="action-btn-primary" onclick="restartGame()">[ 重新開始生存挑戰 ]</button>
+      </div>
+    </section>
+  </main>
+</div>
+
+<!-- QR Modal -->
+<div class="modal-overlay" id="qr-modal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h3 class="modal-title">學員手機掃碼加入網址</h3>
+      <button class="modal-close-btn" onclick="closeQRModal()">×</button>
+    </div>
+    <div class="qr-preview-box">
+      <canvas id="qr-canvas" style="display: none;"></canvas>
+      <img id="qr-img" alt="QR Code" style="width: 180px; height: 180px; display: block;" />
+    </div>
+    <div style="font-size: 11.5px; color: #a39789; text-align: center; word-break: break-all;" id="qr-url-text"></div>
+    <div style="display: flex; gap: 8px;">
+      <button class="action-btn-secondary" style="flex: 1;" onclick="copyPageUrl()">[ 複製學員網址 ]</button>
+      <button class="action-btn-primary" style="flex: 1;" onclick="closeQRModal()">[ 完成 ]</button>
+    </div>
+  </div>
+</div>
+
+<script>
+
+  const AudioEngine = {
+    ctx: null,
+    init() {
+      if (!this.ctx) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) this.ctx = new AudioCtx();
+      }
+      if (this.ctx && this.ctx.state === 'suspended') {
+        this.ctx.resume();
+      }
+    },
+    playClick() {
+      try {
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(440, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(880, this.ctx.currentTime + 0.05);
+        gain.gain.setValueAtTime(0.12, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.05);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.05);
+      } catch (e) {}
+    },
+    playDamage() {
+      try {
+        this.init();
+        if (!this.ctx) return;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(260, this.ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(110, this.ctx.currentTime + 0.35);
+        gain.gain.setValueAtTime(0.25, this.ctx.currentTime);
+        gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + 0.35);
+        osc.start();
+        osc.stop(this.ctx.currentTime + 0.35);
+      } catch (e) {}
+    },
+    playChime() {
+      try {
+        this.init();
+        if (!this.ctx) return;
+        [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.08);
+          gain.gain.setValueAtTime(0.18, this.ctx.currentTime + idx * 0.08);
+          gain.gain.linearRampToValueAtTime(0.01, this.ctx.currentTime + idx * 0.08 + 0.3);
+          osc.start(this.ctx.currentTime + idx * 0.08);
+          osc.stop(this.ctx.currentTime + idx * 0.08 + 0.3);
+        });
+      } catch (e) {}
+    }
+  };
+
+
+  const SceneSVGs = {
+    midnightBoardroom: () => `
+      <svg viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="skyGrad1" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#080605"/>
+            <stop offset="60%" stop-color="#140f0c"/>
+            <stop offset="100%" stop-color="#261c16"/>
+          </linearGradient>
+          <linearGradient id="tableGrad1" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#3d291e"/>
+            <stop offset="100%" stop-color="#1a110b"/>
+          </linearGradient>
+        </defs>
+        <rect width="1200" height="600" fill="url(#skyGrad1)"/>
+        <g stroke="#3a2a20" stroke-width="3" opacity="0.7">
+          <line x1="200" y1="0" x2="200" y2="460"/>
+          <line x1="450" y1="0" x2="450" y2="460"/>
+          <line x1="750" y1="0" x2="750" y2="460"/>
+          <line x1="1000" y1="0" x2="1000" y2="460"/>
+          <line x1="0" y1="200" x2="1200" y2="200"/>
+        </g>
+        <rect x="60" y="240" width="35" height="220" fill="#17110d" opacity="0.8"/>
+        <polygon points="120,200 135,160 150,200 150,460 120,460" fill="#1c140f" opacity="0.85"/>
+        <polygon points="850,220 870,120 890,220 885,460 855,460" fill="#1c140f" opacity="0.85"/>
+        <rect x="920" y="250" width="40" height="210" fill="#17110d" opacity="0.8"/>
+        <g fill="#fde68a" opacity="0.6" font-family="monospace" font-size="12">
+          <text x="70" y="50">TOKYO 03:30 (JST)</text>
+          <text x="960" y="50">SAN FRANCISCO 11:30 (PST)</text>
+        </g>
+        <polygon points="0,520 1200,520 1200,600 0,600" fill="url(#tableGrad1)"/>
+        <line x1="0" y1="520" x2="1200" y2="520" stroke="#f59e0b" stroke-width="2" opacity="0.4"/>
+      </svg>
+    `,
+
+    confidentialLab: () => `
+      <svg viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="labBg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#090d10"/>
+            <stop offset="60%" stop-color="#121820"/>
+            <stop offset="100%" stop-color="#1a232e"/>
+          </linearGradient>
+          <linearGradient id="waferGrad" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#d97706" stop-opacity="0.6"/>
+            <stop offset="50%" stop-color="#f59e0b" stop-opacity="0.9"/>
+            <stop offset="100%" stop-color="#78350f" stop-opacity="0.5"/>
+          </linearGradient>
+        </defs>
+        <rect width="1200" height="600" fill="url(#labBg)"/>
+        <g stroke="#1e293b" stroke-width="1.5" opacity="0.4">
+          <line x1="0" y1="150" x2="1200" y2="150"/>
+          <line x1="0" y1="300" x2="1200" y2="300"/>
+          <line x1="0" y1="450" x2="1200" y2="450"/>
+          <line x1="400" y1="0" x2="400" y2="600"/>
+          <line x1="800" y1="0" x2="800" y2="600"/>
+        </g>
+        <circle cx="600" cy="280" r="140" fill="none" stroke="url(#waferGrad)" stroke-width="3" opacity="0.6"/>
+        <circle cx="600" cy="280" r="90" fill="none" stroke="#f59e0b" stroke-width="1.5" stroke-dasharray="6,4" opacity="0.4"/>
+        <g fill="#38bdf8" opacity="0.75" font-family="monospace" font-size="12">
+          <text x="80" y="60">CONFIDENTIAL QUALITY LAB: WAFER TELEMETRY</text>
+          <text x="80" y="85">YIELD METRIC: 98.4% (TOKYO SPEC PASSED)</text>
+        </g>
+        <g fill="#f87171" opacity="0.75" font-family="monospace" font-size="12">
+          <text x="800" y="60">ALLOCATION ALERT: -30% WAFER CAPACITY</text>
+          <text x="800" y="85">CAUSE: UNAUTHORIZED VIP PARTNER DISRUPTION</text>
+        </g>
+      </svg>
+    `,
+
+    hybridChashitsu: () => `
+      <svg viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="chashitsuBg" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#140e0a"/>
+            <stop offset="60%" stop-color="#241912"/>
+            <stop offset="100%" stop-color="#38261b"/>
+          </linearGradient>
+          <linearGradient id="woodPillar" x1="0" y1="0" x2="1" y2="0">
+            <stop offset="0%" stop-color="#4a3325"/>
+            <stop offset="50%" stop-color="#5e412f"/>
+            <stop offset="100%" stop-color="#4a3325"/>
+          </linearGradient>
+        </defs>
+        <rect width="1200" height="600" fill="url(#chashitsuBg)"/>
+        <g stroke="#78533c" stroke-width="1.5" opacity="0.45">
+          <line x1="50" y1="50" x2="350" y2="350"/>
+          <line x1="50" y1="150" x2="350" y2="450"/>
+          <line x1="350" y1="50" x2="50" y2="350"/>
+          <line x1="350" y1="150" x2="50" y2="450"/>
+        </g>
+        <rect x="360" y="0" width="30" height="600" fill="url(#woodPillar)"/>
+        <rect x="820" y="0" width="30" height="600" fill="url(#woodPillar)"/>
+        <rect x="880" y="100" width="260" height="180" rx="8" fill="#17120e" stroke="#523a2c" stroke-width="2"/>
+        <g fill="#fde68a" opacity="0.7" font-family="monospace" font-size="11">
+          <text x="900" y="130">PROTOCOL: TRUST REBUILD</text>
+          <text x="900" y="160">CHANNEL: 15-MIN PEER STANDUP</text>
+          <text x="900" y="190">ROLE: CULTURAL CHAMELEON</text>
+          <text x="900" y="220">STATUS: CONFLICT DE-ESCALATING</text>
+        </g>
+      </svg>
+    `,
+
+    grandSummit: () => `
+      <svg viewBox="0 0 1200 600" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="summitGrad" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#0a0705"/>
+            <stop offset="40%" stop-color="#1a120c"/>
+            <stop offset="100%" stop-color="#2a1b12"/>
+          </linearGradient>
+        </defs>
+        <rect width="1200" height="600" fill="url(#summitGrad)"/>
+        <g stroke="#422e22" stroke-width="2" opacity="0.5">
+          <ellipse cx="600" cy="550" rx="550" ry="200" fill="none"/>
+          <ellipse cx="600" cy="550" rx="420" ry="150" fill="none"/>
+          <ellipse cx="600" cy="550" rx="280" ry="100" fill="none"/>
+        </g>
+        <!-- 3 Podiums Banners -->
+        <rect x="80" y="120" width="280" height="80" rx="6" fill="#241710" stroke="#d97706" stroke-width="2"/>
+        <g fill="#fde68a" font-family="sans-serif">
+          <text x="100" y="150" font-size="13" font-weight="bold">總部陣營席 (第 1, 2 組)</text>
+          <text x="100" y="175" font-size="11" fill="#c4b5a5">任務：華爾街做空暴跌與究責決策</text>
+        </g>
+        <rect x="460" y="80" width="280" height="80" rx="6" fill="#13231a" stroke="#10b981" stroke-width="2"/>
+        <g fill="#a7f3d0" font-family="sans-serif">
+          <text x="480" y="110" font-size="13" font-weight="bold">變色龍調解席 (第 5 組)</text>
+          <text x="480" y="135" font-size="11" fill="#c4b5a5">任務：雙軌心理安全與仲裁協定</text>
+        </g>
+        <rect x="840" y="120" width="280" height="80" rx="6" fill="#111d29" stroke="#38bdf8" stroke-width="2"/>
+        <g fill="#bae6fd" font-family="sans-serif">
+          <text x="860" y="150" font-size="13" font-weight="bold">分公司陣營席 (第 3, 4 組)</text>
+          <text x="860" y="175" font-size="11" fill="#c4b5a5">任務：良率免責背書與尊嚴防線</text>
+        </g>
+        <!-- Live Ticker -->
+        <rect x="0" y="0" width="1200" height="36" fill="#080605" stroke="#38261b" stroke-width="1"/>
+        <g fill="#f87171" font-family="monospace" font-size="11">
+          <text x="40" y="22">NASDAQ: ATLAS CORP -8.54% (PRE-MARKET)</text>
+          <text x="450" y="22">TOPIX: SEMICON ALLIANCE -3.12%</text>
+          <text x="880" y="22">STATUS: GLOBAL PRESS BRIEFING IN 60 MIN</text>
+        </g>
+      </svg>
+    `
+  };
+
+
+  const DilemmasData = {
+    1: {
+      themeTag: "【主題一：認知維度】高語境解碼與深層常模辨識",
+      title: "【實戰第一回】委婉留白時的追問藝術",
+      sceneKey: "midnightBoardroom",
+      speaker: "佐藤部長（雙手交疊，緩緩喝了一口茶，審慎沉吟）：",
+      dialogue: "「……交付時程方面，我們現場會全力以赴進行慎重研討，只是部分細節可能還需要團隊內部進一步調研……」\n\n【背景形勢】：總部明日開盤前必須向華爾街做空機構與董事會提交進度，此時總部該如何接話？",
+      options: [
+        {
+          id: "A",
+          title: "方案 A：進度量化追蹤策略",
+          text: "「感謝佐藤部長的回饋。為確保全球供應鏈排程精準，請東京團隊在今日下午 5 點前，將調研里程碑量化為具體甘特圖並標註預計完工日。」",
+          rationale: "表面合理性：標準專案管理（PMP）SMART 原則，界定清晰交付物與期限，對董事會與投資人忠實負責。",
+          penalty: -20,
+          blindspot: "文化盲點：日方高語境下「慎重研討」已是幾近無法如期完工的求救訊號。公開逼問硬性死線等於逼其當場認錯或撒謊，破壞深層信任。"
+        },
+        {
+          id: "B",
+          title: "方案 B：全球資源緊急調度策略",
+          text: "「總部充分理解東京團隊的沉重壓力。我們已批准協調 5 位矽谷資深架構師於明晨直飛東京現場，直接進駐協助分擔程式碼調校。」",
+          rationale: "表面合理性：高管資源傾斜、頂尖專家技術賦能、主動替海外第一線同仁分擔極限工作量。",
+          penalty: -25,
+          blindspot: "文化盲點：在日式職人與現場主義（Gemba）文化中，不請自來的總部專家等同官方審計接管，暗示東京團隊無能，激起全員防衛消極抵制。"
+        },
+        {
+          id: "C",
+          title: "方案 C：全員民主共識決策機制",
+          text: "「為分擔管理層決策壓力，建議此時在大會中由美日全體研發工程師進行線上不記名投票，依第一線真實工時表決是否微調發布日。」",
+          rationale: "表面合理性：扁平化治理、心理安全感、打破科層官僚壁壘、汲取第一線集體智慧。",
+          penalty: -15,
+          blindspot: "文化盲點：破壞東亞長幼有序與組織和睦（和，Wa）。強迫基層在主管前公開表態會造成極大社交焦慮，且被日方視為總部推卸治理責任。"
+        },
+        {
+          id: "D",
+          title: "方案 D：雙邊技術排程微調對齊",
+          text: "「非常理解公差調研的嚴謹性與技術深度。今日大會先行休會，會後由我方營運負責人親自致電佐藤部長，就底層架構參數先做個別溝通。」",
+          rationale: "管理實效：不在公開大會讓對方下不了台，移至非公開場域建立心理安全通道，探求水面下的真正技術瓶頸。",
+          penalty: 0,
+          bonus: 5,
+          blindspot: "最優解：精準實踐「根回し（Nemawashi）」，為日方搭設心理安全階梯，真正被挪用晶圓的實情方能在私下電話中被如實吐露。"
+        }
+      ]
+    },
+
+    2: {
+      themeTag: "【主題二：動機維度】自尊維護與消解文化防衛",
+      title: "【實戰第二回】晶圓遭挪用風暴與責任定調",
+      sceneKey: "confidentialLab",
+      speaker: "東京工程團隊（遞交底層 log 數據與集體抗議連署書）：",
+      dialogue: "東京私下向調解人證實：延誤根本非技術問題（東京良率實測達 98.4%），而是總部董事關係戶私自插單強行挪走 30% 晶圓！東京團隊連續加班三週背黑鍋，如今卻被總部公開質疑工作效率低落，日本工程師全員抗議。\n\n【背景形勢】：調解席與總部該如何定調這起內部醜聞，並平息兩地怒火？",
+      options: [
+        {
+          id: "A",
+          title: "方案 A：合規獨立審查與資安管控",
+          text: "「總部法務與合規長立即啟動內部專案調查，並針對代工廠及分部相關人員簽發全面保密協議（NDA），在調查結果出爐前嚴格隔離資訊。」",
+          rationale: "表面合理性：標準企業風險控管（Risk Management）與法規遵循流程，防止未授權資訊外流影響股價或涉及內線爭議。",
+          penalty: -30,
+          blindspot: "文化盲點：法律霸凌（Legal Bullying）。將受害工程師視為潛在洩密犯罪嫌疑人，粉碎東京團隊最後的心理安全感，極易促使其向媒體揭弊。"
+        },
+        {
+          id: "B",
+          title: "方案 B：專案特別津貼與全員激勵",
+          text: "「由總部提撥專案特別預算，為東京現場全體工程師發放每人雙倍專案激勵獎金與全員加成加班津貼，以實質回饋感謝大家的辛勞付出。」",
+          rationale: "表面合理性：務實的實質激勵手段，直接把預算發給第一線同仁，以豐厚經濟補償撫慰加班辛勞。",
+          penalty: -20,
+          blindspot: "文化盲點：將名譽金錢化（Monetizing Dignity）。對恪守「職人精神（Shokunin）」的團隊而言，用金錢封口形同侮辱專業自尊。"
+        },
+        {
+          id: "C",
+          title: "方案 C：市場重大訊息公開澄清",
+          text: "「總部立即召開全球法人說明會，正式向公眾揭露該外部代工廠違約插單情事，並宣告啟動商務索賠，公開向市場還給東京團隊清白。」",
+          rationale: "表面合理性：黑白分明、追求絕對正義與公開透明，展現高層保護海外下屬的魄力。",
+          penalty: -25,
+          blindspot: "文化盲點：玉石俱焚（Pyrrhic Victory）。公開指責關係戶導致主管機關立案調查，全產品線被迫無限期凍結，市值崩跌造成全體雙輸。"
+        },
+        {
+          id: "D",
+          title: "方案 D：內部責任專函與戰略重整",
+          text: "「董事會正式出具內部專函確認研發團隊零過失，對外發表聲明將本次時程微調定調為『追求旗艦級極限品質之戰略升級』，公開向董事會表彰研發團隊。」",
+          rationale: "管理實效：對內釐清是非曲直以撫慰軍心，對外將時程調整轉化為品牌工藝溢價，兼顧商業全局與團隊自尊。",
+          penalty: 0,
+          bonus: 10,
+          blindspot: "最優解：動機 CQ 核心在於保護群體的自尊與自我效能感，精準擊中日方名譽與美方商業利益的唯一交集點。"
+        }
+      ]
+    },
+
+    3: {
+      themeTag: "【主題三：行為維度】跨國協作摩擦與溝通機制重構",
+      title: "【實戰第三回】跨國通訊口角升級與場域重構",
+      sceneKey: "hybridChashitsu",
+      speaker: "美日跨國 Slack 頻道（爭執紀錄截圖曝光）：",
+      dialogue: "兩地工程師在公開 Slack 頻道爆發激烈口角：美方工程師不斷使用大寫英文與 @here 催促進度，日方工程師感到被當眾公開審查羞辱，開始採取集體已讀不回與拒絕更新英文工單的被動防禦，跨國協作即將全面中斷。\n\n【背景形勢】：應採取何種形式與管道重構，徹底打破溝通死結？",
+      options: [
+        {
+          id: "A",
+          title: "方案 A：敏捷看板全透明數位化監控",
+          text: "「全面導入 Jira 自動化即時追蹤機制，要求雙方每 2 小時自動同步任務進度與程式碼提交紀錄，建立客觀中立的全球燃盡圖。」",
+          rationale: "表面合理性：現代敏捷專案管理核心，進度全透明，以純客觀數據消除跨國溝通中的主觀猜忌與資訊延遲。",
+          penalty: -20,
+          blindspot: "文化盲點：監視焦慮（Surveillance Anxiety）。高語境文化會解讀為極度的「不信任」與微觀管理，觸發工程師「表面合規、實質怠工」。"
+        },
+        {
+          id: "B",
+          title: "方案 B：確立層級責任與指揮鏈貫徹",
+          text: "「由總部全球執行副總向東京製造部長發布正式行政備忘錄，要求部長依組織層級督導下屬，落實日常溝通時效考核。」",
+          rationale: "表面合理性：危機時期的強勢決斷力（Decisive Leadership），由上而下確立權責鏈，符合科層組織管理標準。",
+          penalty: -25,
+          blindspot: "文化盲點：摧毀日本下意上達的「稟議制（Ringi）」與共識和諧。部長陷入忠誠與下屬信賴的夾縫，極易導致部長引咎辭職。"
+        },
+        {
+          id: "C",
+          title: "方案 C：非正式跨文化團隊凝聚交流",
+          text: "「規劃跨國同仁線上文化交流茶會，透過非正式輕鬆互動與生活話題分享，緩解近期專案衝刺引發的人際緊張。」",
+          rationale: "表面合理性：經典團隊建設（Team Building），提倡放鬆身心、增進跨文化同仁私人情誼。",
+          penalty: -15,
+          blindspot: "文化盲點：輕浮無禮（Tone-Deaf Frivolity）。在面臨重大專案危機與信任破裂時強推休閒娛樂，被日方視為輕佻與極不專業，加劇心理反感。"
+        },
+        {
+          id: "D",
+          title: "方案 D：設立去層級技術對等站會機制",
+          text: "「設立每日 15 分鐘『雙邊技術對等站會』，選派兼具跨文化背景之核心工程師擔任窗口，脫鉤考核流程，聚焦具體技術本體。」",
+          rationale: "管理實效：建立安全的微型對話場域，藉由具備高行為調適力的人員調適溝通語境，大幅降低交易成本。",
+          penalty: 0,
+          bonus: 5,
+          blindspot: "最優解：將溝通模式從「公開審訊」轉換為「同儕探討」，精準落實行為 CQ 中的語言與非語言行為靈活切換。"
+        }
+      ]
+    },
+
+    4: {
+      themeTag: "【第四回：全案巔峰情境模擬】三方非對稱大會審",
+      title: "【終極實戰】華爾街做空危機與跨太平洋聯合戰略協定",
+      sceneKey: "grandSummit",
+      isAsymmetric: true,
+      
+      factions: {
+        hq: {
+          factionName: "總部陣營（第 1、2 組）",
+          speaker: "美方總部副總（面對董事會與做空機構最後通牒）：",
+          dialogue: "華爾街做空機構嗅到晶圓遭挪用風聲，母公司盤前股價重挫 8.5%，華爾街各大投行要求總部於 1 小時內發布全球重訊並指名究責對象，董事會施壓限期定案！",
+          options: [
+            {
+              id: "A",
+              title: "方案 A：契約責任追訴與止血策略",
+              text: "「依供應鏈採購合約向代工廠發出法律存證信函並啟動求償程序，對外發布公告澄清延誤主因為第三方供應商違約。」",
+              rationale: "表面合理性：迅速釐清法律責任、向市場展現問責決心、藉由法律行動挽救當前股價。",
+              penalty: -30,
+              blindspot: "文化盲點：東亞半導體圈極度重視長期供應商體系（Keiretsu）。公開指控等於與東亞供應鏈決裂，未來無封測廠敢承接總部訂單。"
+            },
+            {
+              id: "B",
+              title: "方案 B：全球架構重組與技術集中化",
+              text: "「推動全球研發架構集中化重組，將底層核心代碼與韌體驗收權限統一收歸總部中央團隊管轄。」",
+              rationale: "表面合理性：消滅海外分部指揮壁壘、強化全球中央統治力、保護核心智慧財產權。",
+              penalty: -25,
+              blindspot: "文化盲點：激起東京工程師集體辭職潮，微公差組裝工藝失傳，新產品陷入永久無法量產的死局。"
+            },
+            {
+              id: "C",
+              title: "方案 C：預期管理與財務對衝方案",
+              text: "「向市場發布前瞻性樂觀營運指引以穩定當前股價，同時規劃內部留任激勵基金安撫海外團隊。」",
+              rationale: "表面合理性：極端危機下的資本運作策略，用預期管理平息市場恐慌，以實質利益撫慰基層。",
+              penalty: -35,
+              blindspot: "文化盲點：前瞻指引過度美化，東京工程師視為造假欺詐而向美國監管機構揭弊，總部高層面臨刑事起訴。"
+            },
+            {
+              id: "D",
+              title: "方案 D：全球聯席協同委員會架構",
+              text: "「對外宣布成立由美日雙方技術主管共同主持之『全球旗艦品質聯席委員會』，將時程微調定調為多中心深度驗證之必要程序。」",
+              rationale: "管理實效：超越單向殖民審計，賦予海外分部對等權力地位，化被動代工為命運共同體。",
+              penalty: 0,
+              bonus: 10,
+              blindspot: "最優解：給予東京實質決策話語權，對外塑造跨國合作共贏典範，贏得市場長期溢價信賴。"
+            }
+          ]
+        },
+
+        tokyo: {
+          factionName: "分公司陣營（第 3、4 組）",
+          speaker: "東京佐藤部長與工會幹部（面對總部免責背書要求）：",
+          dialogue: "總部施壓要求東京簽署「產品良率免責背書」，若簽署，總部即可向投資人交差，但未來若晶圓出問題東京需負全責；若東京拒簽，新產品可能全面夭折，東京團隊該如何決策？",
+          options: [
+            {
+              id: "A",
+              title: "方案 A：公開專業聲明與主權捍衛",
+              text: "「正式出具聲明拒絕簽署背書，召開日媒專業記者會揭露產能挪用事件，以透明度保護分部聲譽。」",
+              rationale: "表面合理性：捍衛絕對真相與職人道德潔癖、公開透明向產業公眾自清。",
+              penalty: -30,
+              blindspot: "文化盲點：道德上雖正確，但直接摧毀母公司市值與商業信任，分部亦隨之面臨關閉撤裁。"
+            },
+            {
+              id: "B",
+              title: "方案 B：組織大局優先與簽署背書",
+              text: "「基於公司整體生存大局，由部長代表簽署免責背書，事後再尋求內部管道逐步爭取資源。」",
+              rationale: "表面合理性：顧全大局、避免衝突激化、向高層展現服從忠誠與組織承諾。",
+              penalty: -25,
+              blindspot: "文化盲點：盲目屈從讓職人信念瓦解，未來若出問題東京成為官方唯一代罪羔羊。"
+            },
+            {
+              id: "C",
+              title: "方案 C：提升驗收門檻之嚴格品質防禦",
+              text: "「同意簽署原則性意向，但同時全面提高現場出廠檢測標準，在所有公差未達最高標準前嚴格暫緩放行。」",
+              rationale: "表面合理性：技術合規防衛、以嚴格把關為由被動防禦自身免於瑕疵責任。",
+              penalty: -20,
+              blindspot: "文化盲點：被動攻擊（Passive-Aggressive）。隱性消極抵制讓總部感受到欺騙，徹底破壞互信。"
+            },
+            {
+              id: "D",
+              title: "方案 D：技術條件書綁定與共同簽署專函",
+              text: "「出具正式技術條件專函，詳列晶圓公差校準之必備工程參數，並要求總部工程副總共同聯名簽署驗收報告。」",
+              rationale: "管理實效：以客觀數據設立防線，要求權責對等共同聯名，既不退讓專業底線亦不中斷商業合作。",
+              penalty: 0,
+              bonus: 10,
+              blindspot: "最優解：守住專業底線同時保留商業推進通道，促使總部必須認真對待技術實況。"
+            }
+          ]
+        },
+
+        chameleon: {
+          factionName: "變色龍協調組（第 5 組）",
+          speaker: "變色龍調解席（手握跨文化仲裁建議權）：",
+          dialogue: "美日雙方已至最後通牒關頭，調解人手握董事會與雙方唯一的信任中樞，變色龍組該端出何種調解協定，挽救 Project ATLAS？",
+          options: [
+            {
+              id: "A",
+              title: "方案 A：平衡權責與強制歸零重啟",
+              text: "「要求雙方即刻停止相互指責，各承擔一半延誤責任，將進度時鐘歸零重新啟動日常排程。」",
+              rationale: "表面合理性：維持表象平靜、快刀斬亂麻消除檯面衝突、權責各半貌似公平。",
+              penalty: -25,
+              blindspot: "文化盲點：表面平息未能化解深層尊嚴與信任創傷，問題隨時以更大破壞力反撲。"
+            },
+            {
+              id: "B",
+              title: "方案 B：現實資源導向之實質妥協建議",
+              text: "「向東京分析全球母公司資源實力現實，建議東京接受內部補償協議並配合總部現階段發布進程。」",
+              rationale: "表面合理性：務實權力政治考量、依附資源優勢方推動妥協，求取企業生存。",
+              penalty: -30,
+              blindspot: "文化盲點：變色龍喪失中立，淪為強勢總部的附庸，永久失去東亞團隊的信任與尊重。"
+            },
+            {
+              id: "C",
+              title: "方案 C：建立獨立第三方調研專案機制",
+              text: "「建議董事會聘請獨立管理顧問與技術第三方介入調查，在 60 天內出具客觀事實報告後再行定奪。」",
+              rationale: "表面合理性：程序正義、以客觀第三方調研中和兩造偏見、避免倉促做錯決策。",
+              penalty: -20,
+              blindspot: "文化盲點：錯失危機處置的黃金視窗，公司因無法按時出貨直接面臨客戶鉅額求償與發布夭折。"
+            },
+            {
+              id: "D",
+              title: "方案 D：雙軌制內部專函與外部價值重構",
+              text: "「促成董事會內部機密專函釐清工程零責任，對外定調為工藝旗艦升級，並建立常態化雙邊技術站會。」",
+              rationale: "管理實效：精準調和各方核心訴求，撫慰日方自尊、滿足美方商業價值，重構對等通道。",
+              penalty: 0,
+              bonus: 15,
+              blindspot: "最優解：達成全贏調解，完美拯救專案並建立可持續的跨文化組織協作範式。"
+            }
+          ]
+        }
+      }
+    }
+  };
+
+
+  const GameState = {
+    currentRound: 1,
+    roundStatus: "voting",
+    r4HostFilter: "hq",
+    teams: {
+      1: { name: "第 1 組（總部戰略組）", faction: "hq", hp: 100, headcount: 1, currentChoice: null, submitted: false },
+      2: { name: "第 2 組（總部產品組）", faction: "hq", hp: 100, headcount: 1, currentChoice: null, submitted: false },
+      3: { name: "第 3 組（東京工程組）", faction: "tokyo", hp: 100, headcount: 1, currentChoice: null, submitted: false },
+      4: { name: "第 4 組（東京製造組）", faction: "tokyo", hp: 100, headcount: 1, currentChoice: null, submitted: false },
+      5: { name: "第 5 組（變色龍協調組）", faction: "chameleon", hp: 100, headcount: 1, currentChoice: null, submitted: false }
+    },
+    timerRemaining: 120,
+    timerRunning: false,
+    timerInterval: null,
+    syncChannel: null
+  };
+
+  function initApp() {
+    try {
+      GameState.syncChannel = new BroadcastChannel('project_atlas_cq_sync');
+      GameState.syncChannel.onmessage = (e) => {
+        handleSyncMessage(e.data);
+      };
+    } catch (err) {}
+
+    window.addEventListener('storage', (e) => {
+      if (e.key === 'project_atlas_cq_state' && e.newValue) {
+        try { handleSyncMessage(JSON.parse(e.newValue)); } catch (err) {}
+      }
+    });
+
+    renderTeamHPStrip();
+    loadRound(GameState.currentRound);
+    startTimer();
+    initQRCode();
+  }
+
+  function handleSyncMessage(msg) {
+    if (!msg || !msg.type) return;
+    if (msg.type === 'TEAM_SUBMIT') {
+      const { teamId, choiceId } = msg;
+      if (GameState.teams[teamId]) {
+        GameState.teams[teamId].currentChoice = choiceId;
+        GameState.teams[teamId].submitted = true;
+        renderTeamHPStrip();
+        updateOptionsGridUI();
+      }
+    } else if (msg.type === 'TEAM_JOIN') {
+      const { teamId } = msg;
+      if (GameState.teams[teamId]) {
+        GameState.teams[teamId].headcount++;
+        renderTeamHPStrip();
+        updateHeadcountDisplay();
+      }
+    }
+  }
+
+  function broadcastState(type, payload = {}) {
+    const packet = { type, ...payload, timestamp: Date.now() };
+    if (GameState.syncChannel) {
+      try { GameState.syncChannel.postMessage(packet); } catch (e) {}
+    }
+    try { localStorage.setItem('project_atlas_cq_state', JSON.stringify(packet)); } catch (e) {}
+  }
+
+  function renderTeamHPStrip() {
+    const strip = document.getElementById('teams-hp-strip');
+    if (!strip) return;
+    let html = '';
+    for (let i = 1; i <= 5; i++) {
+      const team = GameState.teams[i];
+      const hpPercent = Math.max(0, Math.min(100, team.hp));
+      let fillColor = 'linear-gradient(90deg, #10b981, #059669)';
+      if (hpPercent <= 30) fillColor = 'linear-gradient(90deg, #dc2626, #ef4444)';
+      else if (hpPercent <= 65) fillColor = 'linear-gradient(90deg, #d97706, #f59e0b)';
+
+      let factionLabel = '總部';
+      let factionClass = 'faction-hq';
+      if (team.faction === 'tokyo') { factionLabel = '分公司'; factionClass = 'faction-tokyo'; }
+      else if (team.faction === 'chameleon') { factionLabel = '變色龍'; factionClass = 'faction-chameleon'; }
+
+      const statusClass = team.submitted ? 'status-submitted' : 'status-pending';
+      const statusText = team.submitted ? `已送出${GameState.roundStatus === 'revealed' ? ` (${team.currentChoice})` : ''}` : '研議中';
+
+      html += `
+        <div class="team-hp-card" id="team-card-${i}">
+          <div class="team-hp-header">
+            <span class="team-hp-name">
+              <span class="team-faction-tag ${factionClass}">${factionLabel}</span>
+              ${team.name.split('（')[0]}
+              <span class="team-headcount-badge">${team.headcount}人</span>
+            </span>
+            <span class="team-hp-val" id="team-hp-num-${i}">${team.hp} HP</span>
+          </div>
+          <div class="team-hp-track">
+            <div class="team-hp-fill" id="team-hp-fill-${i}" style="width: ${hpPercent}%; background: ${fillColor};"></div>
+          </div>
+          <div class="team-submission-status">
+            <span>代表決策：</span>
+            <span class="status-badge ${statusClass}">${statusText}</span>
+          </div>
+          <div class="hp-damage-float" id="damage-float-${i}"></div>
+        </div>
+      `;
+    }
+    strip.innerHTML = html;
+  }
+
+  function triggerDamageAnimation(teamId, penalty) {
+    const card = document.getElementById(`team-card-${teamId}`);
+    const floatText = document.getElementById(`damage-float-${teamId}`);
+    if (card) {
+      card.classList.remove('damaged-anim');
+      void card.offsetWidth;
+      card.classList.add('damaged-anim');
+    }
+    if (floatText) {
+      floatText.innerText = penalty < 0 ? `${penalty} CQ` : `+${penalty} CQ`;
+      floatText.style.color = penalty < 0 ? '#ef4444' : '#10b981';
+      floatText.style.animation = 'none';
+      void floatText.offsetWidth;
+      floatText.style.animation = 'floatDamage 1.2s ease-out forwards';
+    }
+  }
+
+  function updateHeadcountDisplay() {
+    const chip = document.getElementById('hud-total-headcount');
+    if (!chip) return;
+    let total = 0;
+    for (let i = 1; i <= 5; i++) total += GameState.teams[i].headcount;
+    chip.innerText = `全班在線：${total} 人`;
+  }
+
+  function simulateClassCheckin() {
+    AudioEngine.playChime();
+    const counts = [6, 7, 6, 8, 5];
+    for (let i = 1; i <= 5; i++) GameState.teams[i].headcount = counts[i - 1];
+    renderTeamHPStrip();
+    updateHeadcountDisplay();
+  }
+
+  function jumpToRound(roundNum) {
+    AudioEngine.playClick();
+    GameState.currentRound = roundNum;
+    loadRound(roundNum);
+  }
+
+  function setR4HostFilter(factionKey) {
+    AudioEngine.playClick();
+    GameState.r4HostFilter = factionKey;
+    document.querySelectorAll('.r4-filter-btn').forEach(btn => btn.classList.remove('active'));
+    const activeBtn = document.getElementById(`btn-filter-${factionKey}`);
+    if (activeBtn) activeBtn.classList.add('active');
+    loadRound(4);
+  }
+
+  function loadRound(roundNum) {
+    document.querySelectorAll('.step-pill').forEach(pill => pill.classList.remove('active'));
+    const activePill = document.getElementById(`pill-${roundNum === 'final' ? 'final' : 'r' + roundNum}`);
+    if (activePill) activePill.classList.add('active');
+
+    const stageContainer = document.getElementById('round-stage-container');
+    const leaderboardContainer = document.getElementById('leaderboard-stage');
+    const r4FilterBar = document.getElementById('r4-filter-bar');
+
+    if (roundNum === 'final') {
+      stageContainer.style.display = 'none';
+      leaderboardContainer.style.display = 'flex';
+      renderFinalLeaderboard();
+      broadcastState('STATE_UPDATE', { teams: GameState.teams, currentRound: 'final', roundStatus: 'revealed' });
+      return;
+    }
+
+    stageContainer.style.display = 'block';
+    leaderboardContainer.style.display = 'none';
+
+    const data = DilemmasData[roundNum];
+    if (!data) return;
+
+    GameState.roundStatus = 'voting';
+    for (let i = 1; i <= 5; i++) {
+      GameState.teams[i].submitted = false;
+      GameState.teams[i].currentChoice = null;
+    }
+
+    const svgContainer = document.getElementById('scene-svg-container');
+    if (svgContainer && SceneSVGs[data.sceneKey]) {
+      svgContainer.innerHTML = SceneSVGs[data.sceneKey]();
+    }
+
+    if (roundNum === 4) r4FilterBar.style.display = 'flex';
+    else r4FilterBar.style.display = 'none';
+
+    let currentFactionData = null;
+    if (data.isAsymmetric) {
+      currentFactionData = data.factions[GameState.r4HostFilter];
+    }
+
+    document.getElementById('round-theme-tag').innerText = data.themeTag + (currentFactionData ? ` - ${currentFactionData.factionName}` : '');
+    document.getElementById('round-mandate-title').innerText = data.title;
+    document.getElementById('speaker-tag').innerText = currentFactionData ? currentFactionData.speaker : data.speaker;
+    document.getElementById('dialogue-text').innerText = currentFactionData ? currentFactionData.dialogue : data.dialogue;
+
+    const revealBtn = document.getElementById('btn-reveal-results');
+    if (revealBtn) {
+      revealBtn.disabled = false;
+      revealBtn.innerText = '[ 揭曉各組選擇與 CQ 判定 ]';
+    }
+
+    resetTimer();
+    renderOptionsGrid(currentFactionData ? currentFactionData.options : data.options);
+    renderTeamHPStrip();
+
+    broadcastState('STATE_UPDATE', {
+      teams: GameState.teams,
+      currentRound: roundNum,
+      roundStatus: 'voting'
+    });
+  }
+
+  function renderOptionsGrid(options) {
+    const grid = document.getElementById('options-grid');
+    if (!grid) return;
+    let html = '';
+    options.forEach(opt => {
+      html += `
+        <div class="option-card" id="option-card-${opt.id}">
+          <div class="option-header">
+            <span class="option-tag-badge">${opt.title}</span>
+            <span class="option-votes-badge" id="opt-votes-${opt.id}">0 組代表選擇</span>
+          </div>
+          <p class="option-text-main">${opt.text}</p>
+          <div class="option-rationale-preview">${opt.rationale}</div>
+          <div class="option-reveal-box ${opt.penalty < 0 ? 'reveal-penalty' : 'reveal-success'}" id="reveal-box-${opt.id}">
+            <strong>【CQ 判定結果】：${opt.penalty < 0 ? `${opt.penalty} 點 CQ` : `+${opt.bonus} 點 CQ (卓越決策)`}</strong><br>
+            <span>${opt.blindspot}</span>
+          </div>
+        </div>
+      `;
+    });
+    grid.innerHTML = html;
+  }
+
+  function revealRoundResults() {
+    if (GameState.roundStatus === 'revealed') return;
+    GameState.roundStatus = 'revealed';
+
+    const currentData = DilemmasData[GameState.currentRound];
+    if (!currentData) return;
+
+    const optIds = ['A', 'B', 'C', 'D'];
+    for (let i = 1; i <= 5; i++) {
+      if (!GameState.teams[i].currentChoice) {
+        GameState.teams[i].currentChoice = optIds[Math.floor(Math.random() * optIds.length)];
+        GameState.teams[i].submitted = true;
+      }
+    }
+
+    applyRevealedUI();
+
+    broadcastState('STATE_UPDATE', {
+      teams: GameState.teams,
+      currentRound: GameState.currentRound,
+      roundStatus: 'revealed'
+    });
+  }
+
+  function applyRevealedUI() {
+    const currentData = DilemmasData[GameState.currentRound];
+    if (!currentData) return;
+
+    let anyPenalty = false;
+
+    if (!currentData.isAsymmetric) {
+      const votesCount = { A: 0, B: 0, C: 0, D: 0 };
+      for (let i = 1; i <= 5; i++) {
+        const choice = GameState.teams[i].currentChoice;
+        if (choice && votesCount[choice] !== undefined) votesCount[choice]++;
+      }
+
+      currentData.options.forEach(opt => {
+        const voteBadge = document.getElementById(`opt-votes-${opt.id}`);
+        if (voteBadge) voteBadge.innerText = `${votesCount[opt.id]} 組代表選擇`;
+        const revealBox = document.getElementById(`reveal-box-${opt.id}`);
+        if (revealBox) revealBox.style.display = 'block';
+      });
+
+      for (let i = 1; i <= 5; i++) {
+        const team = GameState.teams[i];
+        const opt = currentData.options.find(o => o.id === team.currentChoice);
+        if (opt) {
+          if (opt.penalty < 0) {
+            anyPenalty = true;
+            team.hp = Math.max(0, team.hp + opt.penalty);
+            triggerDamageAnimation(i, opt.penalty);
+          } else if (opt.bonus) {
+            team.hp = Math.min(100, team.hp + opt.bonus);
+            triggerDamageAnimation(i, opt.bonus);
+          }
+        }
+      }
+    } else {
+      const activeFaction = GameState.r4HostFilter;
+      const factionData = currentData.factions[activeFaction];
+
+      const votesCount = { A: 0, B: 0, C: 0, D: 0 };
+      for (let i = 1; i <= 5; i++) {
+        if (GameState.teams[i].faction === activeFaction) {
+          const choice = GameState.teams[i].currentChoice;
+          if (choice && votesCount[choice] !== undefined) votesCount[choice]++;
+        }
+      }
+
+      if (factionData) {
+        factionData.options.forEach(opt => {
+          const voteBadge = document.getElementById(`opt-votes-${opt.id}`);
+          if (voteBadge) voteBadge.innerText = `${votesCount[opt.id]} 組代表選擇`;
+          const revealBox = document.getElementById(`reveal-box-${opt.id}`);
+          if (revealBox) revealBox.style.display = 'block';
+        });
+      }
+
+      for (let i = 1; i <= 5; i++) {
+        const team = GameState.teams[i];
+        const teamFactionOpts = currentData.factions[team.faction].options;
+        const opt = teamFactionOpts.find(o => o.id === team.currentChoice);
+        if (opt) {
+          if (opt.penalty < 0) {
+            anyPenalty = true;
+            team.hp = Math.max(0, team.hp + opt.penalty);
+            triggerDamageAnimation(i, opt.penalty);
+          } else if (opt.bonus) {
+            team.hp = Math.min(100, team.hp + opt.bonus);
+            triggerDamageAnimation(i, opt.bonus);
+          }
+        }
+      }
+    }
+
+    if (anyPenalty) AudioEngine.playDamage();
+    else AudioEngine.playChime();
+
+    renderTeamHPStrip();
+
+    const revealBtn = document.getElementById('btn-reveal-results');
+    if (revealBtn) {
+      revealBtn.disabled = true;
+      revealBtn.innerText = '[ 已揭曉 CQ 判定 ]';
+    }
+  }
+
+  function advanceNextRound() {
+    AudioEngine.playClick();
+    if (GameState.currentRound === 1) jumpToRound(2);
+    else if (GameState.currentRound === 2) jumpToRound(3);
+    else if (GameState.currentRound === 3) jumpToRound(4);
+    else if (GameState.currentRound === 4) jumpToRound('final');
+  }
+
+  function simulateRandomVotes() {
+    AudioEngine.playClick();
+    const optIds = ['A', 'B', 'C', 'D'];
+    for (let i = 1; i <= 5; i++) {
+      GameState.teams[i].currentChoice = optIds[Math.floor(Math.random() * optIds.length)];
+      GameState.teams[i].submitted = true;
+    }
+    renderTeamHPStrip();
+    updateOptionsGridUI();
+  }
+
+  function updateOptionsGridUI() {
+    const currentData = DilemmasData[GameState.currentRound];
+    if (!currentData) return;
+    const votesCount = { A: 0, B: 0, C: 0, D: 0 };
+    for (let i = 1; i <= 5; i++) {
+      const choice = GameState.teams[i].currentChoice;
+      if (choice && votesCount[choice] !== undefined) votesCount[choice]++;
+    }
+    ['A', 'B', 'C', 'D'].forEach(id => {
+      const b = document.getElementById(`opt-votes-${id}`);
+      if (b) b.innerText = `${votesCount[id]} 組代表選擇`;
+    });
+  }
+
+  function startTimer() {
+    if (GameState.timerInterval) clearInterval(GameState.timerInterval);
+    GameState.timerRunning = true;
+    updateTimerButtonLabel();
+    GameState.timerInterval = setInterval(() => {
+      if (GameState.timerRemaining > 0) {
+        GameState.timerRemaining--;
+        updateTimerDisplay();
+      } else {
+        clearInterval(GameState.timerInterval);
+        GameState.timerRunning = false;
+        updateTimerButtonLabel();
+        AudioEngine.playDamage();
+      }
+    }, 1000);
+  }
+
+  function toggleTimer() {
+    AudioEngine.playClick();
+    if (GameState.timerRunning) {
+      clearInterval(GameState.timerInterval);
+      GameState.timerRunning = false;
+    } else {
+      startTimer();
+    }
+    updateTimerButtonLabel();
+  }
+
+  function resetTimer() {
+    if (GameState.timerInterval) clearInterval(GameState.timerInterval);
+    GameState.timerRemaining = 120;
+    GameState.timerRunning = false;
+    updateTimerDisplay();
+    updateTimerButtonLabel();
+  }
+
+  function updateTimerDisplay() {
+    const el = document.getElementById('timer-display');
+    if (!el) return;
+    const mins = Math.floor(GameState.timerRemaining / 60);
+    const secs = GameState.timerRemaining % 60;
+    el.innerText = `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+  }
+
+  function updateTimerButtonLabel() {
+    const btn = document.getElementById('btn-timer-toggle');
+    if (btn) btn.innerText = GameState.timerRunning ? '[ 計時暫停 ]' : '[ 繼續計時 ]';
+  }
+
+  function renderFinalLeaderboard() {
+    AudioEngine.playChime();
+    const list = document.getElementById('leaderboard-ranks-list');
+    if (!list) return;
+    const sorted = Object.keys(GameState.teams).map(id => ({
+      id,
+      ...GameState.teams[id]
+    })).sort((a, b) => b.hp - a.hp);
+
+    let html = '';
+    sorted.forEach((team, idx) => {
+      const rankNum = idx + 1;
+      let factionLabel = '總部';
+      if (team.faction === 'tokyo') factionLabel = '分公司';
+      else if (team.faction === 'chameleon') factionLabel = '變色龍';
+
+      html += `
+        <div class="rank-card ${rankNum === 1 ? 'rank-1' : ''}">
+          <span class="rank-badge">NO.${rankNum}</span>
+          <span class="rank-team-name">[${factionLabel}] ${team.name}</span>
+          <span class="rank-hp-score">${team.hp} / 100 CQ</span>
+        </div>
+      `;
+    });
+    list.innerHTML = html;
+  }
+
+  function restartGame() {
+    AudioEngine.playClick();
+    for (let i = 1; i <= 5; i++) {
+      GameState.teams[i].hp = 100;
+      GameState.teams[i].submitted = false;
+      GameState.teams[i].currentChoice = null;
+    }
+    jumpToRound(1);
+    broadcastState('STATE_UPDATE', {
+      teams: GameState.teams,
+      currentRound: 1,
+      roundStatus: 'voting'
+    });
+  }
+
+  function openQRModal() {
+    AudioEngine.playClick();
+    const modal = document.getElementById('qr-modal');
+    if (modal) modal.style.display = 'flex';
+    initQRCode();
+  }
+
+  function closeQRModal() {
+    AudioEngine.playClick();
+    const modal = document.getElementById('qr-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  function initQRCode() {
+    // Dedicated participant URL is root '/'
+    const targetUrl = window.location.origin + '/';
+    const textEl = document.getElementById('qr-url-text');
+    if (textEl) textEl.innerText = targetUrl;
+
+    const canvas = document.getElementById('qr-canvas');
+    const img = document.getElementById('qr-img');
+
+    if (window.QRious && canvas) {
+      try {
+        new QRious({
+          element: canvas,
+          value: targetUrl,
+          size: 180,
+          level: 'M'
+        });
+        canvas.style.display = 'block';
+        if (img) img.style.display = 'none';
+        return;
+      } catch (e) {}
+    }
+
+    if (img) {
+      img.src = 'https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=' + encodeURIComponent(targetUrl);
+      img.style.display = 'block';
+      if (canvas) canvas.style.display = 'none';
+    }
+  }
+
+  function copyPageUrl() {
+    AudioEngine.playClick();
+    const targetUrl = window.location.origin + '/';
+    if (navigator.clipboard) {
+      navigator.clipboard.writeText(targetUrl).then(() => {
+        alert('已成功複製學員手機加入網址：' + targetUrl);
+      });
+    } else {
+      prompt('請複製以下學員加入網址：', targetUrl);
+    }
+  }
+
+  window.addEventListener('DOMContentLoaded', () => {
+    initApp();
+  });
+</script>
+
+</body>
+</html>
