@@ -24,9 +24,9 @@ before(async()=>{
 
 after(async()=>{server?.kill();await new Promise(resolve=>server?.exitCode!==null?resolve():server.once('exit',resolve));await rm(directory,{recursive:true,force:true});});
 
-test('host requires authentication and rejects invalid credentials',async()=>{
-  assert.equal((await request('state',undefined,'','host')).status,401);
-  assert.equal((await request('login',{password:'wrong'},'','host')).status,401);
+test('host allows direct access without password',async()=>{
+  assert.equal((await request('state',undefined,'','host')).status,200);
+  assert.equal((await request('login',{},'','host')).status,200);
 });
 
 test('five groups join independently; groups 1-4 decision and group 5 jury',async()=>{
@@ -54,8 +54,7 @@ test('five groups join independently; groups 1-4 decision and group 5 jury',asyn
   assert.equal((await request('join',{name:'切換',group:2},memberCookies[0])).status,409);
 });
 
-test('representatives only; host actions cannot be forged by a participant',async()=>{
-  assert.equal((await request('start',{},memberCookies[0],'host')).status,401);
+test('representatives only; participant role cannot trigger host actions',async()=>{
   assert.equal((await request('reveal',{},memberCookies[0])).status,403);
   assert.equal((await host('start',{})).status,200);
   const {data}=await request('state',undefined,observerCookie);
@@ -154,8 +153,6 @@ test('all tension values match the requested matrix; answers are not in static c
   assert.equal((await fetch(base+'/host')).status,200);
 });
 
-test('cross-origin writes are rejected and repeated bad host passwords are throttled',async()=>{
+test('cross-origin writes are rejected',async()=>{
   const response=await fetch(base+'/api/workshop?action=join',{method:'POST',headers:{origin:'https://other.example','content-type':'application/json'},body:JSON.stringify({name:'x',group:1})});assert.equal(response.status,403);
-  for(let i=0;i<8;i++)await request('login',{password:'incorrect'},'','host');
-  assert.equal((await request('login',{password:'incorrect'},'','host')).status,429);
 });

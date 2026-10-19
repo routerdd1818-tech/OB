@@ -1,6 +1,5 @@
 import { $,esc,api,toast,status,scene,roundNav,tensionCard,dialogue,startClock } from './common.js';
 let state=null,lastSignature='',selectedReview='B',busy=false,previousReveal='',confirmResolve;
-const gate=$('#login');gate.addEventListener('cancel',e=>e.preventDefault());
 function ask(title,text,label='確認'){const modal=$('#confirm-dialog');$('#confirm-title').textContent=title;$('#confirm-text').textContent=text;$('#confirm-yes').textContent=label;modal.showModal();return new Promise(resolve=>confirmResolve=resolve);}
 function closeConfirm(value){$('#confirm-dialog').close();confirmResolve?.(value);confirmResolve=null;}
 $('#confirm-yes').addEventListener('click',()=>closeConfirm(true));$('#confirm-no').addEventListener('click',()=>closeConfirm(false));$('#confirm-dialog').addEventListener('cancel',e=>{e.preventDefault();closeConfirm(false);});
@@ -92,30 +91,11 @@ async function refresh(){
     next.clockOffset=next.serverTime-Date.now();
     const signature=JSON.stringify({...next,serverTime:0,clockOffset:0});
     state=next;status(true);
-    if(gate.open)gate.close();
     if(signature!==lastSignature){lastSignature=signature;render();}
   }catch(e){
-    if(e.status===401){
-      state=null;lastSignature='';
-      document.querySelector('.host-controls')?.remove();
-      $('#app').innerHTML='<div class="loading">登入後即可開始課堂。</div>';
-      if(!gate.open)gate.showModal();
-      status(true);
-    }else status(false);
+    status(false);
   }
 }
-
-$('#login-form').addEventListener('submit',async e=>{
-  e.preventDefault();
-  const button=e.currentTarget.querySelector('button');
-  button.disabled=true;$('#login-error').textContent='';
-  try{
-    await api('login',{password:$('#password').value},'host');
-    $('#password').value='';gate.close();
-    await refresh();
-  }catch(error){$('#login-error').textContent=error.message;}
-  finally{button.disabled=false;}
-});
 
 document.querySelectorAll('[data-close]').forEach(el=>el.addEventListener('click',()=>document.getElementById(el.dataset.close).close()));
 $('#qr-open').addEventListener('click',()=>{

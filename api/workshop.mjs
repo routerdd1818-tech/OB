@@ -6,9 +6,10 @@ const hash = value => createHash('sha256').update(value).digest('hex');
 const fail = (message, status=400) => { throw Object.assign(new Error(message),{status}); };
 function cookies(req) { return Object.fromEntries((req.headers.cookie || '').split(';').filter(x=>x.includes('=')).map(x=>{const i=x.indexOf('=');return [x.slice(0,i).trim(),x.slice(i+1)];})); }
 function session(req,state,role) {
-  const token = cookies(req)[role==='host'?'cq_host':'cq_member'];
-  const found = token && (role==='host'?state.hosts:state.participants)[hash(token)];
-  if (!found || found.expires < Date.now()) fail(role==='host'?'請先登入簡報者主控台':'請重新填寫姓名與組別',401);
+  if(role==='host') return { host:true };
+  const token = cookies(req)['cq_member'];
+  const found = token && state.participants[hash(token)];
+  if (!found || found.expires < Date.now()) fail('請重新填寫姓名與組別',401);
   return found;
 }
 function setCookie(res,role,token) { res.setHeader('Set-Cookie',`cq_${role}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200${process.env.VERCEL?'; Secure':''}`); }
@@ -61,19 +62,7 @@ export default async function handler(req,res) {
     if(req.method==='GET') { const state=await readState();const user=session(req,state,role);res.end(JSON.stringify(role==='host'?hostView(state,req):memberView(state,user)));return; }
     const body=await bodyOf(req);
     if(action==='login') {
-      const password=process.env.HOST_PASSWORD || 'classroom-demo';
-      if(!password) fail('尚未設定簡報者密碼',503);
-      const ip=hash(String(req.headers['x-forwarded-for'] || req.socket?.remoteAddress || 'unknown'));
-      const token=randomBytes(32).toString('hex');
-      const answer=await mutate(state=>{
-        const now=Date.now();const tries=state.attempts[ip];
-        if(tries && tries.until>now && tries.count>=8) return {error:'嘗試次數過多，請在 15 分鐘後再試',status:429};
-        if(typeof body.password!=='string'||!timingSafeEqual(Buffer.from(hash(password)),Buffer.from(hash(body.password)))) {
-          state.attempts[ip]={count:tries?.until>now?tries.count+1:1,until:now+900000};return {error:'密碼不正確',status:401};
-        }
-        delete state.attempts[ip];state.hosts[hash(token)]={expires:now+43200000};return {ok:true};
-      });
-      if(answer.error) fail(answer.error,answer.status);setCookie(res,'host',token);res.end(JSON.stringify(answer));return;
+      res.end(JSON.stringify({ok:true}));return;
     }
     if(action==='join') {
       const name=typeof body.name==='string'?body.name.trim():'';const group=Number(body.group);
