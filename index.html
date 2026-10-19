@@ -538,9 +538,45 @@
       cursor: pointer;
       padding: 8px;
     }
+
+    /* Sync Dot & Toast */
+    .mobile-sync-dot {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: #15803d;
+      display: inline-block;
+      transition: background 0.3s;
+    }
+    .ios-toast {
+      position: fixed;
+      top: 18px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-50px);
+      background: rgba(28, 25, 23, 0.92);
+      color: #ffffff;
+      padding: 9px 20px;
+      border-radius: 9999px;
+      font-size: 13px;
+      font-weight: 500;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.18);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      opacity: 0;
+      transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 9999;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+    .ios-toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
   </style>
 </head>
 <body>
+
+<div id="ios-toast" class="ios-toast"></div>
 
 <div id="app-container">
   <header class="mobile-header">
@@ -550,7 +586,10 @@
         <span>|</span>
         <span class="user-team-text" id="hud-user-team">第 1 組</span>
       </div>
-      <span style="font-size: 10px; color: #a39789;" id="round-status-indicator">【等待大螢幕指示】</span>
+      <div style="display: flex; align-items: center; gap: 6px;">
+        <span class="mobile-sync-dot" id="mobile-sync-dot"></span>
+        <span style="font-size: 11px; color: var(--ios-secondary-label);" id="round-status-indicator">已連線大螢幕</span>
+      </div>
     </div>
 
     <div class="mobile-team-hp-card">
@@ -880,34 +919,198 @@
 
 
   const MobileState = {
+    roomId: 'ob2026',
     user: { name: '', team: 1 },
     currentRound: 1,
     roundStatus: 'voting',
     r4Proposal: null,
     r4Decision: null,
+    tensionData: null,
     teams: {
       1: { name: "第 1 組", faction: "hq", hp: 100, currentChoice: null, submitted: false },
       2: { name: "第 2 組", faction: "hq", hp: 100, currentChoice: null, submitted: false },
       3: { name: "第 3 組", faction: "tokyo", hp: 100, currentChoice: null, submitted: false },
       4: { name: "第 4 組", faction: "tokyo", hp: 100, currentChoice: null, submitted: false },
       5: { name: "第 5 組", faction: "chameleon", hp: 100, currentChoice: null, submitted: false }
-    },
-    syncChannel: null
+    }
   };
 
-  function initMobileApp() {
-    try {
-      MobileState.syncChannel = new BroadcastChannel('project_atlas_cq_sync');
-      MobileState.syncChannel.onmessage = (e) => {
-        handleHostSync(e.data);
-      };
-    } catch (err) {}
+  const RealtimeSync = {
+    roomId: 'ob2026',
+    isHost: false,
+    sseSource: null,
+    syncChannel: null,
+    processedMsgIds: new Set(),
 
-    window.addEventListener('storage', (e) => {
-      if (e.key === 'project_atlas_cq_state' && e.newValue) {
-        try { handleHostSync(JSON.parse(e.newValue)); } catch (err) {}
+    getRoomId() {
+      const params = new URLSearchParams(window.location.search);
+      const r = params.get('room');
+      if (r && r.trim()) return r.trim().toLowerCase();
+      const saved = localStorage.getItem('ob_cq_room_id');
+      if (saved && saved.trim()) return saved.trim().toLowerCase();
+      return 'ob2026';
+    },
+
+    setRoomId(newId) {
+      if (!newId || !newId.trim()) return;
+      const clean = newId.trim().toLowerCase();
+      localStorage.setItem('ob_cq_room_id', clean);
+      const url = new URL(window.location.href);
+      url.searchParams.set('room', clean);
+      window.history.replaceState({}, '', url.toString());
+      this.roomId = clean;
+      MobileState.roomId = clean;
+      this.init();
+      showToast('已切換至房間【' + clean + '】！');
+    },
+
+    updateStatusUI(connected) {
+      const dot = document.getElementById('mobile-sync-dot');
+      const text = document.getElementById('round-status-indicator');
+      if (dot) {
+        dot.style.background = connected ? '#15803d' : '#dc2626';
       }
-    });
+      if (text) {
+        if (connected) {
+          if (!text.innerText.includes('已送出') && !text.innerText.includes('開票')) {
+            text.innerText = `已連線大螢幕 · 房間 ${this.roomId}`;
+          }
+        } else {
+          text.innerText = `連線重試中 · 房間 ${this.roomId}`;
+        }
+      }
+    },
+
+    init() {
+      this.roomId = this.getRoomId();
+      MobileState.roomId = this.roomId;
+      this.updateStatusUI(false);
+
+      // 1. BroadcastChannel (Same-device tabs)
+      try {
+        if (this.syncChannel) this.syncChannel.close();
+        this.syncChannel = new BroadcastChannel('ob_cq_channel_' + this.roomId);
+        this.syncChannel.onmessage = (e) => this.handleIncoming(e.data);
+      } catch (e) {}
+
+      // 2. Storage event fallback (Same-browser)
+      window.addEventListener('storage', (e) => {
+        if (e.key === 'ob_cq_state_' + this.roomId && e.newValue) {
+          try { this.handleIncoming(JSON.parse(e.newValue)); } catch (err) {}
+        }
+      });
+
+      // 3. Connect to ntfy.sh SSE stream for host broadcasts
+      if (this.sseSource) {
+        try { this.sseSource.close(); } catch (e) {}
+      }
+      const stateTopic = `ob_cq_state_${this.roomId}`;
+      try {
+        this.sseSource = new EventSource(`https://ntfy.sh/${stateTopic}/sse`);
+        this.sseSource.onopen = () => {
+          this.updateStatusUI(true);
+        };
+        this.sseSource.onmessage = (e) => {
+          try {
+            const data = JSON.parse(e.data);
+            if (data.event === 'message') {
+              const msgId = data.id;
+              if (msgId && this.processedMsgIds.has(msgId)) return;
+              if (msgId) this.processedMsgIds.add(msgId);
+              const payload = JSON.parse(data.message);
+              this.handleIncoming(payload);
+            }
+          } catch (err) {}
+        };
+        this.sseSource.onerror = () => {
+          this.updateStatusUI(false);
+        };
+      } catch (err) {
+        this.updateStatusUI(false);
+      }
+
+      // 4. Query latest state on load to synchronize immediately
+      this.fetchLatestState();
+    },
+
+    handleIncoming(payload) {
+      if (!payload || !payload.type) return;
+      const key = payload.msgId || `${payload.type}_${payload.currentRound}_${payload.roundStatus}_${payload.timestamp}`;
+      if (this.processedMsgIds.has(key)) return;
+      this.processedMsgIds.add(key);
+
+      handleHostSync(payload);
+    },
+
+    send(packet) {
+      packet.msgId = packet.msgId || ('mob_' + Date.now() + '_' + Math.random().toString(36).substr(2, 6));
+      packet.timestamp = packet.timestamp || Date.now();
+      packet.roomId = this.roomId;
+      this.processedMsgIds.add(packet.msgId);
+
+      // Local BroadcastChannel
+      if (this.syncChannel) {
+        try { this.syncChannel.postMessage(packet); } catch (e) {}
+      }
+
+      // Local storage
+      try {
+        localStorage.setItem('ob_cq_vote_' + this.roomId, JSON.stringify(packet));
+      } catch (e) {}
+
+      // Cross-device push to host via ntfy.sh
+      const voteTopic = `ob_cq_vote_${this.roomId}`;
+      return fetch(`https://ntfy.sh/${voteTopic}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'text/plain' },
+        body: JSON.stringify(packet)
+      }).catch(err => {
+        console.warn('Vote transmission error:', err);
+      });
+    },
+
+    fetchLatestState() {
+      const stateTopic = `ob_cq_state_${this.roomId}`;
+      fetch(`https://ntfy.sh/${stateTopic}/json?poll=1&since=all`)
+        .then(res => res.text())
+        .then(text => {
+          if (!text) return;
+          const lines = text.trim().split('\n');
+          for (let i = lines.length - 1; i >= 0; i--) {
+            const line = lines[i];
+            if (!line) continue;
+            try {
+              const data = JSON.parse(line);
+              if (data.event === 'message') {
+                const payload = JSON.parse(data.message);
+                this.handleIncoming(payload);
+                break;
+              }
+            } catch (e) {}
+          }
+        })
+        .catch(() => {});
+    }
+  };
+
+  function showToast(text, duration = 3000) {
+    let t = document.getElementById('ios-toast');
+    if (!t) {
+      t = document.createElement('div');
+      t.id = 'ios-toast';
+      t.className = 'ios-toast';
+      document.body.appendChild(t);
+    }
+    t.innerText = text;
+    t.classList.add('show');
+    clearTimeout(t._hideTimer);
+    t._hideTimer = setTimeout(() => {
+      t.classList.remove('show');
+    }, duration);
+  }
+
+  function initMobileApp() {
+    RealtimeSync.init();
 
     // Check saved user
     const saved = localStorage.getItem('atlas_mobile_user');
@@ -987,24 +1190,54 @@
 
   function handleHostSync(msg) {
     if (!msg || !msg.type) return;
-    if (msg.type === 'STATE_UPDATE') {
-      if (msg.teams) MobileState.teams = msg.teams;
-      if (msg.currentRound) MobileState.currentRound = msg.currentRound;
-      if (msg.roundStatus) MobileState.roundStatus = msg.roundStatus;
-      if (msg.r4Proposal) MobileState.r4Proposal = msg.r4Proposal;
-      updateTeamHPUI();
-      renderCurrentRound();
-      if (msg.tensionData) MobileState.tensionData = msg.tensionData;
-      if (MobileState.roundStatus === 'revealed') {
-        applyMobileRevealedUI(msg.tensionData || MobileState.tensionData);
+    if (msg.type === 'STATE_UPDATE' || msg.type === 'STATE_HEARTBEAT') {
+      if (msg.teams) {
+        for (let i = 1; i <= 5; i++) {
+          if (msg.teams[i]) {
+            MobileState.teams[i].hp = msg.teams[i].hp;
+            if (i !== MobileState.user.team) {
+              MobileState.teams[i].submitted = msg.teams[i].submitted;
+            }
+          }
+        }
       }
+
+      const roundChanged = (msg.currentRound !== undefined && msg.currentRound !== MobileState.currentRound);
+      const statusChanged = (msg.roundStatus && msg.roundStatus !== MobileState.roundStatus);
+
+      if (roundChanged) {
+        MobileState.currentRound = msg.currentRound;
+        MobileState.roundStatus = msg.roundStatus || 'voting';
+        // Reset own team submission for the new round
+        MobileState.teams[MobileState.user.team].submitted = false;
+        MobileState.teams[MobileState.user.team].currentChoice = null;
+        MobileState.r4Proposal = null;
+        MobileState.r4Decision = null;
+        renderCurrentRound();
+        showToast(`簡報者已切換至第 ${msg.currentRound} 回合！`);
+      } else if (statusChanged) {
+        MobileState.roundStatus = msg.roundStatus;
+        if (msg.tensionData) MobileState.tensionData = msg.tensionData;
+        if (MobileState.roundStatus === 'revealed') {
+          applyMobileRevealedUI(msg.tensionData || MobileState.tensionData);
+          showToast('大螢幕已開票！請查看貴組 CQ 覆盤判定');
+        } else {
+          renderCurrentRound();
+        }
+      } else {
+        if (msg.r4Proposal && msg.r4Proposal !== MobileState.r4Proposal) {
+          MobileState.r4Proposal = msg.r4Proposal;
+          renderCurrentRound();
+        }
+      }
+      updateTeamHPUI();
     } else if (msg.type === 'R4_PROPOSAL_OFFER') {
       MobileState.r4Proposal = msg.proposalId;
       AudioEngine.playChime();
       renderCurrentRound();
+      showToast(`文化變色龍已提出【方案 ${msg.proposalId}】！請檢視並表態`);
     } else if (msg.type === 'TEAM_SUBMIT') {
       const { teamId, choiceId } = msg;
-      // Isolated voting: strictly ignore other teams' choices
       if (teamId === MobileState.user.team && MobileState.teams[teamId]) {
         MobileState.teams[teamId].currentChoice = choiceId;
         MobileState.teams[teamId].submitted = true;
@@ -1014,11 +1247,7 @@
   }
 
   function broadcastToHost(type, payload = {}) {
-    const packet = { type, ...payload, timestamp: Date.now() };
-    if (MobileState.syncChannel) {
-      try { MobileState.syncChannel.postMessage(packet); } catch (e) {}
-    }
-    try { localStorage.setItem('project_atlas_cq_state', JSON.stringify(packet)); } catch (e) {}
+    RealtimeSync.send({ type, ...payload });
   }
 
   function renderCurrentRound() {
@@ -1263,7 +1492,7 @@
       broadcastToHost('CHAMELEON_PROPOSAL', {
         proposalId: myTeam.currentChoice
       });
-      alert('已將【方案 ' + myTeam.currentChoice + '】送達總部與公司端！雙方正在手機審議中。');
+      showToast('已將【方案 ' + myTeam.currentChoice + '】送達總部與公司端！雙方正在審議中。');
       renderCurrentRound();
       return;
     }
@@ -1273,8 +1502,11 @@
 
     broadcastToHost('TEAM_SUBMIT', {
       teamId: MobileState.user.team,
-      choiceId: myTeam.currentChoice
+      choiceId: myTeam.currentChoice,
+      userName: MobileState.user.name
     });
+
+    showToast(`決策已送達簡報大螢幕：選項 ${myTeam.currentChoice}`);
   }
 
   function applyMobileRevealedUI(tensionData) {
