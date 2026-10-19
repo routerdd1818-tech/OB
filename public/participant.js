@@ -32,9 +32,11 @@ function render(){
   }
   document.documentElement.style.setProperty('--accent',r.color);
 
+  const anger = state.group.anger ?? state.group.cq ?? 25;
+  const angerClass = anger > 55 ? 'critical' : anger > 25 ? 'low' : '';
   const identityBar = member.isJury
     ? `<div class="mobile-identity"><div class="identity-bar"><div class="identity-pill"><span class="identity-name">${esc(member.name)}</span> <span aria-hidden="true">｜</span> 第 5 組 · 裁判組</div><span class="rep-tag jury-tag">跨文化裁判席</span></div><div class="mobile-health"><span class="health-label">評定席</span><div class="health-track"><div class="health-fill" style="width:100%; background:var(--accent,#7c3aed);"></div></div><span class="cq-value">JURY<small> 裁判公正席</small></span></div></div>`
-    : `<div class="mobile-identity"><div class="identity-bar"><div class="identity-pill"><span class="identity-name">${esc(member.name)}</span> <span aria-hidden="true">｜</span> 第 ${member.group} 組</div><span class="rep-tag">${member.isRepresentative?'本組決策代表':'與夥伴一起思考'}</span></div><div class="mobile-health"><span class="health-label">本組 CQ</span><div class="health-track" role="progressbar" aria-label="本組 CQ 健康度" aria-valuenow="${state.group.cq}" aria-valuemin="0" aria-valuemax="100"><div class="health-fill ${state.group.cq<40?'critical':state.group.cq<70?'low':''}" style="width:${state.group.cq}%"></div></div><span class="cq-value">${state.group.cq}<small>/ 100</small></span></div></div>`;
+    : `<div class="mobile-identity"><div class="identity-bar"><div class="identity-pill"><span class="identity-name">${esc(member.name)}</span> <span aria-hidden="true">｜</span> 第 ${member.group} 組</div><span class="rep-tag">${member.isRepresentative?'本組決策代表':'與夥伴一起思考'}</span></div><div class="mobile-health"><span class="health-label">溝通怒氣值</span><div class="health-track" role="progressbar" aria-label="本組溝通怒氣值" aria-valuenow="${anger}" aria-valuemin="0" aria-valuemax="100"><div class="health-fill ${angerClass}" style="width:${anger}%"></div></div><span class="cq-value">${anger}<small>/ 100 怒氣</small></span></div></div>`;
 
   $('#app').innerHTML=`${identityBar}${roundNav(state.roundIndex)}${state.phase==='finished'?'<div class="finished-banner">四回合探索完成，謝謝你為對話留出空間。</div>':''}<section class="mobile-scenario">${scene}<div class="topic-row"><span class="topic-badge">ROUND ${String(state.roundIndex+1).padStart(2,'0')} · ${r.dimension}</span><span class="topic-location">${esc(r.location)}</span></div><h1>${esc(r.title)}</h1><p class="scenario-context">${esc(r.context)}</p></section>${revealed?tensionCard(state.result||state.results?.[1],true):''}${dialogue(r)}<div class="question-prompt">${esc(r.prompt)}</div>
   ${['waiting','ready'].includes(state.phase)?`<section class="card waiting-card"><span class="waiting-orbit" aria-hidden="true"></span><h2>先聽聽彼此的想法。</h2><p>等待簡報者開放本回合研討。<br>${member.isJury?'你是第 5 組裁判代表，稍後請為第 1~4 組進行體感衝突排序。':member.isRepresentative?'你是本組代表，稍後請提交共同決策。':`本組代表：${esc(state.group.representativeName)}`}</p></section>`:state.phase==='voting'?(member.isJury?juryVotingMarkup():votingMarkup()):(member.isJury?juryResultMarkup():resultMarkup())}
@@ -119,7 +121,7 @@ function juryVotingMarkup(){
 
 function resultMarkup(){
   const result=state.result;
-  if(!result)return '<section class="card waiting-card"><h2>本組本回合未提交決策</h2><p>CQ 維持原值，請跟隨簡報者一起覆盤。</p></section>';
+  if(!result)return '<section class="card waiting-card"><h2>本組本回合未提交決策</h2><p>溝通怒氣值維持原值，請跟隨簡報者一起覆盤。</p></section>';
   const juryRank=state.juryRank;
   let rankText='';
   if(juryRank){
@@ -129,13 +131,16 @@ function resultMarkup(){
       rankText=`並列第 ${juryRank} 名（體感衝突評定）`;
     }
   }
+  const angerBefore = result.angerBefore ?? result.cqBefore ?? 25;
+  const angerAfter = result.angerAfter ?? result.cqAfter ?? 25;
+  const delta = result.actualDelta ?? 0;
   return `<section class="card mobile-review">
     <div class="eyebrow">GROUP ${state.member.group} · YOUR DECISION</div>
     <h2>${result.id==='X'?'三方未達成協議':`方案 ${result.id} · ${esc(result.title)}`}</h2>
     ${rankText?`<div class="jury-verdict-pill">第 5 組裁判評定：<strong>${rankText}</strong></div>`:''}
-    <span class="pill ${result.reduction>0?'positive':'negative'}">${esc(result.verdict)}</span>
+    <span class="pill ${delta<=0?'positive':'negative'}">${esc(result.verdict)}</span>
     <div class="review-insight"><div class="eyebrow">文化盲點 · 重新看見</div><p>${esc(result.blindspot)}</p></div>
-    <div class="cq-summary"><span>本組 CQ ${result.cqBefore} → ${result.cqAfter}<br><small>${result.actualDelta===0&&result.cq>0?'已達健康度上限，守住 100 點':result.cq>0?'修復合作，回復健康度':'信任受損，調整健康度'}</small></span><strong class="${result.actualDelta<0?'negative-text':'positive-text'}">${result.actualDelta>0?'+':''}${result.actualDelta} CQ</strong></div>
+    <div class="cq-summary"><span>溝通怒氣值 ${angerBefore} → ${angerAfter}<br><small>${delta>0?'踩中文化地雷，怒氣急遽飆升':delta<0?'化解文化盲點，成功平息對方怒氣':'怒氣維持原值'}</small></span><strong class="${delta>0?'negative-text':'positive-text'}">${delta>0?'+':''}${delta} 怒氣</strong></div>
   </section>`;
 }
 

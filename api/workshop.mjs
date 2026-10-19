@@ -17,15 +17,17 @@ function memberView(state,member) {
   const group=state.groups[member.group-1];
   const isJury=(member.group===5);
   const revealed=['revealed','finished'].includes(state.phase);
+  const angerVal = group.anger ?? group.cq ?? 25;
   if(isJury) {
     const decisionGroups=state.groups.slice(0,4).map(g=>{
       const vote=state.votes[state.round][g.id];
       const opt=vote?rounds[state.round].options.find(o=>o.id===vote.choice):null;
-      return { id:g.id, cq:g.cq, submitted:Boolean(vote), choice:vote?vote.choice:null, proposal:vote?vote.proposal:null, title:opt?opt.title:null, text:opt?opt.text:null, blindspot:opt?opt.blindspot:null, consensus:vote?vote.consensus:null };
+      const gAnger = g.anger ?? g.cq ?? 25;
+      return { id:g.id, anger:gAnger, cq:gAnger, submitted:Boolean(vote), choice:vote?vote.choice:null, proposal:vote?vote.proposal:null, title:opt?opt.title:null, text:opt?opt.text:null, blindspot:opt?opt.blindspot:null, consensus:vote?vote.consensus:null };
     });
-    return { ...shared(state,true), member:{name:member.name,id:member.id,group:member.group,isRepresentative:true,isJury:true}, group:{id:5,cq:100,isJury:true,representativeName:member.name}, decisionGroups, juryRankings:state.juryRankings?(state.juryRankings[state.round]||{}):{}, jurySubmitted:state.jurySubmitted?Boolean(state.jurySubmitted[state.round]):false, optionsWithIntel:rounds[state.round].options, results:revealed?state.results[state.round]:null };
+    return { ...shared(state,true), member:{name:member.name,id:member.id,group:member.group,isRepresentative:true,isJury:true}, group:{id:5,anger:25,cq:25,isJury:true,representativeName:member.name}, decisionGroups, juryRankings:state.juryRankings?(state.juryRankings[state.round]||{}):{}, jurySubmitted:state.jurySubmitted?Boolean(state.jurySubmitted[state.round]):false, optionsWithIntel:rounds[state.round].options, results:revealed?state.results[state.round]:null };
   }
-  return { ...shared(state,true), member:{name:member.name,id:member.id,group:member.group,isRepresentative:group.representative===member.id,isJury:false}, group:{id:group.id,cq:group.cq,isJury:false,representativeName:Object.values(state.participants).find(p=>p.id===group.representative)?.name || '尚未指定'}, vote:state.votes[state.round][group.id] || null, juryRank:(revealed&&state.juryRankings)?(state.juryRankings[state.round]?.[group.id]||null):null, result:revealed?state.results[state.round][group.id] || null:null };
+  return { ...shared(state,true), member:{name:member.name,id:member.id,group:member.group,isRepresentative:group.representative===member.id,isJury:false}, group:{id:group.id,anger:angerVal,cq:angerVal,isJury:false,representativeName:Object.values(state.participants).find(p=>p.id===group.representative)?.name || '尚未指定'}, vote:state.votes[state.round][group.id] || null, juryRank:(revealed&&state.juryRankings)?(state.juryRankings[state.round]?.[group.id]||null):null, result:revealed?state.results[state.round][group.id] || null:null };
 }
 function hostView(state,req) {
   const revealed=['revealed','finished'].includes(state.phase);
@@ -33,7 +35,10 @@ function hostView(state,req) {
   const decisionVotes=Object.keys(votes).filter(id=>Number(id)<=4);
   const jurySubmitted=state.jurySubmitted?Boolean(state.jurySubmitted[state.round]):false;
   const juryRankings=state.juryRankings?state.juryRankings[state.round]:{};
-  const result= { ...shared(state,false), completed:decisionVotes.length, decisionTotal:4, jurySubmitted, juryRankings, groups:state.groups.map(g=>({...g, count:Object.values(state.participants).filter(p=>p.group===g.id && p.expires>Date.now()).length, submitted:g.id===5?jurySubmitted:Boolean(votes[g.id]), members:Object.values(state.participants).filter(p=>p.group===g.id && p.expires>Date.now()).map(({id,name})=>({id,name}))})), joinUrl:process.env.PUBLIC_URL ? new URL('/',process.env.PUBLIC_URL).href : `${process.env.VERCEL?'https':'http'}://${req.headers.host}/`};
+  const result= { ...shared(state,false), completed:decisionVotes.length, decisionTotal:4, jurySubmitted, juryRankings, groups:state.groups.map(g=>{
+    const gAnger = g.anger ?? g.cq ?? 25;
+    return { ...g, anger:gAnger, cq:gAnger, count:Object.values(state.participants).filter(p=>p.group===g.id && p.expires>Date.now()).length, submitted:g.id===5?jurySubmitted:Boolean(votes[g.id]), members:Object.values(state.participants).filter(p=>p.group===g.id && p.expires>Date.now()).map(({id,name})=>({id,name}))};
+  }), joinUrl:process.env.PUBLIC_URL ? new URL('/',process.env.PUBLIC_URL).href : `${process.env.VERCEL?'https':'http'}://${req.headers.host}/`};
   if (revealed) { result.results=state.results[state.round]; result.distribution=[...rounds[state.round].options,...(state.round===3?[rounds[3].breakdown]:[])].map(o=>({id:o.id,title:o.title,count:Object.entries(votes).filter(([gid,v])=>Number(gid)<=4&&v.choice===o.id).length, result:outcome(state.round,{choice:o.id})})); }
   return result;
 }
@@ -126,9 +131,12 @@ export default async function handler(req,res) {
           const vote=state.votes[state.round][group.id];
           const result=outcome(state.round,vote);
           if(result){
-            const before=group.cq;
-            group.cq=Math.min(100,Math.max(0,before+result.cq));
-            state.results[state.round][group.id]={...result,cqBefore:before,cqAfter:group.cq,actualDelta:group.cq-before,juryRank:state.juryRankings?.[state.round]?.[group.id]||null};
+            const before=group.anger ?? group.cq ?? 25;
+            const delta=result.angerDelta ?? (result.cq ? -result.cq : 25);
+            const after=Math.min(100,Math.max(0,before+delta));
+            group.anger=after;
+            group.cq=after;
+            state.results[state.round][group.id]={...result,angerBefore:before,angerAfter:after,actualDelta:after-before,cqBefore:before,cqAfter:after,juryRank:state.juryRankings?.[state.round]?.[group.id]||null};
           }
         }
         state.phase='revealed';state.deadline=null;state.remaining=null;
