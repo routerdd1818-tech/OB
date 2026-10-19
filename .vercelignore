@@ -1,0 +1,7 @@
+.data/
+.env
+.env.local
+test-output/
+test/
+node_modules/
+.git/
