@@ -160,6 +160,33 @@
       color: #f1f5f9;
     }
 
+    
+    .mobile-vote-banner {
+      background: #0d0f15;
+      border: 1px solid var(--border-subtle);
+      border-left: 3px solid var(--accent-blue);
+      border-radius: 6px;
+      padding: 10px 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .mobile-vote-banner-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: #f8fafc;
+    }
+    .mobile-vote-banner-desc {
+      font-size: 11.5px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    .mobile-option-card.my-team-chosen {
+      border-color: #3b82f6;
+      background: #141b29;
+      box-shadow: 0 0 15px rgba(59, 130, 246, 0.25);
+    }
+
     /* Options List */
     .mobile-options-container {
       display: flex;
@@ -865,12 +892,11 @@
       }
     } else if (msg.type === 'TEAM_SUBMIT') {
       const { teamId, choiceId } = msg;
-      if (MobileState.teams[teamId]) {
+      // Votes from other teams are strictly ignored on mobile (isolated voting)
+      if (teamId === MobileState.user.team && MobileState.teams[teamId]) {
         MobileState.teams[teamId].currentChoice = choiceId;
         MobileState.teams[teamId].submitted = true;
-        if (teamId === MobileState.user.team) {
-          updateSubmissionUI();
-        }
+        updateSubmissionUI();
       }
     }
   }
@@ -946,21 +972,30 @@
     const submitBtn = document.getElementById('btn-bottom-submit');
     const statusIndicator = document.getElementById('round-status-indicator');
 
+    const bannerTitle = document.getElementById('mobile-banner-title');
+    const bannerDesc = document.getElementById('mobile-banner-desc');
+
     if (myTeam.submitted) {
       textLabel.innerText = `本組已送出：選項 ${myTeam.currentChoice}`;
-      submitBtn.innerText = '已送出決策';
+      submitBtn.innerText = '已送出代表決策';
       submitBtn.disabled = true;
-      statusIndicator.innerText = '已送出，等待主控台揭曉';
+      statusIndicator.innerText = '已送出 · 請看大螢幕';
+      if (bannerTitle) bannerTitle.innerText = `貴組已送出代表決策：選項 ${myTeam.currentChoice}`;
+      if (bannerDesc) bannerDesc.innerText = '每組投票獨立保密不互通。請抬頭看前方大螢幕，等待報告者揭曉全班投票結果。';
     } else if (myTeam.currentChoice) {
       textLabel.innerText = `已選取：選項 ${myTeam.currentChoice}`;
       submitBtn.innerText = '送出本組決策';
       submitBtn.disabled = false;
       statusIndicator.innerText = '請確認並送出';
+      if (bannerTitle) bannerTitle.innerText = '組內決策研討中';
+      if (bannerDesc) bannerDesc.innerText = '每組投票獨立保密不互通，請組內取得共識後選取並送出。';
     } else {
       textLabel.innerText = '尚未選取選項';
       submitBtn.innerText = '送出本組決策';
       submitBtn.disabled = true;
       statusIndicator.innerText = '決策研討中';
+      if (bannerTitle) bannerTitle.innerText = '組內決策研討中';
+      if (bannerDesc) bannerDesc.innerText = '每組投票獨立保密不互通，請組內取得共識後選取並送出。';
     }
   }
 
@@ -980,6 +1015,13 @@
   function applyMobileRevealedUI() {
     const currentData = DilemmasData[MobileState.currentRound];
     if (!currentData) return;
+    const myTeam = MobileState.teams[MobileState.user.team];
+    const bannerTitle = document.getElementById('mobile-banner-title');
+    const bannerDesc = document.getElementById('mobile-banner-desc');
+
+    if (bannerTitle) bannerTitle.innerText = `【開票完成】貴組選擇：選項 ${myTeam.currentChoice || '未作答'}`;
+    if (bannerDesc) bannerDesc.innerText = '全班各組投票統計分佈僅於前方大螢幕報告者主控台顯示。貴組之 CQ 判定與決策覆盤如下：';
+
     let opts = currentData.options;
     if (currentData.isAsymmetric) {
       const userFaction = MobileState.teams[MobileState.user.team].faction;
@@ -988,10 +1030,16 @@
     if (opts) {
       opts.forEach(opt => {
         const box = document.getElementById(`m-reveal-${opt.id}`);
-        if (box) box.style.display = 'block';
+        const card = document.getElementById(`m-opt-${opt.id}`);
+        if (box) {
+          box.style.display = 'block';
+        }
+        if (card && opt.id === myTeam.currentChoice) {
+          card.classList.add('my-team-chosen');
+        }
       });
     }
-    document.getElementById('round-status-indicator').innerText = 'CQ 判定已揭曉';
+    document.getElementById('round-status-indicator').innerText = '開票完成 · 請看大螢幕';
   }
 
   window.addEventListener('DOMContentLoaded', () => {

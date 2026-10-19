@@ -333,6 +333,120 @@
     }
     .action-btn-secondary:hover { background: #202534; border-color: var(--border-medium); color: #f8fafc; }
 
+    
+    /* Voting Status Panel on Host (Visible during voting) */
+    .voting-status-panel {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: 8px;
+      padding: 18px 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-top: 14px;
+    }
+    .voting-panel-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .voting-panel-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: #f8fafc;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .voting-progress-pill {
+      font-family: var(--font-mono);
+      font-size: 12px;
+      font-weight: 600;
+      color: #60a5fa;
+      background: rgba(59, 130, 246, 0.12);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 3px 10px;
+      border-radius: 20px;
+    }
+    .voting-panel-hint {
+      font-size: 12.5px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    .team-sub-chips-grid {
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 8px;
+    }
+    .team-sub-chip {
+      background: #0d0f15;
+      border: 1px solid var(--border-subtle);
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      transition: all 0.2s ease;
+    }
+    .team-sub-chip.submitted {
+      border-color: rgba(16, 185, 129, 0.3);
+      background: rgba(16, 185, 129, 0.05);
+    }
+    .team-sub-chip-name {
+      font-size: 12px;
+      font-weight: 600;
+      color: #f8fafc;
+    }
+    .team-sub-chip-status {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+    .team-sub-chip.submitted .team-sub-chip-status {
+      color: #34d399;
+      font-weight: 600;
+    }
+
+    /* Option result breakdown inside card */
+    .opt-result-bar-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      margin: 6px 0;
+      background: #0d0f15;
+      padding: 8px 12px;
+      border-radius: 6px;
+      border: 1px solid var(--border-subtle);
+    }
+    .opt-result-label {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    .opt-result-teams {
+      color: #60a5fa;
+      font-weight: 600;
+    }
+    .opt-result-pct {
+      font-family: var(--font-mono);
+      font-weight: 700;
+      color: #f8fafc;
+    }
+    .opt-result-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: 3px;
+      overflow: hidden;
+    }
+    .opt-result-fill {
+      height: 100%;
+      background: #3b82f6;
+      border-radius: 3px;
+      transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
     /* Options Grid */
     .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
     .option-card {
@@ -508,7 +622,7 @@
 
         <div class="host-btn-group">
           <button class="action-btn-primary" id="btn-reveal-results" onclick="revealRoundResults()">
-            揭曉 CQ 判定
+            揭曉全班投票結果
           </button>
           <button class="action-btn-secondary" id="btn-next-round" onclick="advanceNextRound()">
             進入下一回合
@@ -522,7 +636,20 @@
         </div>
       </div>
 
-      <div class="options-grid" id="options-grid"></div>
+            <!-- Voting Status Panel: Shown during voting phase -->
+      <div class="voting-status-panel" id="voting-status-panel">
+        <div class="voting-panel-header">
+          <span class="voting-panel-title" id="voting-panel-title">各組代表研討與投票中</span>
+          <span class="voting-progress-pill" id="voting-progress-pill">0 / 5 組已送出決策</span>
+        </div>
+        <p class="voting-panel-hint" id="voting-panel-hint">
+          情境題目已推送至學員手機端。每組投票完全保密不互通，僅於報告者揭曉後在此顯示全班投票統計結果。
+        </p>
+        <div class="team-sub-chips-grid" id="team-sub-chips-grid"></div>
+      </div>
+
+      <!-- Voting Results Grid: Revealed only when presenter clicks reveal -->
+      <div class="options-grid" id="options-grid" style="display: none;"></div>
     </section>
 
     <section class="leaderboard-container" id="leaderboard-stage" style="display: none;">
@@ -1071,7 +1198,10 @@
         GameState.teams[teamId].currentChoice = choiceId;
         GameState.teams[teamId].submitted = true;
         renderTeamHPStrip();
-        updateOptionsGridUI();
+        renderVotingStatusPanel();
+        if (GameState.roundStatus === 'revealed') {
+          updateOptionsGridUI();
+        }
       }
     } else if (msg.type === 'TEAM_JOIN') {
       const { teamId } = msg;
@@ -1084,11 +1214,64 @@
   }
 
   function broadcastState(type, payload = {}) {
-    const packet = { type, ...payload, timestamp: Date.now() };
+    // Sanitize teams so other teams' secret choices are NEVER leaked to participant devices
+    const sanitizedTeams = {};
+    for (let i = 1; i <= 5; i++) {
+      sanitizedTeams[i] = {
+        name: GameState.teams[i].name,
+        faction: GameState.teams[i].faction,
+        hp: GameState.teams[i].hp,
+        submitted: GameState.teams[i].submitted
+        // currentChoice is strictly withheld from client devices!
+      };
+    }
+    const packet = {
+      type,
+      ...payload,
+      teams: sanitizedTeams,
+      timestamp: Date.now()
+    };
     if (GameState.syncChannel) {
       try { GameState.syncChannel.postMessage(packet); } catch (e) {}
     }
     try { localStorage.setItem('project_atlas_cq_state', JSON.stringify(packet)); } catch (e) {}
+  }
+
+  function renderVotingStatusPanel() {
+    const panel = document.getElementById('voting-status-panel');
+    const titleEl = document.getElementById('voting-panel-title');
+    const pillEl = document.getElementById('voting-progress-pill');
+    const hintEl = document.getElementById('voting-panel-hint');
+    const gridEl = document.getElementById('team-sub-chips-grid');
+    if (!panel || !gridEl) return;
+
+    let submittedCount = 0;
+    let chipsHtml = '';
+
+    for (let i = 1; i <= 5; i++) {
+      const team = GameState.teams[i];
+      if (team.submitted) submittedCount++;
+      const isSub = team.submitted;
+      chipsHtml += `
+        <div class="team-sub-chip ${isSub ? 'submitted' : ''}">
+          <span class="team-sub-chip-name">${team.name}</span>
+          <span class="team-sub-chip-status">${isSub ? (GameState.roundStatus === 'revealed' ? `已投票 (${team.currentChoice})` : '已送出決策') : '研議中...'}</span>
+        </div>
+      `;
+    }
+
+    if (GameState.roundStatus === 'voting') {
+      panel.style.display = 'flex';
+      titleEl.innerText = '各組代表研討與投票中';
+      pillEl.innerText = `${submittedCount} / 5 組已送出決策`;
+      hintEl.innerText = '情境題目已推送至學員手機端。每組投票完全保密不互通，僅於報告者揭曉後在此顯示全班投票統計結果。';
+    } else {
+      panel.style.display = 'flex';
+      titleEl.innerText = '全班決策開票完成 · 投票結果如下';
+      pillEl.innerText = `全班 5 組已全數開票`;
+      hintEl.innerText = '以下為全班各組投票統計分佈與跨文化 CQ 覆盤判定：';
+    }
+    gridEl.innerHTML = chipsHtml;
   }
 
   function renderTeamHPStrip() {
@@ -1158,6 +1341,7 @@
     const counts = [6, 7, 6, 8, 5];
     for (let i = 1; i <= 5; i++) GameState.teams[i].headcount = counts[i - 1];
     renderTeamHPStrip();
+    renderVotingStatusPanel();
     updateHeadcountDisplay();
   }
 
@@ -1173,7 +1357,16 @@
     document.querySelectorAll('.r4-filter-btn').forEach(btn => btn.classList.remove('active'));
     const activeBtn = document.getElementById(`btn-filter-${factionKey}`);
     if (activeBtn) activeBtn.classList.add('active');
-    loadRound(4);
+
+    const data = DilemmasData[4];
+    if (!data) return;
+    const currentFactionData = data.factions[GameState.r4HostFilter];
+    document.getElementById('round-theme-tag').innerText = data.themeTag + ` - ${currentFactionData.factionName}`;
+    document.getElementById('speaker-tag').innerText = currentFactionData.speaker;
+    document.getElementById('dialogue-text').innerText = currentFactionData.dialogue;
+
+    renderVotingStatusPanel();
+    renderOptionsGrid(currentFactionData.options);
   }
 
   function loadRound(roundNum) {
@@ -1226,12 +1419,13 @@
     const revealBtn = document.getElementById('btn-reveal-results');
     if (revealBtn) {
       revealBtn.disabled = false;
-      revealBtn.innerText = '揭曉 CQ 判定';
+      revealBtn.innerText = '揭曉全班投票結果';
     }
 
     resetTimer();
     renderOptionsGrid(currentFactionData ? currentFactionData.options : data.options);
     renderTeamHPStrip();
+    renderVotingStatusPanel();
 
     broadcastState('STATE_UPDATE', {
       teams: GameState.teams,
@@ -1243,17 +1437,58 @@
   function renderOptionsGrid(options) {
     const grid = document.getElementById('options-grid');
     if (!grid) return;
+
+    if (GameState.roundStatus === 'voting') {
+      grid.style.display = 'none';
+      return;
+    }
+    grid.style.display = 'grid';
+
+    const currentData = DilemmasData[GameState.currentRound];
+    const isAsymmetric = currentData && currentData.isAsymmetric;
+    const activeFaction = GameState.r4HostFilter;
+
+    // Calculate voting statistics
+    const votesCount = { A: [], B: [], C: [], D: [] };
+    let relevantTotal = 0;
+
+    for (let i = 1; i <= 5; i++) {
+      const team = GameState.teams[i];
+      if (!isAsymmetric || team.faction === activeFaction) {
+        relevantTotal++;
+        if (team.currentChoice && votesCount[team.currentChoice]) {
+          votesCount[team.currentChoice].push(team.name);
+        }
+      }
+    }
+
     let html = '';
     options.forEach(opt => {
+      const pickedTeams = votesCount[opt.id] || [];
+      const count = pickedTeams.length;
+      const pct = relevantTotal > 0 ? Math.round((count / relevantTotal) * 100) : 0;
+      const teamsListText = pickedTeams.length > 0 ? pickedTeams.join('、') : '無組別選擇';
+
       html += `
         <div class="option-card" id="option-card-${opt.id}">
           <div class="option-header">
             <span class="option-tag-badge">${opt.title}</span>
-            <span class="option-votes-badge" id="opt-votes-${opt.id}">0 組代表選擇</span>
+            <span class="option-votes-badge" id="opt-votes-${opt.id}">${count} 組選擇 (${pct}%)</span>
           </div>
+
+          <div class="opt-result-bar-wrap">
+            <div class="opt-result-label">
+              <span>選擇組別：<span class="opt-result-teams">${teamsListText}</span></span>
+              <span class="opt-result-pct">${pct}%</span>
+            </div>
+            <div class="opt-result-track">
+              <div class="opt-result-fill" style="width: ${pct}%;"></div>
+            </div>
+          </div>
+
           <p class="option-text-main">${opt.text}</p>
           <div class="option-rationale-preview">${opt.rationale}</div>
-          <div class="option-reveal-box ${opt.penalty < 0 ? 'reveal-penalty' : 'reveal-success'}" id="reveal-box-${opt.id}">
+          <div class="option-reveal-box ${opt.penalty < 0 ? 'reveal-penalty' : 'reveal-success'}" style="display: block;" id="reveal-box-${opt.id}">
             <strong>【CQ 判定結果】：${opt.penalty < 0 ? `${opt.penalty} 點 CQ` : `+${opt.bonus} 點 CQ (卓越決策)`}</strong><br>
             <span>${opt.blindspot}</span>
           </div>
@@ -1363,11 +1598,14 @@
     else AudioEngine.playChime();
 
     renderTeamHPStrip();
+    renderVotingStatusPanel();
+    const currentFactionData = currentData.isAsymmetric ? currentData.factions[GameState.r4HostFilter] : null;
+    renderOptionsGrid(currentFactionData ? currentFactionData.options : currentData.options);
 
     const revealBtn = document.getElementById('btn-reveal-results');
     if (revealBtn) {
       revealBtn.disabled = true;
-      revealBtn.innerText = '已揭曉 CQ 判定';
+      revealBtn.innerText = '已揭曉全班投票結果';
     }
   }
 
@@ -1387,7 +1625,8 @@
       GameState.teams[i].submitted = true;
     }
     renderTeamHPStrip();
-    updateOptionsGridUI();
+    renderVotingStatusPanel();
+    if (GameState.roundStatus === "revealed") { updateOptionsGridUI(); }
   }
 
   function updateOptionsGridUI() {
