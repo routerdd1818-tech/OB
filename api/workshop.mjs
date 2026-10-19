@@ -164,9 +164,9 @@ export default async function handler(req,res) {
                 }
               }
             } else {
-              // Fallback if jury did not rank
-              delta = result.angerDelta ?? (result.cq ? -result.cq : 15);
-              juryVerdict = '裁判未特別評定 · 依情境模型計算';
+              // Options do not add anger; if jury did not rank, anger remains unchanged
+              delta = 0;
+              juryVerdict = '裁判未特別評定 · 怒氣維持原值';
             }
 
             const after=Math.min(100,Math.max(0,before+delta));

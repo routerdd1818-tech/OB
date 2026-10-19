@@ -115,8 +115,9 @@ test('pause/resume uses shared server deadlines and incomplete reveal needs expl
   await host('timer',{});let state=(await host()).data;assert.equal(state.deadline,null);assert.ok(state.remaining>0);
   await host('timer',{});state=(await host()).data;assert.ok(state.deadline>Date.now());assert.equal(state.remaining,null);
   assert.equal((await host('reveal',{})).status,409);
-  // Round 2 optimal is C
+  // Round 2 choice and jury ranking
   await request('vote',{choice:'C',epoch:state.epoch,roundIndex:1},memberCookies[0]);
+  await request('jury-rank',{rankings:{1:1},epoch:state.epoch,roundIndex:1},memberCookies[4]);
   assert.equal((await host('reveal',{confirmIncomplete:true})).status,200);
   state=(await host()).data;assert.equal(state.groups[0].anger,0);
   await host('next',{});await host('start',{});await host('reveal',{confirmIncomplete:true});await host('next',{});

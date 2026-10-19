@@ -64,9 +64,8 @@ function resultsMarkup(){
 function renderReview(){
   const entry=state.distribution.find(o=>o.id===selectedReview)||state.distribution[0];
   selectedReview=entry.id;const r=entry.result;
-  const angerDelta = r.angerDelta ?? (r.cq ? -r.cq : 0);
   document.querySelectorAll('[data-review]').forEach(el=>el.setAttribute('aria-selected',String(el.dataset.review===selectedReview)));
-  $('#review-content').innerHTML=`<h3 class="review-verdict">${esc(r.verdict)}</h3><p class="review-copy">${esc(r.analysis)}</p><div class="review-insight"><div class="eyebrow">BEYOND THE WORDS · 深層文化盲點</div><p class="review-copy">${esc(r.blindspot)}</p></div><div class="review-insight"><span class="pill ${r.reduction>0?'positive':'negative'}">${r.reduction>0?'↓ 張力降 '+r.reduction+' 個百分點':r.reduction<0?'↑ 張力升 '+Math.abs(r.reduction)+' 個百分點':'張力持平'}</span> <span class="pill ${angerDelta>0?'negative':'positive'}">怒氣 ${angerDelta>0?'↑ 飆升 +'+angerDelta:'↓ 降溫 '+angerDelta} 點</span></div>`;
+  $('#review-content').innerHTML=`<h3 class="review-verdict">${esc(r.verdict)}</h3><p class="review-copy">${esc(r.analysis)}</p><div class="review-insight"><div class="eyebrow">BEYOND THE WORDS · 深層文化盲點</div><p class="review-copy">${esc(r.blindspot)}</p></div><div class="review-insight"><span class="pill ${r.reduction>0?'positive':'negative'}">${r.reduction>0?'↓ 張力降 '+r.reduction+' 個百分點':r.reduction<0?'↑ 張力升 '+Math.abs(r.reduction)+' 個百分點':'張力持平'}</span></div>`;
 }
 
 async function hostAction(action,extra={}){
