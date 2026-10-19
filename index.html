@@ -6,31 +6,54 @@
   <title>OB報告：跨文化職場對話博弈（學員手機端）</title>
   <style>
     :root {
-      --bg-canvas: #090a0f;
-      --bg-surface: #10121a;
-      --bg-card: #151822;
-      --bg-card-hover: #1b1f2c;
-      --bg-elevated: #1f2432;
-      --border-subtle: rgba(255, 255, 255, 0.08);
-      --border-medium: rgba(255, 255, 255, 0.14);
-      --border-focus: #3b82f6;
-      --text-primary: #f8fafc;
-      --text-secondary: #94a3b8;
-      --text-muted: #64748b;
-      --accent-blue: #3b82f6;
-      --color-success: #10b981;
-      --color-warning: #f59e0b;
-      --color-danger: #f43f5e;
-      --font-sans: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans TC", "PingFang TC", sans-serif;
-      --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      --ios-bg: #000000;
+      --ios-surface: #121214;
+      --ios-card: #1c1c1e;
+      --ios-card-hover: #2c2c2e;
+      --ios-elevated: #252528;
+      --ios-hairline: rgba(255, 255, 255, 0.1);
+      --ios-hairline-strong: rgba(255, 255, 255, 0.18);
+      --ios-label: #ffffff;
+      --ios-secondary-label: #8e8e93;
+      --ios-tertiary-label: #636366;
+      --ios-blue: #0a84ff;
+      --ios-green: #30d158;
+      --ios-amber: #ff9f0a;
+      --ios-red: #ff453a;
+      --ios-indigo: #5e5ce6;
+      --ios-purple: #bf5af2;
+      --ios-font: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "PingFang TC", "Helvetica Neue", sans-serif;
+      --ios-mono: "SF Mono", ui-monospace, Menlo, Monaco, Consolas, monospace;
+      --ios-radius-card: 18px;
+      --ios-radius-pill: 9999px;
+      --ios-radius-btn: 14px;
+
+      /* Legacy compatibility mappings */
+      --bg-canvas: var(--ios-bg);
+      --bg-surface: var(--ios-surface);
+      --bg-card: var(--ios-card);
+      --bg-card-hover: var(--ios-card-hover);
+      --bg-elevated: var(--ios-elevated);
+      --border-subtle: var(--ios-hairline);
+      --border-medium: var(--ios-hairline-strong);
+      --border-focus: var(--ios-blue);
+      --text-primary: var(--ios-label);
+      --text-secondary: var(--ios-secondary-label);
+      --text-muted: var(--ios-tertiary-label);
+      --accent-blue: var(--ios-blue);
+      --color-success: var(--ios-green);
+      --color-warning: var(--ios-amber);
+      --color-danger: var(--ios-red);
+      --font-sans: var(--ios-font);
+      --font-mono: var(--ios-mono);
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; user-select: none; -webkit-tap-highlight-color: transparent; }
 
     body {
-      background: var(--bg-canvas);
-      color: var(--text-primary);
-      font-family: var(--font-sans);
+      background: #000000;
+      color: var(--ios-label);
+      font-family: var(--ios-font);
       overflow-x: hidden;
       min-height: 100vh;
       display: flex;
@@ -44,25 +67,26 @@
       width: 100%;
       max-width: 480px;
       min-height: 100vh;
-      background: var(--bg-surface);
+      background: #000000;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 0 40px rgba(0, 0, 0, 0.7);
-      padding-bottom: 85px;
+      box-shadow: 0 0 50px rgba(0, 0, 0, 0.85);
+      padding-bottom: 95px;
     }
 
-    /* Mobile Header */
+    /* iOS Mobile Header */
     header.mobile-header {
       position: sticky;
       top: 0;
       z-index: 90;
-      background: rgba(16, 18, 26, 0.96);
-      border-bottom: 1px solid var(--border-subtle);
-      backdrop-filter: blur(16px);
-      padding: 10px 14px;
+      background: rgba(18, 18, 20, 0.85);
+      border-bottom: 0.5px solid var(--ios-hairline);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      padding: 12px 16px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
     }
     .mobile-header-top {
       display: flex;
@@ -73,49 +97,50 @@
       display: flex;
       align-items: center;
       gap: 6px;
-      background: #151822;
-      border: 1px solid var(--border-subtle);
-      padding: 4px 10px;
-      border-radius: 6px;
-      font-size: 11.5px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 0.5px solid var(--ios-hairline);
+      padding: 4px 12px;
+      border-radius: var(--ios-radius-pill);
+      font-size: 12px;
       cursor: pointer;
       transition: all 0.15s ease;
     }
-    .user-profile-badge:hover { border-color: var(--border-medium); }
-    .user-name-text { font-weight: 600; color: #f8fafc; }
-    .user-team-text { font-weight: 500; color: #60a5fa; font-family: var(--font-mono); }
-    .header-round-indicator { font-size: 11px; font-weight: 500; color: var(--text-muted); }
+    .user-profile-badge:active { transform: scale(0.97); }
+    .user-name-text { font-weight: 600; color: #ffffff; }
+    .user-team-text { font-weight: 600; color: #0a84ff; font-family: var(--ios-mono); }
+    .header-round-indicator { font-size: 11px; font-weight: 500; color: var(--ios-secondary-label); }
 
-    /* Team Health Card */
+    /* Health Widget Card */
     .mobile-team-hp-card {
-      background: #0d0f15;
-      border: 1px solid var(--border-subtle);
-      border-radius: 6px;
-      padding: 8px 10px;
+      background: #1c1c1e;
+      border: 0.5px solid var(--ios-hairline);
+      border-radius: 12px;
+      padding: 10px 12px;
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 6px;
     }
     .mobile-team-hp-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      font-size: 11.5px;
+      font-size: 12px;
       font-weight: 600;
     }
-    .mobile-team-title { color: var(--text-secondary); }
-    .mobile-team-hp-num { color: var(--color-success); font-family: var(--font-mono); font-size: 13px; font-weight: 700; }
+    .mobile-team-title { color: var(--ios-secondary-label); }
+    .mobile-team-hp-num { color: var(--ios-green); font-family: var(--ios-mono); font-size: 13px; font-weight: 700; }
     .mobile-team-hp-track {
       width: 100%;
-      height: 3px;
+      height: 4px;
       background: rgba(255, 255, 255, 0.08);
-      border-radius: 2px;
+      border-radius: var(--ios-radius-pill);
       overflow: hidden;
     }
     .mobile-team-hp-fill {
       height: 100%;
       width: 100%;
-      background: var(--color-success);
+      background: var(--ios-green);
+      border-radius: var(--ios-radius-pill);
       transition: width 0.6s ease, background 0.3s ease;
     }
 
@@ -123,227 +148,252 @@
     main.mobile-arena {
       display: flex;
       flex-direction: column;
-      padding: 14px;
-      gap: 12px;
+      padding: 16px;
+      gap: 14px;
     }
     .scenario-brief-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-subtle);
-      border-radius: 8px;
-      padding: 14px;
+      background: #1c1c1e;
+      border: 0.5px solid var(--ios-hairline);
+      border-radius: var(--ios-radius-card);
+      padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 10px;
     }
     .scenario-badge {
       display: inline-flex;
       align-items: center;
       gap: 4px;
-      font-size: 10.5px;
+      font-size: 11px;
       font-weight: 600;
-      color: #60a5fa;
-      background: rgba(59, 130, 246, 0.1);
-      padding: 2px 8px;
-      border-radius: 4px;
-      border: 1px solid rgba(59, 130, 246, 0.25);
+      color: var(--ios-blue);
+      background: rgba(10, 132, 255, 0.14);
+      padding: 3px 10px;
+      border-radius: var(--ios-radius-pill);
+      border: 0.5px solid rgba(10, 132, 255, 0.3);
       width: fit-content;
     }
-    .scenario-title { font-size: 15px; font-weight: 700; color: #f8fafc; letter-spacing: -0.01em; }
+    .scenario-title { font-size: 16px; font-weight: 700; color: #ffffff; letter-spacing: -0.01em; }
     .scenario-dialogue {
-      background: #0d0f15;
-      border: 1px solid var(--border-subtle);
-      border-left: 3px solid var(--accent-blue);
-      border-radius: 6px;
-      padding: 10px 12px;
-      font-size: 12.5px;
+      background: rgba(0, 0, 0, 0.35);
+      border: 0.5px solid var(--ios-hairline);
+      border-left: 3px solid var(--ios-blue);
+      border-radius: 12px;
+      padding: 12px 14px;
+      font-size: 13px;
       line-height: 1.6;
-      color: #f1f5f9;
+      color: #f2f2f7;
     }
 
-    
     .mobile-vote-banner {
-      background: #0d0f15;
-      border: 1px solid var(--border-subtle);
-      border-left: 3px solid var(--accent-blue);
-      border-radius: 6px;
-      padding: 10px 12px;
+      background: #1c1c1e;
+      border: 0.5px solid var(--ios-hairline);
+      border-left: 3px solid var(--ios-blue);
+      border-radius: 12px;
+      padding: 12px 14px;
       display: flex;
       flex-direction: column;
       gap: 4px;
     }
-    .mobile-vote-banner-title {
-      font-size: 12.5px;
-      font-weight: 700;
-      color: #f8fafc;
+    .mobile-vote-banner-title { font-size: 13px; font-weight: 700; color: #ffffff; }
+    .mobile-vote-banner-desc { font-size: 12px; color: var(--ios-secondary-label); line-height: 1.5; }
+
+    /* iOS Mobile Tension Card */
+    .ios-mobile-tension-card {
+      background: rgba(28, 28, 30, 0.95);
+      border: 0.5px solid rgba(255, 255, 255, 0.16);
+      border-radius: var(--ios-radius-card);
+      padding: 14px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
     }
-    .mobile-vote-banner-desc {
-      font-size: 11.5px;
-      color: var(--text-secondary);
+    .ios-tension-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .ios-tension-pill {
+      font-size: 11px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: var(--ios-radius-pill);
+      background: rgba(10, 132, 255, 0.15);
+      color: #0a84ff;
+      border: 0.5px solid rgba(10, 132, 255, 0.3);
+    }
+    .ios-tension-delta-badge {
+      font-size: 12px;
+      font-weight: 700;
+      font-family: var(--ios-mono);
+      padding: 3px 10px;
+      border-radius: var(--ios-radius-pill);
+      display: inline-flex;
+      align-items: center;
+    }
+    .delta-high-drop {
+      background: rgba(48, 209, 88, 0.18);
+      color: #30d158;
+      border: 0.5px solid rgba(48, 209, 88, 0.35);
+    }
+    .delta-no-drop {
+      background: rgba(255, 69, 58, 0.18);
+      color: #ff453a;
+      border: 0.5px solid rgba(255, 69, 58, 0.35);
+    }
+    .ios-tension-gauge-wrap {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      background: rgba(0, 0, 0, 0.35);
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 0.5px solid rgba(255, 255, 255, 0.06);
+    }
+    .ios-tension-track {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.08);
+      border-radius: var(--ios-radius-pill);
+      overflow: hidden;
+    }
+    .ios-tension-fill {
+      height: 100%;
+      border-radius: var(--ios-radius-pill);
+      transition: width 0.8s cubic-bezier(0.2, 0.8, 0.2, 1);
+    }
+    .ios-tension-labels {
+      display: flex;
+      justify-content: space-between;
+      font-size: 11px;
+      color: var(--ios-secondary-label);
+    }
+    .ios-tension-current-val {
+      color: #ffffff;
+      font-weight: 600;
+      font-family: var(--ios-mono);
+    }
+    .ios-tension-comment {
+      font-size: 12px;
+      color: #d1d1d6;
       line-height: 1.5;
     }
-    .mobile-option-card.my-team-chosen {
-      border-color: #3b82f6;
-      background: #141b29;
-      box-shadow: 0 0 15px rgba(59, 130, 246, 0.25);
-    }
 
-    
     /* Round 4 Special Mobile Components */
     .r4-mobile-intel-box {
-      background: #090a14;
-      border: 1px solid rgba(99, 102, 241, 0.4);
-      border-radius: 8px;
+      background: #1c1c1e;
+      border: 0.5px solid rgba(191, 90, 242, 0.35);
+      border-radius: 14px;
       padding: 12px 14px;
       display: flex;
       flex-direction: column;
       gap: 8px;
     }
-    .r4-intel-heading {
-      font-size: 13px;
-      font-weight: 700;
-      color: #a5b4fc;
-    }
+    .r4-intel-heading { font-size: 13px; font-weight: 700; color: #bf5af2; }
     .r4-intel-item {
       font-size: 12px;
-      color: #cbd5e1;
-      line-height: 1.55;
-      background: rgba(255, 255, 255, 0.03);
-      padding: 6px 10px;
-      border-radius: 4px;
-      border-left: 3px solid #6366f1;
+      color: #d1d1d6;
+      line-height: 1.5;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 8px 10px;
+      border-radius: 8px;
+      border-left: 3px solid #bf5af2;
     }
     .r4-mobile-wait {
-      background: #0d0f15;
-      border: 1px dashed var(--border-subtle);
-      border-radius: 6px;
-      padding: 14px;
-      font-size: 12.5px;
-      color: var(--text-muted);
+      background: #1c1c1e;
+      border: 0.5px dashed var(--ios-hairline);
+      border-radius: 14px;
+      padding: 16px;
+      font-size: 13px;
+      color: var(--ios-secondary-label);
       text-align: center;
-      line-height: 1.5;
+      line-height: 1.55;
     }
     .r4-prop-review-card {
-      background: #0f111a;
-      border: 1px solid rgba(99, 102, 241, 0.35);
-      border-radius: 8px;
-      padding: 14px;
+      background: #1c1c1e;
+      border: 0.5px solid rgba(191, 90, 242, 0.35);
+      border-radius: var(--ios-radius-card);
+      padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 10px;
+      gap: 12px;
     }
-    .r4-prop-review-title {
-      font-size: 13.5px;
-      font-weight: 700;
-      color: #f8fafc;
-    }
+    .r4-prop-review-title { font-size: 14px; font-weight: 700; color: #ffffff; }
     .r4-prop-review-text {
-      font-size: 12.5px;
-      color: #cbd5e1;
+      font-size: 13px;
+      color: #d1d1d6;
       line-height: 1.6;
-      background: #08090f;
-      padding: 10px;
-      border-radius: 6px;
-      border: 1px solid var(--border-subtle);
+      background: rgba(0, 0, 0, 0.35);
+      padding: 12px;
+      border-radius: 12px;
+      border: 0.5px solid var(--ios-hairline);
     }
-    .r4-vote-btn-group {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 4px;
-    }
+    .r4-vote-btn-group { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 4px; }
     .r4-vote-btn {
-      padding: 11px;
-      border-radius: 6px;
+      padding: 12px;
+      border-radius: var(--ios-radius-pill);
       font-size: 13px;
       font-weight: 700;
       cursor: pointer;
       text-align: center;
       transition: all 0.15s ease;
-      border: 1px solid transparent;
+      border: none;
     }
-    .r4-vote-btn.accept {
-      background: rgba(16, 185, 129, 0.15);
-      border-color: rgba(16, 185, 129, 0.4);
-      color: #34d399;
-    }
-    .r4-vote-btn.accept:hover, .r4-vote-btn.accept.selected {
-      background: #059669;
-      color: #ffffff;
-      border-color: #10b981;
-    }
-    .r4-vote-btn.reject {
-      background: rgba(244, 63, 94, 0.15);
-      border-color: rgba(244, 63, 94, 0.4);
-      color: #fb7185;
-    }
-    .r4-vote-btn.reject:hover, .r4-vote-btn.reject.selected {
-      background: #e11d48;
-      color: #ffffff;
-      border-color: #f43f5e;
-    }
+    .r4-vote-btn:active { transform: scale(0.97); }
+    .r4-vote-btn.accept { background: rgba(48, 209, 88, 0.18); color: #30d158; border: 0.5px solid rgba(48, 209, 88, 0.35); }
+    .r4-vote-btn.accept:hover, .r4-vote-btn.accept.selected { background: #30d158; color: #ffffff; }
+    .r4-vote-btn.reject { background: rgba(255, 69, 58, 0.18); color: #ff453a; border: 0.5px solid rgba(255, 69, 58, 0.35); }
+    .r4-vote-btn.reject:hover, .r4-vote-btn.reject.selected { background: #ff453a; color: #ffffff; }
     .r4-constraint-box {
-      background: rgba(245, 158, 11, 0.08);
-      border: 1px solid rgba(245, 158, 11, 0.25);
-      border-radius: 6px;
-      padding: 8px 10px;
-      font-size: 11.5px;
-      color: #fde68a;
+      background: rgba(255, 159, 10, 0.1);
+      border: 0.5px solid rgba(255, 159, 10, 0.3);
+      border-radius: 10px;
+      padding: 8px 12px;
+      font-size: 12px;
+      color: #ff9f0a;
       line-height: 1.5;
     }
 
     /* Options List */
-    .mobile-options-container {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-    }
+    .mobile-options-container { display: flex; flex-direction: column; gap: 10px; }
     .mobile-option-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border-subtle);
-      border-radius: 8px;
-      padding: 12px 14px;
+      background: #1c1c1e;
+      border: 0.5px solid var(--ios-hairline);
+      border-radius: var(--ios-radius-card);
+      padding: 14px 16px;
       display: flex;
       flex-direction: column;
       gap: 6px;
       cursor: pointer;
       transition: all 0.15s ease;
     }
-    .mobile-option-card:active { transform: scale(0.99); }
+    .mobile-option-card:active { transform: scale(0.98); }
     .mobile-option-card.selected {
-      border-color: #3b82f6;
-      background: #141b29;
-      box-shadow: 0 0 12px rgba(59, 130, 246, 0.2);
+      border-color: #0a84ff;
+      background: rgba(10, 132, 255, 0.12);
+      box-shadow: 0 0 16px rgba(10, 132, 255, 0.25);
     }
-    .mobile-option-title {
-      font-size: 12.5px;
-      font-weight: 700;
-      color: #f8fafc;
+    .mobile-option-card.my-team-chosen {
+      border-color: #0a84ff;
+      background: rgba(10, 132, 255, 0.15);
     }
-    .mobile-option-text {
+    .mobile-option-title { font-size: 13.5px; font-weight: 700; color: #ffffff; }
+    .mobile-option-text { font-size: 12.5px; line-height: 1.55; color: var(--ios-secondary-label); }
+    .mobile-reveal-box {
+      margin-top: 6px;
+      padding: 10px 12px;
+      border-radius: 10px;
       font-size: 12px;
       line-height: 1.55;
-      color: var(--text-secondary);
-    }
-    .mobile-option-rationale {
-      font-size: 11px;
-      color: var(--text-muted);
-      background: #0d0f15;
-      padding: 5px 8px;
-      border-radius: 4px;
-      border: 1px solid var(--border-subtle);
-    }
-    .mobile-reveal-box {
-      margin-top: 4px;
-      padding: 8px 10px;
-      border-radius: 6px;
-      font-size: 11.5px;
-      line-height: 1.5;
       display: none;
     }
-    .mobile-reveal-box.reveal-penalty { background: rgba(244, 63, 94, 0.08); border: 1px solid rgba(244, 63, 94, 0.25); color: #fda4af; }
-    .mobile-reveal-box.reveal-success { background: rgba(16, 185, 129, 0.08); border: 1px solid rgba(16, 185, 129, 0.25); color: #6ee7b7; }
+    .mobile-reveal-box.reveal-penalty { background: rgba(255, 69, 58, 0.12); border: 0.5px solid rgba(255, 69, 58, 0.3); color: #ff9f9c; }
+    .mobile-reveal-box.reveal-success { background: rgba(48, 209, 88, 0.12); border: 0.5px solid rgba(48, 209, 88, 0.3); color: #84f2a7; }
 
-    /* Sticky Bottom Submit Bar */
+    /* iOS Sticky Bottom Submit Bar */
     .mobile-bottom-bar {
       position: fixed;
       bottom: 0;
@@ -352,39 +402,35 @@
       width: 100%;
       max-width: 480px;
       z-index: 100;
-      background: rgba(16, 18, 26, 0.96);
-      border-top: 1px solid var(--border-subtle);
-      padding: 10px 14px;
+      background: rgba(18, 18, 20, 0.9);
+      border-top: 0.5px solid var(--ios-hairline);
+      padding: 12px 16px;
       display: flex;
       justify-content: space-between;
       align-items: center;
-      box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(16px);
+      box-shadow: 0 -4px 25px rgba(0, 0, 0, 0.7);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
     }
-    .mobile-bottom-info {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      max-width: 60%;
-    }
-    .mobile-selection-label { font-size: 10px; color: var(--text-muted); }
-    .mobile-selection-val { font-size: 12px; font-weight: 600; color: #f8fafc; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .mobile-bottom-info { display: flex; flex-direction: column; gap: 2px; max-width: 60%; }
+    .mobile-selection-label { font-size: 10px; color: var(--ios-tertiary-label); }
+    .mobile-selection-val { font-size: 12.5px; font-weight: 600; color: #ffffff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
     .mobile-submit-btn {
-      background: var(--accent-blue);
+      background: var(--ios-blue);
       color: #ffffff;
-      border: 1px solid var(--accent-blue);
-      font-size: 12.5px;
+      border: none;
+      font-size: 13px;
       font-weight: 600;
-      padding: 9px 18px;
-      border-radius: 6px;
+      padding: 10px 20px;
+      border-radius: var(--ios-radius-pill);
       cursor: pointer;
       white-space: nowrap;
       transition: all 0.15s ease;
     }
+    .mobile-submit-btn:active { transform: scale(0.97); }
     .mobile-submit-btn:disabled {
-      background: #181b25;
-      border-color: var(--border-subtle);
-      color: var(--text-muted);
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--ios-tertiary-label);
       cursor: not-allowed;
     }
 
@@ -401,75 +447,79 @@
       justify-content: center;
       align-items: center;
       padding: 16px;
-      backdrop-filter: blur(12px);
+      backdrop-filter: blur(20px);
     }
     .onboarding-card {
-      background: #12151e;
-      border: 1px solid var(--border-medium);
-      border-radius: 8px;
+      background: #1c1c1e;
+      border: 0.5px solid var(--ios-hairline-strong);
+      border-radius: 24px;
       max-width: 380px;
       width: 100%;
-      padding: 22px 18px;
+      padding: 24px 20px;
       display: flex;
       flex-direction: column;
       gap: 16px;
-      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.8);
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.85);
     }
-    .onboarding-title { font-size: 16px; font-weight: 700; color: #f8fafc; text-align: center; }
-    .onboarding-desc { font-size: 12px; color: var(--text-secondary); line-height: 1.5; text-align: center; }
-    .onboarding-form { display: flex; flex-direction: column; gap: 12px; }
-    .form-group { display: flex; flex-direction: column; gap: 5px; }
-    .form-label { font-size: 11.5px; font-weight: 600; color: var(--text-secondary); }
+    .onboarding-title { font-size: 17px; font-weight: 700; color: #ffffff; text-align: center; }
+    .onboarding-desc { font-size: 12.5px; color: var(--ios-secondary-label); line-height: 1.5; text-align: center; }
+    .onboarding-form { display: flex; flex-direction: column; gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-label { font-size: 12px; font-weight: 600; color: var(--ios-secondary-label); }
     .form-input {
-      background: #0d0f15;
-      border: 1px solid var(--border-subtle);
-      color: #f8fafc;
-      font-size: 13px;
-      padding: 9px 12px;
-      border-radius: 6px;
+      background: rgba(0, 0, 0, 0.4);
+      border: 0.5px solid var(--ios-hairline);
+      color: #ffffff;
+      font-size: 14px;
+      padding: 10px 14px;
+      border-radius: 12px;
       outline: none;
       transition: border-color 0.15s ease;
     }
-    .form-input:focus { border-color: var(--border-focus); }
+    .form-input:focus { border-color: var(--ios-blue); }
 
-    /* Team Selector Pills (No team size quotas!) */
-    .team-pills-grid {
-      display: grid;
-      grid-template-columns: repeat(5, 1fr);
-      gap: 6px;
-    }
+    .team-pills-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
     .team-pill-btn {
-      background: #181b25;
-      border: 1px solid var(--border-subtle);
-      color: var(--text-secondary);
-      font-size: 11.5px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 0.5px solid var(--ios-hairline);
+      color: var(--ios-secondary-label);
+      font-size: 12px;
       font-weight: 600;
-      padding: 8px 4px;
-      border-radius: 6px;
+      padding: 10px 4px;
+      border-radius: 12px;
       cursor: pointer;
       text-align: center;
       transition: all 0.15s ease;
     }
-    .team-pill-btn:hover { background: #202534; color: #f8fafc; }
+    .team-pill-btn:active { transform: scale(0.96); }
     .team-pill-btn.active {
-      background: #2563eb;
-      border-color: #3b82f6;
+      background: var(--ios-blue);
+      border-color: var(--ios-blue);
       color: #ffffff;
     }
 
     .onboarding-btn {
-      background: var(--accent-blue);
+      background: var(--ios-blue);
       color: #ffffff;
-      border: 1px solid var(--accent-blue);
-      font-size: 13.5px;
+      border: none;
+      font-size: 14px;
       font-weight: 600;
-      padding: 10px;
-      border-radius: 6px;
+      padding: 12px;
+      border-radius: var(--ios-radius-pill);
       cursor: pointer;
       text-align: center;
       transition: all 0.15s ease;
     }
-    .onboarding-btn:hover { background: #2563eb; }
+    .onboarding-btn:active { transform: scale(0.97); }
+
+    .footer-host-link {
+      font-size: 11px;
+      color: var(--ios-tertiary-label);
+      text-align: center;
+      margin-top: 10px;
+      cursor: pointer;
+      padding: 8px;
+    }
   </style>
 </head>
 <body>
@@ -503,6 +553,7 @@
       <div class="scenario-dialogue" id="mobile-dialogue-text">載入中...</div>
     </div>
 
+    <div id="mobile-tension-wrap" style="display: none; margin-bottom: 12px;"></div>
     <div class="mobile-options-container" id="mobile-options-list"></div>
 
     <div class="footer-host-link" onclick="window.location.href='/host'">
@@ -712,7 +763,7 @@
           title: "方案 A：敏捷看板全透明數位化監控",
           text: "「全面導入 Jira 自動化即時追蹤機制，要求雙方每 2 小時自動同步任務進度與程式碼提交紀錄，建立客觀中立的全球燃盡圖。」",
           penalty: -20,
-          blindspot: "文化盲點：監視焦慮（Surveillance Anxiety）。高語境文化會解讀為極度的「不信任」與微觀管理，觸發工程師「表面合規、實質怠工」。"
+          blindspot: "文化盲點：監視焦慮（Surveillance Anxiety）。高語境文化會解讀為極度的「不信任」與微觀管理，觸發工程師「形式合規、消極怠工」。"
         },
         {
           id: "B",
@@ -920,8 +971,9 @@
       if (msg.r4Proposal) MobileState.r4Proposal = msg.r4Proposal;
       updateTeamHPUI();
       renderCurrentRound();
+      if (msg.tensionData) MobileState.tensionData = msg.tensionData;
       if (MobileState.roundStatus === 'revealed') {
-        applyMobileRevealedUI();
+        applyMobileRevealedUI(msg.tensionData || MobileState.tensionData);
       }
     } else if (msg.type === 'R4_PROPOSAL_OFFER') {
       MobileState.r4Proposal = msg.proposalId;
@@ -968,6 +1020,8 @@
 
   function renderOptions(options) {
     const list = document.getElementById('mobile-options-list');
+    const tensionWrap = document.getElementById('mobile-tension-wrap');
+    if (tensionWrap && MobileState.roundStatus === 'voting') tensionWrap.style.display = 'none';
     if (!list) return;
     let html = '';
     const myTeam = MobileState.teams[MobileState.user.team];
@@ -995,6 +1049,8 @@
     const titleEl = document.getElementById('mobile-scenario-title');
     const dialEl = document.getElementById('mobile-dialogue-text');
     const list = document.getElementById('mobile-options-list');
+    const tensionWrap = document.getElementById('mobile-tension-wrap');
+    if (tensionWrap && MobileState.roundStatus === 'voting') tensionWrap.style.display = 'none';
     const bottomBar = document.querySelector('.mobile-bottom-bar');
     if (!list) return;
 
@@ -1198,7 +1254,7 @@
     });
   }
 
-  function applyMobileRevealedUI() {
+  function applyMobileRevealedUI(tensionData) {
     const currentData = DilemmasData[MobileState.currentRound];
     if (!currentData) return;
     const myTeam = MobileState.teams[MobileState.user.team];
@@ -1206,13 +1262,72 @@
     const bannerDesc = document.getElementById('mobile-banner-desc');
 
     if (bannerTitle) bannerTitle.innerText = `【開票完成】貴組選擇：選項 ${myTeam.currentChoice || '未作答'}`;
-    if (bannerDesc) bannerDesc.innerText = '全班各組投票統計分佈僅於前方大螢幕報告者主控台顯示。貴組之 CQ 判定與決策覆盤如下：';
+    if (bannerDesc) bannerDesc.innerText = '全班各組投票統計分佈僅於前方大螢幕報告者主控台顯示。貴組之 CQ 判定、對話張力變化與決策覆盤如下：';
+
+    // Render iOS Mobile Tension Card
+    const tensionWrap = document.getElementById('mobile-tension-wrap');
+    if (tensionWrap) {
+      tensionWrap.style.display = 'block';
+
+      if (MobileState.currentRound === 4) {
+        const isAgreement = tensionData ? tensionData.isAgreement : true;
+        const prop = currentData.proposals.find(p => p.id === MobileState.r4Proposal) || currentData.proposals[3];
+        const initialTension = currentData.initialTension || "98%";
+        const tensionDrop = isAgreement ? prop.tensionDrop : "0%";
+        const tensionRemaining = isAgreement ? prop.tensionRemaining : "100%";
+        const tensionComment = isAgreement ? prop.tensionComment : "談判破局！華爾街做空狙擊，東京集體辭職，對話張力飆升至 100% 毀滅性爆點！";
+        const isDrop = isAgreement && (prop.tensionDrop !== "0%");
+
+        tensionWrap.innerHTML = `
+          <div class="ios-mobile-tension-card">
+            <div class="ios-tension-top">
+              <span class="ios-tension-pill">對話張力即時公布</span>
+              <span class="ios-tension-delta-badge ${isDrop ? 'delta-high-drop' : 'delta-no-drop'}">
+                ${isDrop ? `張力降低 ${tensionDrop}` : `張力未降低（極限緊繃）`}
+              </span>
+            </div>
+            <div class="ios-tension-gauge-wrap">
+              <div class="ios-tension-track">
+                <div class="ios-tension-fill" style="width: ${parseInt(tensionRemaining)}%; background: ${isDrop ? 'var(--ios-green)' : 'var(--ios-red)'};"></div>
+              </div>
+              <div class="ios-tension-labels">
+                <span>起始張力：${initialTension}</span>
+                <span class="ios-tension-current-val">目前張力：${tensionRemaining}</span>
+              </div>
+            </div>
+            <div class="ios-tension-comment"><strong>【調解張力解析】：</strong>${tensionComment}</div>
+          </div>
+        `;
+      } else {
+        let opt = currentData.options.find(o => o.id === myTeam.currentChoice);
+        if (!opt) opt = currentData.options[0];
+        const initialTension = currentData.initialTension || "85%";
+        const isDrop = (opt.tensionDrop !== "0%");
+
+        tensionWrap.innerHTML = `
+          <div class="ios-mobile-tension-card">
+            <div class="ios-tension-top">
+              <span class="ios-tension-pill">對話張力即時公布</span>
+              <span class="ios-tension-delta-badge ${isDrop ? 'delta-high-drop' : 'delta-no-drop'}">
+                ${isDrop ? `貴組使張力降低 ${opt.tensionDrop}` : `張力未降低（加劇緊繃）`}
+              </span>
+            </div>
+            <div class="ios-tension-gauge-wrap">
+              <div class="ios-tension-track">
+                <div class="ios-tension-fill" style="width: ${parseInt(opt.tensionRemaining)}%; background: ${isDrop ? 'var(--ios-green)' : 'var(--ios-red)'};"></div>
+              </div>
+              <div class="ios-tension-labels">
+                <span>起始張力：${initialTension}</span>
+                <span class="ios-tension-current-val">目前張力：${opt.tensionRemaining}</span>
+              </div>
+            </div>
+            <div class="ios-tension-comment"><strong>【貴組決策張力解析】：</strong>${opt.tensionComment}</div>
+          </div>
+        `;
+      }
+    }
 
     let opts = currentData.options;
-    if (currentData.isAsymmetric) {
-      const userFaction = MobileState.teams[MobileState.user.team].faction;
-      opts = currentData.factions[userFaction].options;
-    }
     if (opts) {
       opts.forEach(opt => {
         const box = document.getElementById(`m-reveal-${opt.id}`);
