@@ -139,6 +139,37 @@ export function startClock(getState, opts = {}) {
         ? (seconds > 40 ? '01 交換立場' + penaltyTag : seconds > 20 ? '02 協商提案' + penaltyTag : seconds > 0 ? '03 三方表態' + penaltyTag : '時間到 · 請提交共同決策')
         : (seconds === 0 ? '時間到 · 請提交共同決策' : '小組研討時間' + penaltyTag);
     });
+
+    // 30s Pitch timer update
+    if (state.pitch && state.pitch.deadline) {
+      const pitchSec = Math.max(0, Math.ceil((state.pitch.deadline - now) / 1000));
+      document.querySelectorAll('[data-pitch-clock]').forEach(node => {
+        node.textContent = `${String(Math.floor(pitchSec / 60)).padStart(2, '0')}:${String(pitchSec % 60).padStart(2, '0')}`;
+        node.classList.toggle('time-low', pitchSec <= 10 && pitchSec > 0);
+      });
+      if (opts.enableAudio && pitchSec <= 10 && pitchSec >= 1) {
+        const pitchBeepKey = `pitch:${pitchSec}`;
+        if (pitchBeepKey !== lastBeepKey) {
+          lastBeepKey = pitchBeepKey;
+          playHeartbeat(pitchSec);
+        }
+      }
+      if (pitchSec === 0) {
+        if (!state._pitchEndedFired) {
+          state._pitchEndedFired = true;
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('pitch-ended', { detail: { group: state.pitch?.group } }));
+          }
+        }
+      } else {
+        state._pitchEndedFired = false;
+      }
+    } else {
+      document.querySelectorAll('[data-pitch-clock]').forEach(node => {
+        node.textContent = '00:30';
+        node.classList.remove('time-low');
+      });
+    }
   }, 250);
 }
 

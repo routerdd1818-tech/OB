@@ -1344,6 +1344,808 @@ body.clean-stage .host-main {
   padding-top: 16px !important;
 }
 
+/* ==========================================================================
+   Evolution Plan Enhancements:
+   1. Large Cultural Blindspot Typography
+   2. Zero-Scroll 100vh Bento Layout
+   3. Central Leaderboard with 4 Sort Modes & Rank Badges
+   4. 30s Pitch Countdown Timer & Mobile Notice
+   ========================================================================== */
+
+/* 1. Large Cultural Blindspot Typography */
+.review-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.review-tab {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  padding: 10px 16px !important;
+  border-radius: 10px;
+  background: var(--oat);
+  border: 1px solid var(--line);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.review-tab[aria-selected="true"], .review-tab.active {
+  background: var(--ink) !important;
+  color: #fff !important;
+  border-color: var(--ink) !important;
+}
+
+.review-verdict {
+  font-size: 26px !important;
+  font-weight: 800 !important;
+  line-height: 1.35 !important;
+  margin: 10px 0 8px !important;
+  color: var(--ink) !important;
+}
+
+.review-zone-badge {
+  display: inline-block;
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  padding: 5px 12px !important;
+  border-radius: 8px;
+  background: var(--oat);
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+
+.review-copy {
+  font-size: 19px !important;
+  line-height: 1.65 !important;
+  font-weight: 500 !important;
+  color: #1c1917 !important;
+  margin: 10px 0 14px !important;
+}
+
+.review-insight {
+  background: #fdfbf7;
+  border: 1.5px solid rgba(197, 138, 80, 0.35);
+  border-radius: 14px;
+  padding: 14px 18px;
+  margin: 12px 0;
+}
+
+.review-insight .eyebrow {
+  font-size: 13px !important;
+  font-weight: 800 !important;
+  color: var(--accent, #c58a50) !important;
+  letter-spacing: 1.5px;
+  margin-bottom: 6px;
+}
+
+.review-insight p {
+  font-size: 18.5px !important;
+  font-weight: 600 !important;
+  line-height: 1.6 !important;
+  color: var(--ink) !important;
+  margin: 0;
+}
+
+.review-insight .pill, .review-meta-pill {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  padding: 8px 14px !important;
+  border-radius: 8px;
+}
+
+.review-head-banner h2 {
+  font-size: 20px;
+  font-weight: 800;
+  margin: 4px 0 10px;
+}
+
+/* 2. Zero-Scroll 100vh Host Styles */
+@media (min-width: 1024px) {
+  body.host {
+    height: 100vh;
+    max-height: 100vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  #app.host-main {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 8px 3% 64px;
+    overflow: hidden;
+  }
+
+  .host-top {
+    flex-shrink: 0;
+    height: 68px;
+  }
+
+  .cq-strip {
+    flex-shrink: 0;
+    margin-bottom: 8px;
+  }
+
+  .compact-reveal-header {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 8px;
+    background: #fff;
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: 8px 16px;
+  }
+
+  .voting-stage-grid {
+    display: grid;
+    grid-template-columns: 56% 44%;
+    gap: 16px;
+    flex: 1;
+    min-height: 0;
+    align-items: stretch;
+    overflow: hidden;
+  }
+
+  .voting-left-col {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    gap: 10px;
+    overflow-y: auto;
+  }
+
+  .voting-right-col {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    gap: 10px;
+    overflow-y: auto;
+  }
+
+  .results-bento-grid {
+    display: grid;
+    grid-template-columns: 29% 33% 38%;
+    gap: 14px;
+    flex: 1;
+    min-height: 0;
+    align-items: stretch;
+    overflow: hidden;
+  }
+
+  .bento-col {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+    padding: 14px 16px;
+    overflow: hidden;
+  }
+
+  .bento-col-matrix {
+    overflow-y: auto;
+  }
+
+  .bento-col-leaderboard {
+    overflow: hidden;
+  }
+
+  .host-jury-board-list {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    padding-right: 4px;
+  }
+
+  .bento-col-review {
+    overflow: hidden;
+  }
+
+  #review-content {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+}
+
+/* 3. 30s Pitch Countdown Timer */
+.pitch-timer-card {
+  background: #fff;
+  border: 1.5px solid var(--line);
+  border-radius: 16px;
+  padding: 14px 18px;
+  transition: all 0.2s ease;
+}
+
+.pitch-timer-card.is-active {
+  border-color: #f59e0b;
+  background: #fffbeb;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+.pitch-timer-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.pitch-status-note {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.pitch-status-note.active-note {
+  color: #b45309;
+  font-weight: 700;
+}
+
+.pitch-clock-display {
+  font-size: 32px;
+  font-weight: 800;
+  color: var(--ink);
+  line-height: 1;
+  letter-spacing: -1px;
+}
+
+.pitch-clock.urgent, .pitch-clock-number.urgent {
+  color: var(--red) !important;
+  animation: pulse-urgent 0.8s infinite alternate;
+}
+
+@keyframes pulse-urgent {
+  from { transform: scale(1); opacity: 1; }
+  to { transform: scale(1.08); opacity: 0.75; }
+}
+
+.pitch-actions-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 6px;
+}
+
+.pitch-btn {
+  padding: 8px 10px;
+  font-size: 12.5px;
+  font-weight: 600;
+  background: #f4f2ec;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.pitch-btn:hover {
+  background: #e9e5dc;
+}
+
+.pitch-btn.is-submitted {
+  border-color: #86efac;
+  color: #166534;
+}
+
+.pitch-btn.active {
+  background: #f59e0b;
+  color: #fff;
+  border-color: #d97706;
+  box-shadow: 0 2px 6px rgba(217, 119, 6, 0.3);
+}
+
+.pitch-btn.pitch-stop-btn {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  color: #991b1b;
+}
+
+.pitch-btn.pitch-stop-btn:hover {
+  background: #fecaca;
+}
+
+/* 4. Leaderboard Center Column & Sorting */
+.leaderboard-head {
+  margin-bottom: 10px;
+}
+
+.leaderboard-head h2 {
+  font-size: 18px;
+  font-weight: 800;
+  margin: 4px 0 8px;
+}
+
+.board-sort-tabs {
+  display: flex;
+  gap: 6px;
+  background: var(--oat);
+  padding: 3px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  overflow-x: auto;
+}
+
+.sort-tab {
+  flex: 1;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  color: var(--muted);
+  white-space: nowrap;
+  text-align: center;
+  transition: all 0.15s ease;
+  cursor: pointer;
+}
+
+.sort-tab.active {
+  background: #fff;
+  color: var(--ink);
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+}
+
+.host-board-row {
+  background: #faf8f5;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  transition: all 0.2s ease;
+}
+
+.host-board-row.is-buff {
+  border-left: 4px solid #16a34a;
+  background: #f0fdf4;
+}
+
+.host-board-row.is-veto {
+  border-left: 4px solid #dc2626;
+  background: #fef2f2;
+}
+
+.host-board-row.is-neutral {
+  border-left: 4px solid #78716c;
+}
+
+.board-row-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+}
+
+.board-rank-badge {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: #e7e5e4;
+  color: #44403c;
+  white-space: nowrap;
+}
+
+.board-rank-badge.rank-1, .rank-badge.rank-1, .rank-gold {
+  background: #fef08a !important;
+  color: #854d0e !important;
+  border: 1px solid #facc15;
+}
+
+.board-rank-badge.rank-2, .rank-badge.rank-2, .rank-silver {
+  background: #e2e8f0 !important;
+  color: #475569 !important;
+  border: 1px solid #cbd5e1;
+}
+
+.board-rank-badge.rank-3, .rank-badge.rank-3, .rank-bronze {
+  background: #fed7aa !important;
+  color: #9a3412 !important;
+  border: 1px solid #fdba74;
+}
+
+.board-team-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.board-team-info strong {
+  font-size: 14px;
+}
+
+.board-opt-tag {
+  font-size: 11.5px;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 140px;
+}
+
+.board-row-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+}
+
+.jury-order-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: #6b21a8;
+  background: #f3e8ff;
+  padding: 2px 7px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+
+.board-row-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.delta-val {
+  font-family: ui-monospace, monospace;
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.total-cq-val {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-family: ui-monospace, monospace;
+}
+
+.host-jury-seat-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 6px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--line);
+}
+
+/* 5. Mobile Participant Pitch & Jury Styles */
+.pitch-notice-banner {
+  background: #fffbeb;
+  border: 1.5px solid #f59e0b;
+  border-radius: 14px;
+  padding: 12px 14px;
+  margin: 12px 0;
+}
+
+.pitch-notice-banner.is-my-turn {
+  background: #fef3c7;
+  border-color: #d97706;
+  box-shadow: 0 0 0 2px rgba(217, 119, 6, 0.25);
+}
+
+.pitch-notice-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.pitch-tag {
+  font-size: 10.5px;
+  font-weight: 700;
+  background: #d97706;
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.pitch-clock-text {
+  font-size: 14px;
+  color: #b45309;
+  font-weight: 800;
+}
+
+.pitch-clock-number {
+  font-size: 17px;
+  font-weight: 800;
+}
+
+.pitch-notice-banner p {
+  font-size: 12.5px;
+  color: #78350f;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.pitch-ready-hint {
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin: 10px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pitch-ready-tag {
+  font-size: 10px;
+  font-weight: 700;
+  background: #2563eb;
+  color: #fff;
+  padding: 2px 6px;
+  border-radius: 5px;
+  white-space: nowrap;
+}
+
+.pitch-ready-hint p {
+  font-size: 12px;
+  color: #1e40af;
+  margin: 0;
+  line-height: 1.45;
+}
+
+.order-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+
+.order-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
+}
+
+.order-buttons-group {
+  display: flex;
+  gap: 5px;
+  flex: 1;
+}
+
+.order-btn {
+  flex: 1;
+  padding: 6px 4px;
+  font-size: 11.5px;
+  font-weight: 600;
+  background: #f5f4f0;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--muted);
+  transition: all 0.15s ease;
+}
+
+.order-btn.active, .order-btn[aria-pressed="true"] {
+  background: #7c3aed !important;
+  color: #fff !important;
+  border-color: #6d28d9 !important;
+  font-weight: 700;
+}
+
+.jury-tag-pill.is-order {
+  background: #ede9fe;
+  color: #6b21a8;
+  border: 1px solid #ddd6fe;
+}
+
+.board-cq-stats {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.board-cq-total {
+  font-size: 11px;
+  color: var(--muted);
+  font-family: ui-monospace, monospace;
+}
+
+/* 6. Compact Reveal Header & Dist Chips */
+.reveal-header-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.reveal-location {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.reveal-header-tension {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+}
+
+.reveal-header-tension strong {
+  font-family: ui-monospace, monospace;
+  font-size: 15px;
+}
+
+.dist-mini-chip {
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 8px;
+  font-size: 11.5px;
+  background: #f5f4ef;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  margin-right: 4px;
+  margin-bottom: 4px;
+  transition: all 0.15s ease;
+}
+
+.dist-mini-chip.active {
+  background: #1c1917;
+  color: #fff;
+  border-color: #1c1917;
+}
+
+.dist-mini-chip.active b {
+  color: #fff;
+}
+
+/* 7. Jury 3-Stage Workflow Styles */
+.jury-stage-banner {
+  border-radius: 14px;
+  padding: 13px 16px;
+  margin: 12px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.stage-banner-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.stage-tag {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  background: #64748b;
+  color: #fff;
+}
+
+.stage-tag.active {
+  background: #d97706;
+  color: #fff;
+}
+
+.stage-tag.done {
+  background: #16a34a;
+  color: #fff;
+}
+
+.stage-progress-tag, .stage-unlocked-status {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--muted);
+}
+
+.stage-unlocked-status {
+  color: #16a34a;
+}
+
+.jury-stage-banner.stage-waiting {
+  background: #f8fafc;
+  border: 1.5px solid #cbd5e1;
+  color: #334155;
+}
+
+.jury-stage-banner.stage-waiting strong {
+  font-size: 13.5px;
+  color: #1e293b;
+}
+
+.jury-stage-banner.stage-waiting p {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.jury-stage-banner.stage-pitching {
+  background: #fffbeb;
+  border: 2px solid #f59e0b;
+  color: #78350f;
+  box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.2);
+}
+
+.jury-stage-banner.stage-pitching strong {
+  font-size: 14px;
+  color: #92400e;
+}
+
+.skip-pitch-btn {
+  background: #d97706;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  transition: background 0.15s ease;
+}
+
+.skip-pitch-btn:hover {
+  background: #b45309;
+}
+
+.jury-stage-banner.stage-unlocked {
+  background: #f0fdf4;
+  border: 2px solid #22c55e;
+  color: #14532d;
+  box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.2);
+}
+
+.jury-stage-banner.stage-unlocked strong {
+  font-size: 14.5px;
+  color: #15803d;
+}
+
+.jury-stage-banner.stage-unlocked p {
+  font-size: 12px;
+  color: #166534;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.card-locked {
+  border-style: dashed !important;
+  opacity: 0.78;
+}
+
+.pitch-ready-hint.is-done {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.pitch-ready-hint.is-done p {
+  color: #166534;
+}
+
 
 
 

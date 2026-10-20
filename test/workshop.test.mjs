@@ -238,5 +238,65 @@ test('jury chip cards affect CQ scores on reveal and round 1 choices trigger rou
   await host('reset', { confirm: 'RESET' });
 });
 
+test('pitch timer triggers on 4 submissions or host action; jury orders persist and show on publicBoard', async () => {
+  const joins = await Promise.all(Array.from({ length: 5 }, (_, i) => request('join', { name: `進階組員${i + 1}`, group: i + 1 })));
+  const cookies = joins.map(r => r.cookie);
+
+  await host('start', { seconds: 120 });
+  const started = (await host()).data;
+  assert.equal(started.pitch, null);
+
+  // Host can trigger pitch for a specific group
+  const pitchRes = await host('pitch', { group: 2, seconds: 30 });
+  assert.equal(pitchRes.status, 200);
+  const pitchHostState = (await host()).data;
+  assert.equal(pitchHostState.pitch?.group, 2);
+  assert.ok(pitchHostState.pitch?.deadline > Date.now());
+
+  // Host can stop pitch
+  await host('pitch', { group: 'stop' });
+  assert.equal((await host()).data.pitch, null);
+
+  // Groups 1, 2, 3 vote
+  for (let i = 1; i <= 3; i++) {
+    await request('vote', { choice: 'B', epoch: started.epoch, roundIndex: 0 }, cookies[i - 1]);
+  }
+  // Not all 4 voted yet, pitch shouldn't be auto-triggered
+  assert.equal((await host()).data.pitch, null);
+
+  // Group 4 votes -> all 4 submitted -> triggers automatic 30s pitch
+  await request('vote', { choice: 'C', epoch: started.epoch, roundIndex: 0 }, cookies[3]);
+  const autoPitchState = (await host()).data;
+  assert.equal(autoPitchState.pitch?.group, 'all');
+  assert.ok(autoPitchState.pitch?.deadline > Date.now());
+
+  // Group 5 sets jury rankings and jury orders
+  const juryRankRes = await request('jury-rank', {
+    rankings: { 1: 'empathy', 2: 'neutral', 3: 'empathy', 4: 'veto' },
+    orders: { 1: 2, 2: 1, 3: 4, 4: 3 },
+    epoch: started.epoch,
+    roundIndex: 0
+  }, cookies[4]);
+  assert.equal(juryRankRes.status, 200);
+
+  // Host reveals -> pitch is cleared, juryOrders appear in publicBoard
+  await host('reveal', {});
+  const hostReveal = (await host()).data;
+  assert.equal(hostReveal.pitch, null);
+  assert.equal(hostReveal.juryOrders[2], 1);
+  assert.equal(hostReveal.juryOrders[1], 2);
+
+  // Member view check
+  const memberReveal = (await request('state', undefined, cookies[0])).data;
+  assert.equal(memberReveal.pitch, null);
+  assert.ok(Array.isArray(memberReveal.publicBoard));
+  const pbGroup2 = memberReveal.publicBoard.find(g => g.id === 2);
+  assert.equal(pbGroup2.juryOrder, 1);
+  const pbGroup1 = memberReveal.publicBoard.find(g => g.id === 1);
+  assert.equal(pbGroup1.juryOrder, 2);
+
+  await host('reset', { confirm: 'RESET' });
+});
+
 
 

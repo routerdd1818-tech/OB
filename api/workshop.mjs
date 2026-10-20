@@ -76,6 +76,7 @@ function memberView(state,member) {
   const cqVal = group.cq ?? 100;
   const jurySubmitted = state.jurySubmitted ? Boolean(state.jurySubmitted[state.round]) : false;
   const rk = state.juryRankings ? (state.juryRankings[state.round] || {}) : {};
+  const jOrders = state.juryOrders ? (state.juryOrders[state.round] || {}) : {};
   const jurySummary = jurySubmitted ? {
     empathyCount: Object.values(rk).filter(v => v === 'empathy').length,
     vetoCount: Object.values(rk).filter(v => v === 'veto').length
@@ -83,6 +84,7 @@ function memberView(state,member) {
   const publicBoard = revealed ? state.groups.slice(0, 4).map(g => {
     const r = state.results[state.round]?.[g.id];
     const rkVal = state.juryRankings?.[state.round]?.[g.id] || null;
+    const jOrder = state.juryOrders?.[state.round]?.[g.id] || null;
     return {
       id: g.id,
       cq: g.cq ?? 100,
@@ -92,6 +94,7 @@ function memberView(state,member) {
       juryBonus: r?.juryBonus ?? 0,
       actualDelta: r?.actualDelta ?? 0,
       juryRank: rkVal,
+      juryOrder: jOrder,
       juryVerdict: r?.juryVerdict || ''
     };
   }) : null;
@@ -104,10 +107,10 @@ function memberView(state,member) {
       const cascade = state.round >= 1 ? computeCascade(state.round, state.votes[state.round-1]?.[g.id]) : null;
       return { id:g.id, cq:gCq, submitted:Boolean(vote), choice:vote?vote.choice:null, proposal:vote?vote.proposal:null, title:opt?opt.title:null, text:opt?opt.text:null, blindspot:opt?opt.blindspot:null, consensus:vote?vote.consensus:null, cascade: cascade ? { type: cascade.type, badge: cascade.badge } : null };
     });
-    return { ...shared(state,true), member:{name:member.name,id:member.id,group:member.group,isRepresentative:true,isJury:true}, group:{id:5,cq:100,isJury:true,representativeName:member.name}, decisionGroups, juryRankings:state.juryRankings?(state.juryRankings[state.round]||{}):{}, jurySubmitted, jurySummary, publicBoard, optionsWithIntel:rounds[state.round].options, results:revealed?state.results[state.round]:null };
+    return { ...shared(state,true), member:{name:member.name,id:member.id,group:member.group,isRepresentative:true,isJury:true}, group:{id:5,cq:100,isJury:true,representativeName:member.name}, decisionGroups, juryRankings:state.juryRankings?(state.juryRankings[state.round]||{}):{}, juryOrders:jOrders, jurySubmitted, jurySummary, pitch:state.pitch||null, publicBoard, optionsWithIntel:rounds[state.round].options, results:revealed?state.results[state.round]:null };
   }
   const cascade = state.round >= 1 ? computeCascade(state.round, state.votes[state.round-1]?.[group.id]) : null;
-  return { ...shared(state,true), member:{name:member.name,id:member.id,group:member.group,isRepresentative:group.representative===member.id,isJury:false}, group:{id:group.id,cq:cqVal,isJury:false,representativeName:Object.values(state.participants).find(p=>p.id===group.representative)?.name || '尚未指定'}, vote:state.votes[state.round][group.id] || null, cascade, jurySubmitted, jurySummary, publicBoard, juryRank:(revealed&&state.juryRankings)?(state.juryRankings[state.round]?.[group.id]||null):null, result:revealed?state.results[state.round][group.id] || null:null };
+  return { ...shared(state,true), member:{name:member.name,id:member.id,group:member.group,isRepresentative:group.representative===member.id,isJury:false}, group:{id:group.id,cq:cqVal,isJury:false,representativeName:Object.values(state.participants).find(p=>p.id===group.representative)?.name || '尚未指定'}, vote:state.votes[state.round][group.id] || null, cascade, jurySubmitted, jurySummary, pitch:state.pitch||null, juryOrders:jOrders, publicBoard, juryRank:(revealed&&state.juryRankings)?(state.juryRankings[state.round]?.[group.id]||null):null, result:revealed?state.results[state.round][group.id] || null:null };
 }
 function hostView(state,req) {
   const revealed=['revealed','finished'].includes(state.phase);
@@ -119,7 +122,7 @@ function hostView(state,req) {
     empathyCount: Object.values(juryRankings).filter(v => v === 'empathy').length,
     vetoCount: Object.values(juryRankings).filter(v => v === 'veto').length
   } : null;
-  const result= { ...shared(state,false), completed:decisionVotes.length, decisionTotal:4, jurySubmitted, jurySummary, juryRankings, groups:state.groups.map(g=>{
+  const result= { ...shared(state,false), completed:decisionVotes.length, decisionTotal:4, jurySubmitted, jurySummary, juryRankings, juryOrders:state.juryOrders?(state.juryOrders[state.round]||{}):{}, pitch:state.pitch||null, groups:state.groups.map(g=>{
     const gCq = g.cq ?? 100;
     const cascade = (g.id<=4 && state.round>=1) ? computeCascade(state.round, state.votes[state.round-1]?.[g.id]) : null;
     return { ...g, cq:gCq, cascade: cascade ? { type: cascade.type, badge: cascade.badge, title: cascade.title } : null, count:Object.values(state.participants).filter(p=>p.group===g.id && p.expires>Date.now()).length, submitted:g.id===5?jurySubmitted:Boolean(votes[g.id]), members:Object.values(state.participants).filter(p=>p.group===g.id && p.expires>Date.now()).map(({id,name})=>({id,name}))};
@@ -214,6 +217,10 @@ export default async function handler(req,res) {
           if(!state.juryRankings) state.juryRankings=[{},{},{},{}];
           if(!state.jurySubmitted) state.jurySubmitted=[false,false,false,false];
           state.juryRankings[state.round]=body.rankings;
+          if(body.orders && typeof body.orders==='object') {
+            if(!state.juryOrders) state.juryOrders=[{},{},{},{}];
+            state.juryOrders[state.round]=body.orders;
+          }
           state.jurySubmitted[state.round]=true;
           return;
         }
@@ -230,17 +237,41 @@ export default async function handler(req,res) {
           if(!Array.isArray(body.consensus)||body.consensus.length!==3||body.consensus.some(v=>typeof v!=='boolean')) fail('請完成三方表態');
           if(body.consensus.includes(false)) choice='X';
         }
-        state.votes[state.round][user.group]={choice,proposal:body.choice,submittedBy:user.id,...(state.round===3?{consensus:body.consensus}:{})};return;
+        state.votes[state.round][user.group]={choice,proposal:body.choice,submittedBy:user.id,...(state.round===3?{consensus:body.consensus}:{})};
+        const allFourSubmitted = [1, 2, 3, 4].every(id => Boolean(state.votes[state.round]?.[id]));
+        if (allFourSubmitted) {
+          state.pitch = {
+            group: 'all',
+            deadline: Date.now() + 30000,
+            seconds: 30,
+            startedAt: Date.now()
+          };
+        }
+        return;
       }
       if(action==='start') {
         if(!['waiting','ready','voting'].includes(state.phase)) fail('本回合已揭曉或已結束',409);
         state.phase='voting';state.deadline=Date.now()+rounds[state.round].seconds*1000;state.remaining=null;
+        state.pitch = null;
       } else if(action==='timer') {
         if(state.phase!=='voting') fail('目前不是研討階段',409);
         if(state.deadline){state.remaining=Math.max(0,state.deadline-Date.now());state.deadline=null;}
         else{state.deadline=Date.now()+(state.remaining??rounds[state.round].seconds*1000);state.remaining=null;}
+      } else if(action==='pitch') {
+        if(body.group === 'stop') {
+          state.pitch = null;
+        } else {
+          const sec = Number(body.seconds) || 30;
+          state.pitch = {
+            group: body.group || 'all',
+            deadline: Date.now() + sec * 1000,
+            seconds: sec,
+            startedAt: Date.now()
+          };
+        }
       } else if(action==='reveal') {
         if(state.phase!=='voting') fail('本回合尚未開始或已揭曉',409);
+        state.pitch = null;
         const decisionSubmitted=Object.keys(state.votes[state.round]).filter(id=>Number(id)<=4).length;
         if(decisionSubmitted<4 && body.confirmIncomplete!==true) fail('仍有決策組別未提交，請確認後再揭曉',409);
         for(const group of state.groups){
@@ -288,6 +319,7 @@ export default async function handler(req,res) {
         state.phase='revealed';state.deadline=null;state.remaining=null;
       } else if(action==='next') {
         if(state.phase!=='revealed') fail('請先揭曉本回合',409);
+        state.pitch = null;
         if(state.round===3) state.phase='finished';else{state.round++;state.phase='ready';}
       } else if(action==='representative') {
         const member=Object.values(state.participants).find(p=>p.id===body.memberId&&p.expires>Date.now());

@@ -1,5 +1,5 @@
 import { $,esc,api,toast,status,scene,roundNav,tensionCard,dialogue,startClock,broadcastSync,listenSync,playRevealDrum,toggleSound,isSoundEnabled } from './common.js';
-let state=null,lastSignature='',selectedReview='B',busy=false,previousReveal='',confirmResolve;
+let state=null,lastSignature='',selectedReview='B',busy=false,previousReveal='',confirmResolve,boardSort='cq';
 function ask(title,text,label='確認'){const modal=$('#confirm-dialog');$('#confirm-title').textContent=title;$('#confirm-text').textContent=text;$('#confirm-yes').textContent=label;modal.showModal();return new Promise(resolve=>confirmResolve=resolve);}
 function closeConfirm(value){$('#confirm-dialog').close();confirmResolve?.(value);confirmResolve=null;}
 $('#confirm-yes').addEventListener('click',()=>closeConfirm(true));$('#confirm-no').addEventListener('click',()=>closeConfirm(false));$('#confirm-dialog').addEventListener('cancel',e=>{e.preventDefault();closeConfirm(false);});
@@ -29,24 +29,118 @@ function render(){
   
   document.querySelector('.host-controls')?.remove();const controls=document.createElement('footer');controls.className='host-controls';
   controls.innerHTML=`<div class="timer-wrap">${revealed?`<span class="clock">${String(state.roundIndex+1).padStart(2,'0')} / 04</span><span class="timer-label">${state.phase==='finished'?'課堂已完成':'本回合已揭曉'}</span>`:`<span class="clock" data-clock>--:--</span><div class="timer-label"><strong data-debate>${state.roundIndex===3?'三方結構化辯論':'小組研討時間'}</strong>${state.deadline?'倒數進行中':state.remaining!==null?'計時已暫停':'準備好，就開始'}</div>`}${state.phase==='voting'?`<button class="icon-button" data-host-action="timer" aria-label="${state.deadline?'暫停':'繼續'}計時">${state.deadline?'Ⅱ':'▷'}</button>`:''}</div><div class="control-right"><span class="control-note">${revealed?'每一個決策，都是一次理解的練習。':state.phase==='voting'?`第 1~4 組研討決策，第 5 組【${esc(r.juryRole?.short || '角色席')}】手握 2 張同理加成卡 (+10) 與 1 張踩雷否決卡 (-15)。`:`邀請學員掃碼加入，第 1~4 組為【${esc(r.juryRole?.counterpart || '決策組')}】，第 5 組為【${esc(r.juryRole?.short || '角色席')}】。`}</span>${state.phase==='finished'?'<button class="button secondary" id="finish-manage">課堂管理</button>':`<button class="button primary" data-host-action="${revealed?'next':state.phase==='voting'?'reveal':'start'}">${revealed?(state.roundIndex===3?'完成本次課堂':'進入下一回合'):state.phase==='voting'?'揭曉決策與 CQ 韌性':'開始本回合研討'} <span aria-hidden="true">${state.phase==='voting'?'↗':'→'}</span></button>`}</div>`;
-  document.body.append(controls);document.querySelectorAll('[data-host-action]').forEach(el=>el.addEventListener('click',()=>hostAction(el.dataset.hostAction)));$('#finish-manage')?.addEventListener('click',openManage);
-  document.querySelectorAll('[data-review]').forEach(el=>el.addEventListener('click',()=>{selectedReview=el.dataset.review;renderReview();}));if(revealed)renderReview();
+  document.body.append(controls);
+  document.querySelectorAll('[data-host-action]').forEach(el=>el.addEventListener('click',()=>hostAction(el.dataset.hostAction)));
+  $('#finish-manage')?.addEventListener('click',openManage);
+  document.querySelectorAll('[data-review]').forEach(el=>el.addEventListener('click',()=>{selectedReview=el.dataset.review;renderReview();}));
+  document.querySelectorAll('[data-sort]').forEach(el => el.addEventListener('click', () => {
+    boardSort = el.dataset.sort;
+    render();
+  }));
+  document.querySelectorAll('[data-pitch-group]').forEach(btn => btn.addEventListener('click', async () => {
+    const group = btn.dataset.pitchGroup;
+    try {
+      await api('pitch', { group, seconds: 30 }, 'host');
+      broadcastSync('host_action', { action: 'pitch', group, roundIndex: state.roundIndex });
+      await refresh();
+      toast(group === 'stop' ? '已停止 30 秒論述倒數' : group === 'all' ? '已啟動全體 30 秒論述倒數！' : `已啟動第 ${group} 組 30 秒論述倒數！`);
+    } catch(e) {
+      toast(e.message);
+    }
+  }));
+  if(revealed)renderReview();
 }
 
 function scenarioMarkup(){
   const r=state.round;
   const decisionGroups=state.groups.slice(0,4);
   const allDecisionDone=state.completed>=4;
-  return `<section class="scenario"><div class="scenario-copy"><div class="topic-row"><span class="topic-badge">ROUND ${String(state.roundIndex+1).padStart(2,'0')} · ${r.dimension}</span><span class="topic-location">${esc(r.location)}</span></div><p class="scenario-context">${esc(r.context)}</p></div>${dialogue(r)}</section><div class="question-prompt"><span class="prompt-badge">決策焦點</span><span class="prompt-text">${esc(r.prompt)}</span></div>
-  ${state.jurySubmitted && state.phase==='voting' ? `<div class="card jury-host-status-banner">
-    <span class="prompt-badge" style="background:#7c3aed;">第 5 組【${esc(r.juryRole?.short || '角色席')}】裁決就緒</span>
-    <p>已完成全班道具配發（${state.jurySummary?.empathyCount || 0} 張同理加成卡、${state.jurySummary?.vetoCount || 0} 張踩雷否決卡），揭曉時公開受獎對象！</p>
-  </div>` : ''}
-  ${allDecisionDone && state.phase==='voting' ? `<div class="card pitch-stage-callout">
-    <h2>全組已提交！進入【各組 30 秒申辯 ＆ 裁判發卡】</h2>
-    <p>請第 1~4 組依序向第 5 組【${esc(r.juryRole?.short || '角色席')}】申辯；第 5 組可發放同理心加成卡 (+10 CQ) 或文化踩雷否決卡 (-15 CQ)！</p>
-  </div>` : ''}
-  <section class="progress-card card" aria-label="全班投票進度"><div class="progress-intro"><div><h2>決策進度</h2><p>${state.phase==='voting'?(allDecisionDone?`請依序進行 30 秒申辯`:`各組討論提交中`):'學員加入後即可開始'}</p></div></div><div class="stat-number">${state.completed}<small>/ 4 組</small></div><div class="progress-groups">${decisionGroups.map(g=>`<div class="progress-group ${g.submitted?'done':''}"><span class="status-circle">${g.submitted?'✓':''}</span><span>第 ${g.id} 組 · ${g.submitted?'已鎖定':g.count?'討論中':'未加入'}${g.cascade?` <small class="cascade-mini">(${esc(g.cascade.badge)})</small>`:''}</span></div>`).join('')}<div class="progress-group jury-progress-group ${state.jurySubmitted?'done':''}"><span class="status-circle">${state.jurySubmitted?'✓':''}</span><span>第 5 組【${esc(r.juryRole?.short || '角色席')}】· ${state.jurySubmitted?'籌碼已鎖定':'審視中'}</span></div></div></section>`;
+  const now = Date.now() + (state.clockOffset || 0);
+  const isPitchActive = Boolean(state.pitch && state.pitch.deadline && state.pitch.deadline > now);
+  const isPitchExpired = Boolean(state.pitch && state.pitch.deadline && state.pitch.deadline <= now);
+
+  const showPitchCard = allDecisionDone || Boolean(state.pitch);
+
+  let pitchStatusText = '';
+  if (isPitchActive) {
+    pitchStatusText = state.pitch.group === 'all'
+      ? '全體 30 秒申辯論述中…'
+      : `第 ${state.pitch.group} 組 30 秒申辯論述中…`;
+  } else if (isPitchExpired || (allDecisionDone && !state.pitch)) {
+    pitchStatusText = '30 秒論述結束 · 請第 5 組完成最終排序與裁決';
+  } else {
+    pitchStatusText = '點選組別啟動 30 秒論述';
+  }
+
+  const pitchCardHtml = showPitchCard ? `
+    <div class="card pitch-timer-card ${isPitchActive ? 'is-active' : ''}">
+      <div class="pitch-timer-head">
+        <div>
+          <span class="eyebrow">30-SECOND PITCH TIMER</span>
+          <h2>全組已提交！進入【30 秒申辯論述時間】</h2>
+          <span class="pitch-status-note ${isPitchActive ? 'active-note' : ''}">${pitchStatusText}</span>
+        </div>
+        <div class="pitch-clock-display">
+          <span class="pitch-clock mono" data-pitch-clock>00:30</span>
+        </div>
+      </div>
+      <div class="pitch-actions-grid">
+        ${[1, 2, 3, 4].map(gid => {
+          const gSubmitted = state.groups[gid-1]?.submitted;
+          const isCur = state.pitch?.group === gid || state.pitch?.group === String(gid);
+          return `<button type="button" class="pitch-btn ${isCur ? 'active' : ''} ${gSubmitted ? 'is-submitted' : ''}" data-pitch-group="${gid}">
+            第 ${gid} 組 30s ${gSubmitted ? '✓' : ''}
+          </button>`;
+        }).join('')}
+        <button type="button" class="pitch-btn pitch-all-btn ${state.pitch?.group === 'all' ? 'active' : ''}" data-pitch-group="all">全體再加 30s</button>
+        <button type="button" class="pitch-btn pitch-stop-btn" data-pitch-group="stop">結束論述</button>
+      </div>
+    </div>` : '';
+
+  return `<div class="voting-stage-grid">
+    <div class="voting-left-col">
+      <section class="scenario-copy card">
+        <div class="topic-row">
+          <span class="topic-badge">ROUND ${String(state.roundIndex+1).padStart(2,'0')} · ${r.dimension}</span>
+          <span class="topic-location">${esc(r.location)}</span>
+        </div>
+        <p class="scenario-context">${esc(r.context)}</p>
+      </section>
+      ${dialogue(r)}
+      <div class="question-prompt">
+        <span class="prompt-badge">決策焦點</span>
+        <span class="prompt-text">${esc(r.prompt)}</span>
+      </div>
+    </div>
+    <div class="voting-right-col">
+      ${pitchCardHtml}
+
+      ${state.jurySubmitted && state.phase==='voting' ? `<div class="card jury-host-status-banner" style="margin: 0 0 12px;">
+        <span class="prompt-badge" style="background:#7c3aed;">第 5 組【${esc(r.juryRole?.short || '角色席')}】裁決就緒</span>
+        <p>已完成全班道具配發（${state.jurySummary?.empathyCount || 0} 張同理加成卡、${state.jurySummary?.vetoCount || 0} 張踩雷否決卡），揭曉時公開受獎對象！</p>
+      </div>` : ''}
+
+      <section class="progress-card card" aria-label="全班投票進度">
+        <div class="progress-intro">
+          <div>
+            <h2>決策進度</h2>
+            <p>${state.phase==='voting'?(allDecisionDone?`4 組已全數鎖定 · 請進行 30 秒申辯`:`各組討論提交中`):'學員加入後即可開始'}</p>
+          </div>
+          <div class="stat-number">${state.completed}<small>/ 4 組</small></div>
+        </div>
+        <div class="progress-groups">
+          ${decisionGroups.map(g=>`<div class="progress-group ${g.submitted?'done':''}">
+            <span class="status-circle">${g.submitted?'✓':''}</span>
+            <span>第 ${g.id} 組 · ${g.submitted?'已鎖定':g.count?'討論中':'未加入'}${g.cascade?` <small class="cascade-mini">(${esc(g.cascade.badge)})</small>`:''}</span>
+          </div>`).join('')}
+          <div class="progress-group jury-progress-group ${state.jurySubmitted?'done':''}">
+            <span class="status-circle">${state.jurySubmitted?'✓':''}</span>
+            <span>第 5 組【${esc(r.juryRole?.short || '角色席')}】· ${state.jurySubmitted?'籌碼已鎖定':'審視中'}</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>`;
 }
 
 function quadrantMatrixMarkup(){
@@ -64,9 +158,9 @@ function quadrantMatrixMarkup(){
   }).join('');
 
   return `<div class="quadrant-matrix-wrap">
-    <div class="section-heading" style="margin-bottom:8px;">
+    <div class="section-heading" style="margin-bottom:4px;">
       <h2>2×2 跨文化決策象限落點圖</h2>
-      <span>點擊座標點切換右側盲點解析</span>
+      <span>點擊座標點切換右側解析</span>
     </div>
     <div class="quadrant-axis-header">
       <span>▲ 平等賦權（專業自治 · 對等協作）</span>
@@ -81,65 +175,178 @@ function quadrantMatrixMarkup(){
       ${pointsHtml}
     </div>
     <div class="quadrant-axis-footer">
-      <span>◀ 任務導向（直接溝通）</span>
-      <span>▼ 階級控制（由上而下）</span>
-      <span>關係導向（高語境尊嚴） ▶</span>
+      <span>◀ 任務導向</span>
+      <span>▼ 階級控制</span>
+      <span>關係導向 ▶</span>
     </div>
   </div>`;
 }
 
 function resultsMarkup(){
   const r=state.round;
-  const values=Object.values(state.results);const current=values.length?Math.round(values.reduce((sum,r)=>sum+r.tension,0)/values.length*10)/10:null;
+  const values=Object.values(state.results);
+  const current=values.length?Math.round(values.reduce((sum,r)=>sum+r.tension,0)/values.length*10)/10:null;
   const reduction=current===null?0:Math.round((state.round.baseline-current)*10)/10;
-  const summary={baseline:state.round.baseline,tension:current,reduction,analysis:`${values.length} 組決策組的平均張力結果。${reduction>0?'對話張力獲得實質緩解；不同方案對信任與合作的深層影響，值得一起覆盤。':'目前的決策尚未讓衝突張力降溫；回到各方在意的風險與自尊，尋找合作切入點。'}`};
-  
-  return `${values.length?tensionCard(summary):'<section class="card waiting-card"><h2>本回合沒有已提交決策</h2><p>沒有可計算的決策平均張力，各組 CQ 維持原值。</p></section>'}<p class="result-question">ROUND ${state.roundIndex+1} · ${state.round.dimension} — ${esc(r.location)}</p><div class="results-layout"><section class="card">${quadrantMatrixMarkup()}<div class="group-results">${state.groups.slice(0,4).map(g=>{
-    const result=state.results[g.id];
-    const rk=state.juryRankings?.[g.id];
-    let rankBadge='';
-    if(rk==='empathy') rankBadge='同理心加成 (+10 CQ)';
-    else if(rk==='veto') rankBadge='文化踩雷否決 (-15 CQ)';
-    else if(rk==='neutral') rankBadge='中立觀察 (0 CQ)';
-    else if(rk){
-      if(state.roundIndex===3){
-        rankBadge=rk==='tier1'?'卓越雙贏 Tier 1':rk==='tier2'?'局部妥協 Tier 2':'嚴重破局 Tier 3';
-      }else{
-        rankBadge=`回饋：並列第 ${rk} 名`;
-      }
-    }
-    const delta = result?.actualDelta;
-    const baseDelta = result?.baseDelta ?? result?.cq;
-    const juryBonus = result?.juryBonus ?? 0;
-    return `<div class="group-result">第 ${g.id} 組<strong>方案 ${result?.id==='X'?'破局':result?.id||'—'}</strong>${rankBadge?`<span class="jury-rank-tag ${rk==='empathy'?'is-buff':rk==='veto'?'is-veto':''}">${rankBadge}</span>`:''}<small class="${delta<0?'negative-text':'positive-text'}">${result!==undefined?`${delta>0?'+':''}${delta} CQ${juryBonus?` (方案${baseDelta>0?'+':''}${baseDelta} / 裁判${juryBonus>0?'+':''}${juryBonus})`:''}`:'未提交'}</small></div>`;
-  }).join('')}<div class="group-result jury-group-result">第 5 組【${esc(r.juryRole?.short || '角色席')}】<strong>${state.jurySubmitted?'籌碼裁決已生效':'完成對話'}</strong><small class="positive-text">${esc(r.juryRole?.title || '角色對手席')}</small></div></div><div class="host-public-jury-board"><div class="section-heading" style="margin: 18px 0 10px;"><h2>第 5 組【${esc(r.juryRole?.short || '角色席')}】全班道具配發與裁決榜</h2><span>${esc(r.juryRole?.title || '角色對手席')}</span></div><div class="host-jury-board-grid">${state.groups.slice(0,4).map(g=>{
-    const result=state.results[g.id];
-    const rk=state.juryRankings?.[g.id];
-    let verdictLabel='';
-    let verdictClass='';
-    if(rk==='empathy' || result?.juryBonus > 0) {
-      verdictLabel='同理心加成 (+10 CQ)';
-      verdictClass='is-buff';
-    } else if(rk==='veto' || result?.juryBonus < 0) {
-      verdictLabel='文化踩雷否決 (-15 CQ)';
-      verdictClass='is-veto';
-    } else {
-      verdictLabel='中立觀察 (0 CQ)';
-      verdictClass='is-neutral';
-    }
-    return `<div class="host-jury-card ${verdictClass}"><div class="host-jury-card-head"><strong>第 ${g.id} 組</strong><span class="host-jury-delta ${result?.actualDelta>0?'positive-text':result?.actualDelta<0?'negative-text':''}">${result?.actualDelta!==undefined?`${result.actualDelta>0?'+':''}${result.actualDelta} CQ`:'—'}</span></div><div class="host-jury-choice">方案 ${result?.id==='X'?'破局':result?.id||'—'} · ${esc(result?.shortTitle || result?.title || '')}</div><div class="host-jury-badge-row"><span class="jury-tag-pill ${verdictClass}">${verdictLabel}</span></div></div>`;
-  }).join('')}</div></div></section><section class="card"><div class="section-heading"><h2>看見文化盲點（情境解密）</h2><span>選擇方案，展開覆盤</span></div><div class="review-tabs" role="tablist" aria-label="方案覆盤">${state.distribution.map(o=>`<button class="review-tab" role="tab" data-review="${o.id}" aria-selected="${selectedReview===o.id}" aria-controls="review-content">${o.id==='X'?'破局':'方案 '+o.id} (${o.count}組)</button>`).join('')}</div><div id="review-content" role="tabpanel" aria-live="polite"></div></section></div>`;
+
+  // Sort groups according to boardSort
+  const sortedGroups = state.groups.slice(0, 4).map(g => {
+    const res = state.results[g.id];
+    const rk = state.juryRankings?.[g.id];
+    const order = state.juryOrders?.[g.id] ?? 99;
+    return {
+      group: g,
+      res,
+      rk,
+      order,
+      totalCq: g.cq ?? 100,
+      actualDelta: res?.actualDelta ?? 0,
+      juryBonus: res?.juryBonus ?? 0
+    };
+  });
+
+  if (boardSort === 'cq') {
+    sortedGroups.sort((a, b) => b.totalCq - a.totalCq || a.group.id - b.group.id);
+  } else if (boardSort === 'delta') {
+    sortedGroups.sort((a, b) => b.actualDelta - a.actualDelta || a.group.id - b.group.id);
+  } else if (boardSort === 'jury') {
+    sortedGroups.sort((a, b) => (a.order - b.order) || (b.juryBonus - a.juryBonus) || a.group.id - b.group.id);
+  } else if (boardSort === 'id') {
+    sortedGroups.sort((a, b) => a.group.id - b.group.id);
+  }
+
+  return `
+    <div class="compact-reveal-header">
+      <div class="reveal-header-title">
+        <span class="topic-badge">ROUND ${String(state.roundIndex+1).padStart(2,'0')} · ${r.dimension}</span>
+        <span class="reveal-location">${esc(r.location)}</span>
+      </div>
+      <div class="reveal-header-tension">
+        <span>基準張力 <strong>${r.baseline}%</strong></span>
+        <i>→</i>
+        <span>平均決策張力 <strong class="${reduction > 0 ? 'positive-text' : 'negative-text'}">${current ?? r.baseline}%</strong></span>
+        <span class="pill ${reduction > 0 ? 'positive' : 'negative'}">${reduction > 0 ? `↓ 張力降 ${reduction} 點` : reduction < 0 ? `↑ 張力升 ${Math.abs(reduction)} 點` : '張力持平'}</span>
+      </div>
+    </div>
+
+    <div class="results-bento-grid">
+      <!-- Col 1: Matrix & Distribution -->
+      <section class="card bento-col bento-col-matrix">
+        ${quadrantMatrixMarkup()}
+        <div class="bento-dist-bar">
+          ${state.distribution.map(o => `
+            <span class="dist-mini-chip ${o.id === selectedReview ? 'active' : ''}" data-review="${o.id}">
+              <b>${o.id === 'X' ? '✕' : o.id}</b> ${esc(o.result?.shortTitle || o.title.slice(0,4))} <small>(${o.count}組)</small>
+            </span>
+          `).join('')}
+        </div>
+      </section>
+
+      <!-- Col 2: Central Leaderboard & Jury Showcase (Main Focus!) -->
+      <section class="card bento-col bento-col-leaderboard">
+        <div class="leaderboard-head">
+          <div class="eyebrow">GROUP RANKINGS & JURY VERDICTS</div>
+          <h2>全班決策排行 ＆ 第 5 組【${esc(r.juryRole?.short || '角色席')}】裁決榜</h2>
+          <div class="board-sort-tabs" role="tablist" aria-label="排行榜排序切換">
+            <button type="button" class="sort-tab ${boardSort==='cq'?'active':''}" data-sort="cq">依總 CQ 排名</button>
+            <button type="button" class="sort-tab ${boardSort==='delta'?'active':''}" data-sort="delta">依本輪得分</button>
+            <button type="button" class="sort-tab ${boardSort==='jury'?'active':''}" data-sort="jury">依第 5 組排序</button>
+            <button type="button" class="sort-tab ${boardSort==='id'?'active':''}" data-sort="id">依組別編號</button>
+          </div>
+        </div>
+
+        <div class="host-jury-board-list">
+          ${sortedGroups.map((item, idx) => {
+            const g = item.group;
+            const res = item.res;
+            const rk = item.rk;
+            const order = item.order;
+            const delta = item.actualDelta;
+            const totalCq = item.totalCq;
+            let verdictLabel = '';
+            let verdictClass = '';
+            if (rk === 'empathy' || res?.juryBonus > 0) {
+              verdictLabel = '同理心加成 (+10 CQ)';
+              verdictClass = 'is-buff';
+            } else if (rk === 'veto' || res?.juryBonus < 0) {
+              verdictLabel = '文化踩雷否決 (-15 CQ)';
+              verdictClass = 'is-veto';
+            } else {
+              verdictLabel = '中立觀察 (0 CQ)';
+              verdictClass = 'is-neutral';
+            }
+            return `
+              <div class="host-board-row rank-${idx+1} ${verdictClass}">
+                <div class="board-row-left">
+                  <span class="board-rank-badge rank-${idx+1}">第 ${idx+1} 名</span>
+                  <div class="board-team-info">
+                    <strong>第 ${g.id} 組</strong>
+                    <span class="board-opt-tag">方案 ${res?.id === 'X' ? '破局' : res?.id || '—'} · ${esc(res?.shortTitle || res?.title || '未提交')}</span>
+                  </div>
+                </div>
+                <div class="board-row-center">
+                  <span class="jury-order-tag">${order <= 4 ? `裁判排第 ${order} 名` : '未排名次'}</span>
+                  <span class="jury-tag-pill ${verdictClass}">${verdictLabel}</span>
+                </div>
+                <div class="board-row-right">
+                  <strong class="delta-val ${delta > 0 ? 'positive-text' : delta < 0 ? 'negative-text' : ''}">
+                    ${delta > 0 ? '+' : ''}${delta} CQ
+                  </strong>
+                  <span class="total-cq-val">總計 ${totalCq} CQ</span>
+                </div>
+              </div>
+            `;
+          }).join('')}
+          <div class="host-jury-seat-footer">
+            <span>第 5 組【${esc(r.juryRole?.short || '角色席')}】· ${esc(r.juryRole?.title || '角色對手席')}</span>
+            <span class="pill positive">道具裁決已全數生效</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Col 3: Review Deep Dive (Large Text) -->
+      <section class="card bento-col bento-col-review">
+        <div class="review-head-banner">
+          <div class="eyebrow">CULTURAL BLINDSPOT ANALYSIS</div>
+          <h2>看見文化盲點（情境解密）</h2>
+        </div>
+        <div class="review-tabs" role="tablist" aria-label="方案覆盤">
+          ${state.distribution.map(o => `
+            <button class="review-tab" role="tab" data-review="${o.id}" aria-selected="${selectedReview===o.id}" aria-controls="review-content">
+              ${o.id==='X'?'破局':'方案 '+o.id} · ${esc(o.result?.shortTitle || o.title.slice(0,4))}
+            </button>
+          `).join('')}
+        </div>
+        <div id="review-content" role="tabpanel" aria-live="polite"></div>
+      </section>
+    </div>
+  `;
 }
 
 function renderReview(){
   const entry=state.distribution.find(o=>o.id===selectedReview)||state.distribution[0];
+  if(!entry) return;
   selectedReview=entry.id;const r=entry.result;
   document.querySelectorAll('[data-review]').forEach(el=>{
     el.setAttribute('aria-selected',String(el.dataset.review===selectedReview));
     el.classList.toggle('is-active-point',el.dataset.review===selectedReview);
+    el.classList.toggle('active',el.dataset.review===selectedReview);
   });
   const q=r.quadrant;
-  $('#review-content').innerHTML=`<h3 class="review-verdict">${esc(r.verdict)}</h3>${q?`<div class="review-zone-badge">象限落點：${esc(q.zone)}</div>`:''}<p class="review-copy">${esc(r.analysis)}</p><div class="review-insight"><div class="eyebrow">BEYOND THE WORDS · 深層文化盲點</div><p class="review-copy">${esc(r.blindspot)}</p></div><div class="review-insight"><span class="pill ${r.reduction>0?'positive':'negative'}">${r.reduction>0?'↓ 張力降 '+r.reduction+' 個百分點':r.reduction<0?'↑ 張力升 '+Math.abs(r.reduction)+' 個百分點':'張力持平'}</span> <span class="pill ${r.cq>0?'positive':'negative'}">方案基礎 ${r.cq>0?'CQ +'+r.cq:'CQ '+r.cq}</span></div>`;
+  const contentEl = $('#review-content');
+  if(!contentEl) return;
+  contentEl.innerHTML=`
+    <div class="review-badge-row">
+      ${q?`<span class="review-zone-badge">象限落點：${esc(q.zone)}</span>`:''}
+      <span class="pill ${r.reduction>0?'positive':'negative'}">${r.reduction>0?'↓ 張力降 '+r.reduction+' 點':r.reduction<0?'↑ 張力升 '+Math.abs(r.reduction)+' 點':'張力持平'}</span>
+      <span class="pill ${r.cq>0?'positive':'negative'}">方案基礎 ${r.cq>0?'+'+r.cq:r.cq} CQ</span>
+    </div>
+    <h3 class="review-verdict">${esc(r.verdict)}</h3>
+    <p class="review-copy">${esc(r.analysis)}</p>
+    <div class="review-insight">
+      <div class="eyebrow">BEYOND THE WORDS · 深層文化盲點</div>
+      <p class="review-copy">${esc(r.blindspot)}</p>
+    </div>
+  `;
 }
 
 async function hostAction(action,extra={}){
@@ -275,4 +482,5 @@ listenSync(packet => {
 });
 
 async function poll(){await refresh();setTimeout(poll,document.hidden?5000:1500);}
+window.addEventListener('pitch-ended', () => { render(); });
 startClock(()=>state, { enableAudio: true });poll();
