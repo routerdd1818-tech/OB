@@ -74,6 +74,28 @@ function memberView(state,member) {
   const isJury=(member.group===5);
   const revealed=['revealed','finished'].includes(state.phase);
   const cqVal = group.cq ?? 100;
+  const jurySubmitted = state.jurySubmitted ? Boolean(state.jurySubmitted[state.round]) : false;
+  const rk = state.juryRankings ? (state.juryRankings[state.round] || {}) : {};
+  const jurySummary = jurySubmitted ? {
+    empathyCount: Object.values(rk).filter(v => v === 'empathy').length,
+    vetoCount: Object.values(rk).filter(v => v === 'veto').length
+  } : null;
+  const publicBoard = revealed ? state.groups.slice(0, 4).map(g => {
+    const r = state.results[state.round]?.[g.id];
+    const rkVal = state.juryRankings?.[state.round]?.[g.id] || null;
+    return {
+      id: g.id,
+      cq: g.cq ?? 100,
+      optionId: r?.id || null,
+      optionTitle: r?.title || null,
+      baseDelta: r?.baseDelta ?? r?.cq ?? 0,
+      juryBonus: r?.juryBonus ?? 0,
+      actualDelta: r?.actualDelta ?? 0,
+      juryRank: rkVal,
+      juryVerdict: r?.juryVerdict || ''
+    };
+  }) : null;
+
   if(isJury) {
     const decisionGroups=state.groups.slice(0,4).map(g=>{
       const vote=state.votes[state.round][g.id];
@@ -82,10 +104,10 @@ function memberView(state,member) {
       const cascade = state.round >= 1 ? computeCascade(state.round, state.votes[state.round-1]?.[g.id]) : null;
       return { id:g.id, cq:gCq, submitted:Boolean(vote), choice:vote?vote.choice:null, proposal:vote?vote.proposal:null, title:opt?opt.title:null, text:opt?opt.text:null, blindspot:opt?opt.blindspot:null, consensus:vote?vote.consensus:null, cascade: cascade ? { type: cascade.type, badge: cascade.badge } : null };
     });
-    return { ...shared(state,true), member:{name:member.name,id:member.id,group:member.group,isRepresentative:true,isJury:true}, group:{id:5,cq:100,isJury:true,representativeName:member.name}, decisionGroups, juryRankings:state.juryRankings?(state.juryRankings[state.round]||{}):{}, jurySubmitted:state.jurySubmitted?Boolean(state.jurySubmitted[state.round]):false, optionsWithIntel:rounds[state.round].options, results:revealed?state.results[state.round]:null };
+    return { ...shared(state,true), member:{name:member.name,id:member.id,group:member.group,isRepresentative:true,isJury:true}, group:{id:5,cq:100,isJury:true,representativeName:member.name}, decisionGroups, juryRankings:state.juryRankings?(state.juryRankings[state.round]||{}):{}, jurySubmitted, jurySummary, publicBoard, optionsWithIntel:rounds[state.round].options, results:revealed?state.results[state.round]:null };
   }
   const cascade = state.round >= 1 ? computeCascade(state.round, state.votes[state.round-1]?.[group.id]) : null;
-  return { ...shared(state,true), member:{name:member.name,id:member.id,group:member.group,isRepresentative:group.representative===member.id,isJury:false}, group:{id:group.id,cq:cqVal,isJury:false,representativeName:Object.values(state.participants).find(p=>p.id===group.representative)?.name || '尚未指定'}, vote:state.votes[state.round][group.id] || null, cascade, juryRank:(revealed&&state.juryRankings)?(state.juryRankings[state.round]?.[group.id]||null):null, result:revealed?state.results[state.round][group.id] || null:null };
+  return { ...shared(state,true), member:{name:member.name,id:member.id,group:member.group,isRepresentative:group.representative===member.id,isJury:false}, group:{id:group.id,cq:cqVal,isJury:false,representativeName:Object.values(state.participants).find(p=>p.id===group.representative)?.name || '尚未指定'}, vote:state.votes[state.round][group.id] || null, cascade, jurySubmitted, jurySummary, publicBoard, juryRank:(revealed&&state.juryRankings)?(state.juryRankings[state.round]?.[group.id]||null):null, result:revealed?state.results[state.round][group.id] || null:null };
 }
 function hostView(state,req) {
   const revealed=['revealed','finished'].includes(state.phase);
@@ -93,7 +115,11 @@ function hostView(state,req) {
   const decisionVotes=Object.keys(votes).filter(id=>Number(id)<=4);
   const jurySubmitted=state.jurySubmitted?Boolean(state.jurySubmitted[state.round]):false;
   const juryRankings=state.juryRankings?state.juryRankings[state.round]:{};
-  const result= { ...shared(state,false), completed:decisionVotes.length, decisionTotal:4, jurySubmitted, juryRankings, groups:state.groups.map(g=>{
+  const jurySummary=jurySubmitted ? {
+    empathyCount: Object.values(juryRankings).filter(v => v === 'empathy').length,
+    vetoCount: Object.values(juryRankings).filter(v => v === 'veto').length
+  } : null;
+  const result= { ...shared(state,false), completed:decisionVotes.length, decisionTotal:4, jurySubmitted, jurySummary, juryRankings, groups:state.groups.map(g=>{
     const gCq = g.cq ?? 100;
     const cascade = (g.id<=4 && state.round>=1) ? computeCascade(state.round, state.votes[state.round-1]?.[g.id]) : null;
     return { ...g, cq:gCq, cascade: cascade ? { type: cascade.type, badge: cascade.badge, title: cascade.title } : null, count:Object.values(state.participants).filter(p=>p.group===g.id && p.expires>Date.now()).length, submitted:g.id===5?jurySubmitted:Boolean(votes[g.id]), members:Object.values(state.participants).filter(p=>p.group===g.id && p.expires>Date.now()).map(({id,name})=>({id,name}))};
@@ -229,13 +255,13 @@ export default async function handler(req,res) {
             let juryVerdict='';
             if(rank==='empathy') {
               juryBonus=10;
-              juryVerdict='🌟 裁判頒發：同理心加成卡 (+10 CQ)';
+              juryVerdict='裁判頒發：同理心加成卡 (+10 CQ)';
             } else if(rank==='veto') {
               juryBonus=-15;
-              juryVerdict='⚡ 裁判舉牌：文化踩雷否決卡 (-15 CQ)';
+              juryVerdict='裁判舉牌：文化踩雷否決卡 (-15 CQ)';
             } else if(rank==='neutral') {
               juryBonus=0;
-              juryVerdict='⚖️ 裁判評定：中立觀察 (0 CQ)';
+              juryVerdict='裁判評定：中立觀察 (0 CQ)';
             } else if(rank!==undefined && rank!==null && rank!=='') {
               if(state.round===3) {
                 juryVerdict = rank==='tier1'?'卓越雙贏 (Tier 1)':rank==='tier2'?'局部妥協 (Tier 2)':'嚴重破局 (Tier 3)';

@@ -365,28 +365,29 @@
    ========================================================================== */
 .question-prompt {
   display: block !important;
-  background: #ffffff !important;
-  border: 2px solid var(--accent, #0071e3) !important;
-  border-radius: 16px !important;
-  padding: 18px 22px !important;
-  margin: 18px 0 22px !important;
-  box-shadow: 0 4px 20px rgba(0, 113, 227, 0.12) !important;
+  background: #fdfbf7 !important;
+  border: 1.5px solid rgba(60, 50, 40, 0.22) !important;
+  border-left: 5px solid var(--accent, #0071e3) !important;
+  border-radius: 14px !important;
+  padding: 16px 20px !important;
+  margin: 16px 0 20px !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03) !important;
 }
 
 .prompt-badge {
   display: inline-block;
   background: var(--accent, #0071e3);
   color: #ffffff;
-  font-size: 13px;
+  font-size: 12px;
   font-weight: 700;
-  padding: 4px 12px;
+  padding: 3px 10px;
   border-radius: 20px;
   margin-bottom: 8px;
   letter-spacing: 0.5px;
 }
 
 .prompt-title, .prompt-text {
-  font-size: 23px !important;
+  font-size: 21px !important;
   font-weight: 800 !important;
   line-height: 1.45 !important;
   color: var(--ink) !important;
@@ -394,32 +395,30 @@
 }
 
 .mobile-main .question-prompt {
-  padding: 18px 18px !important;
-  margin: 16px 0 20px !important;
-  border-width: 2px !important;
+  padding: 16px 18px !important;
+  margin: 14px 0 18px !important;
 }
 
 .mobile-main .prompt-title {
-  font-size: 21px !important;
+  font-size: 19px !important;
   font-weight: 800 !important;
   line-height: 1.45 !important;
 }
 
 .host-main .question-prompt {
-  padding: 24px 32px !important;
-  border-width: 3px !important;
-  border-radius: 20px !important;
-  margin: 22px 0 28px !important;
+  padding: 20px 26px !important;
+  border-radius: 16px !important;
+  margin: 18px 0 22px !important;
 }
 
 .host-main .prompt-badge {
-  font-size: 16px !important;
-  padding: 6px 16px !important;
-  margin-bottom: 12px !important;
+  font-size: 14px !important;
+  padding: 4px 12px !important;
+  margin-bottom: 10px !important;
 }
 
 .host-main .prompt-text {
-  font-size: 32px !important;
+  font-size: 26px !important;
   font-weight: 800 !important;
   line-height: 1.4 !important;
 }
@@ -536,41 +535,31 @@
 }
 
 /* ==========================================================================
-   Scenario Typography Balancing:
-   - Scenario Title ("同一個時程，不同的回應。") smaller
-   - Scenario Context ("併購後的第一次跨洋董事會...") larger and clearer
-   - Clean, professional case-study aesthetic (decluttered)
+   Scenario Card Framing & Typography Balancing:
+   - Scenario Context ("矽谷晶片大廠 Aether...") larger and clearer
+   - Framed cards for mobile-scenario & scenario-copy
    ========================================================================== */
 
-.mobile-scenario h1 {
-  font-size: 21px !important;
-  font-weight: 600 !important;
-  line-height: 1.4 !important;
-  color: var(--muted) !important;
-  margin: 10px 0 12px !important;
-  letter-spacing: -0.2px !important;
+.mobile-scenario, .scenario-copy {
+  background: #ffffff !important;
+  border: 1.5px solid rgba(60, 50, 40, 0.18) !important;
+  border-radius: 18px !important;
+  padding: 20px 22px !important;
+  box-shadow: 0 4px 14px rgba(70, 55, 40, 0.05) !important;
+  margin-bottom: 16px !important;
 }
 
 .mobile-scenario .scenario-context {
-  font-size: 19.5px !important;
+  font-size: 17.5px !important;
   line-height: 1.8 !important;
   color: #24211e !important;
   font-weight: 500 !important;
-  margin: 12px 0 16px !important;
+  margin: 10px 0 0 !important;
   letter-spacing: 0.2px !important;
 }
 
-.scenario h1 {
-  font-size: 30px !important;
-  font-weight: 600 !important;
-  line-height: 1.35 !important;
-  color: var(--muted) !important;
-  margin-bottom: 12px !important;
-  letter-spacing: -0.5px !important;
-}
-
 .scenario-context {
-  font-size: 24px !important;
+  font-size: 22px !important;
   line-height: 1.85 !important;
   color: #24211e !important;
   font-weight: 500 !important;
@@ -843,10 +832,31 @@
   margin-bottom: 14px;
 }
 
+.quadrant-axis-header {
+  text-align: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-bottom: 6px;
+  letter-spacing: 0.5px;
+}
+
+.quadrant-axis-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  margin-top: 6px;
+  padding: 0 8px;
+  letter-spacing: 0.5px;
+}
+
 .quadrant-board {
   position: relative;
   width: 100%;
-  height: 290px;
+  height: 320px;
   border-radius: 16px;
   border: 1.5px solid var(--line);
   overflow: hidden;
@@ -857,7 +867,7 @@
 }
 
 .q-cell {
-  padding: 12px 14px;
+  padding: 10px 12px;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -865,25 +875,26 @@
 }
 
 .q-cell .q-zone-name {
-  font-size: 12px;
+  font-size: 11.5px;
   font-weight: 800;
   letter-spacing: 0.5px;
 }
 
 .q-cell small {
-  font-size: 10.5px;
+  font-size: 10px;
   color: var(--muted);
   margin-top: 2px;
+  opacity: 0.85;
 }
 
 .q-tl {
-  background: rgba(245, 158, 11, 0.06);
+  background: rgba(245, 158, 11, 0.05);
   border-right: 1px dashed rgba(60, 50, 40, 0.18);
   border-bottom: 1px dashed rgba(60, 50, 40, 0.18);
 }
 
 .q-tr {
-  background: rgba(21, 128, 61, 0.10);
+  background: rgba(21, 128, 61, 0.08);
   border-bottom: 1px dashed rgba(60, 50, 40, 0.18);
   align-items: flex-end;
   text-align: right;
@@ -894,7 +905,7 @@
 }
 
 .q-bl {
-  background: rgba(185, 28, 28, 0.08);
+  background: rgba(185, 28, 28, 0.06);
   border-right: 1px dashed rgba(60, 50, 40, 0.18);
   justify-content: flex-end;
 }
@@ -904,29 +915,11 @@
 }
 
 .q-br {
-  background: rgba(180, 83, 9, 0.06);
+  background: rgba(180, 83, 9, 0.05);
   justify-content: flex-end;
   align-items: flex-end;
   text-align: right;
 }
-
-.q-axis-label {
-  position: absolute;
-  font-size: 10px;
-  font-weight: 800;
-  letter-spacing: 0.8px;
-  color: #57534e;
-  background: rgba(255, 255, 255, 0.86);
-  padding: 2px 8px;
-  border-radius: 6px;
-  pointer-events: none;
-  z-index: 2;
-}
-
-.q-label-top { top: 6px; left: 50%; transform: translateX(-50%); }
-.q-label-bottom { bottom: 6px; left: 50%; transform: translateX(-50%); }
-.q-label-left { left: 8px; top: 50%; transform: translateY(-50%); }
-.q-label-right { right: 8px; top: 50%; transform: translateY(-50%); }
 
 .matrix-point {
   position: absolute;
@@ -935,11 +928,11 @@
   background: #ffffff;
   border: 2px solid var(--ink);
   border-radius: 999px;
-  padding: 4px 10px 4px 5px;
+  padding: 3px 8px 3px 4px;
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  gap: 5px;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.12);
   cursor: pointer;
   transition: transform 0.18s ease, box-shadow 0.18s ease;
   white-space: nowrap;
@@ -972,20 +965,287 @@
 }
 
 .matrix-node-letter {
-  width: 24px;
-  height: 24px;
+  width: 20px;
+  height: 20px;
   border-radius: 50%;
   display: grid;
   place-items: center;
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 800;
   flex-shrink: 0;
 }
 
 .matrix-node-title {
-  font-size: 11.5px;
+  font-size: 11px;
   font-weight: 700;
   color: var(--ink);
+}
+
+.matrix-group-badges {
+  display: inline-flex;
+  gap: 3px;
+  margin-left: 2px;
+}
+
+.matrix-g-pill {
+  background: #1c1917;
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 5px;
+  border-radius: 5px;
+}
+
+.matrix-point.is-best .matrix-g-pill {
+  background: #15803d;
+}
+
+.review-zone-badge {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 8px;
+  background: var(--oat);
+  color: var(--ink);
+  margin-bottom: 10px;
+}
+
+/* ==========================================================================
+   Public Jury Showcase Boards & Dynamic Status
+   ========================================================================== */
+.jury-status-banner {
+  background: #fbf9ff;
+  border: 1.5px solid rgba(124, 58, 237, 0.3);
+  border-radius: 14px;
+  padding: 13px 16px;
+  margin: 14px 0;
+}
+
+.jury-status-banner-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 5px;
+}
+
+.jury-status-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: #7c3aed;
+  color: #fff;
+}
+
+.jury-status-banner p {
+  font-size: 12.5px;
+  color: #5b21b6;
+  margin: 0;
+  line-height: 1.55;
+}
+
+.jury-host-status-banner {
+  background: #fbf9ff;
+  border: 2px solid rgba(124, 58, 237, 0.35);
+  border-radius: 16px;
+  padding: 16px 22px;
+  margin: 16px 0;
+}
+
+.jury-host-status-banner strong {
+  display: block;
+  font-size: 17px;
+  color: #5b21b6;
+  margin: 6px 0 4px;
+}
+
+.jury-host-status-banner p {
+  font-size: 14px;
+  color: #4c1d95;
+  margin: 0;
+}
+
+/* Public Jury Board (Participant Mobile Reveal) */
+.public-jury-board {
+  padding: 20px;
+  margin: 18px 0;
+  border: 1.5px solid rgba(60, 50, 40, 0.16);
+  border-radius: 18px;
+}
+
+.public-jury-board h2 {
+  font-size: 17px;
+  font-weight: 700;
+  margin: 6px 0 14px;
+}
+
+.public-board-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.public-board-item {
+  background: #fbfaf8;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  transition: all 0.15s ease;
+}
+
+.public-board-item.is-me {
+  background: #f5f8f3;
+  border-color: #a7cf9b;
+  box-shadow: 0 2px 8px rgba(57, 114, 75, 0.08);
+}
+
+.board-item-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+}
+
+.board-group-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.me-pill {
+  font-size: 10px;
+  font-weight: 700;
+  background: #39724b;
+  color: #fff;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.board-cq-delta {
+  font-family: "SF Mono", ui-monospace, monospace;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.board-item-details {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--muted);
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.board-option {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.board-score-calc {
+  font-size: 11px;
+  color: var(--faint);
+}
+
+.board-verdict-row {
+  margin-top: 8px;
+  padding-top: 6px;
+  border-top: 1px dashed var(--line);
+}
+
+.jury-tag-pill {
+  display: inline-block;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 6px;
+  background: var(--oat);
+  color: var(--muted);
+}
+
+.jury-tag-pill.is-buff {
+  background: #e6f6ec;
+  color: #15803d;
+  border: 1px solid #a7e1bd;
+}
+
+.jury-tag-pill.is-veto {
+  background: #fdecec;
+  color: #b91c1c;
+  border: 1px solid #f5b5b5;
+}
+
+.jury-tag-pill.is-neutral {
+  background: #f3f0e8;
+  color: #57534e;
+  border: 1px solid #e0dad0;
+}
+
+/* Host Public Jury Board */
+.host-public-jury-board {
+  margin-top: 18px;
+  padding-top: 16px;
+  border-top: 1.5px solid var(--line);
+}
+
+.host-jury-board-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 900px) {
+  .host-jury-board-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.host-jury-card {
+  background: #faf8f3;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.host-jury-card.is-buff {
+  background: #f0fdf4;
+  border-color: #86efac;
+}
+
+.host-jury-card.is-veto {
+  background: #fef2f2;
+  border-color: #fca5a5;
+}
+
+.host-jury-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.host-jury-delta {
+  font-family: "SF Mono", ui-monospace, monospace;
+  font-size: 13.5px;
+  font-weight: 800;
+}
+
+.host-jury-choice {
+  font-size: 11.5px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.host-jury-badge-row {
+  margin-top: 4px;
 }
 
 .matrix-group-badges {

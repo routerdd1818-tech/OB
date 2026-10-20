@@ -57,7 +57,7 @@ function render(){
     ? `<div class="mobile-identity"><div class="identity-bar"><div class="identity-pill"><span class="identity-name">${esc(member.name)}</span> <span aria-hidden="true">｜</span> 第 5 組 · ${esc(r.juryRole?.short || '角色席')}</div><button type="button" class="switch-group-btn" id="open-switch-group" aria-label="更換組別">換組</button><span class="rep-tag jury-tag">${esc(r.juryRole?.title || '跨文化角色席')}</span></div><div class="mobile-health"><span class="health-label">角色席</span><div class="health-track"><div class="health-fill" style="width:100%; background:var(--accent,#7c3aed);"></div></div><span class="cq-value">JURY<small> 角色對手席</small></span></div></div>`
     : `<div class="mobile-identity"><div class="identity-bar"><div class="identity-pill"><span class="identity-name">${esc(member.name)}</span> <span aria-hidden="true">｜</span> 第 ${member.group} 組 (${esc(r.juryRole?.counterpart || '決策組')})</div><button type="button" class="switch-group-btn" id="open-switch-group" aria-label="更換組別">換組</button><span class="rep-tag">${member.isRepresentative?'本組決策代表':'與夥伴一起思考'}</span></div><div class="mobile-health"><span class="health-label">團隊 CQ 韌性值</span><div class="health-track" role="progressbar" aria-label="本組 CQ 韌性值" aria-valuenow="${cq}" aria-valuemin="0" aria-valuemax="100"><div class="health-fill ${cqClass}" style="width:${cq}%"></div></div><span class="cq-value">${cq}<small>/ 100 CQ</small></span></div></div>`;
 
-  $('#app').innerHTML=`${identityBar}${roundNav(state.roundIndex)}${state.phase==='finished'?'<div class="finished-banner">四回合探索完成！</div>':''}<section class="mobile-scenario"><div class="topic-row"><span class="topic-badge">ROUND ${String(state.roundIndex+1).padStart(2,'0')} · ${r.dimension}</span><span class="topic-location">${esc(r.location)}</span></div><h1>${esc(r.title)}</h1><p class="scenario-context">${esc(r.context)}</p></section>${revealed?tensionCard(state.result||state.results?.[1],true):''}${dialogue(r)}<div class="question-prompt"><span class="prompt-badge">決策焦點</span><div class="prompt-title">${esc(r.prompt)}</div></div>
+  $('#app').innerHTML=`${identityBar}${roundNav(state.roundIndex)}${state.phase==='finished'?'<div class="finished-banner">四回合探索完成！</div>':''}<section class="mobile-scenario"><div class="topic-row"><span class="topic-badge">ROUND ${String(state.roundIndex+1).padStart(2,'0')} · ${r.dimension}</span><span class="topic-location">${esc(r.location)}</span></div><p class="scenario-context">${esc(r.context)}</p></section>${revealed?tensionCard(state.result||state.results?.[1],true):''}${dialogue(r)}<div class="question-prompt"><span class="prompt-badge">決策焦點</span><div class="prompt-title">${esc(r.prompt)}</div></div>
   ${revealed ? (member.isJury?juryResultMarkup():resultMarkup()) : (member.isJury?juryVotingMarkup():votingMarkup())}`;
 
   document.querySelector('.mobile-action')?.remove();
@@ -111,11 +111,11 @@ function render(){
       }
       const otherVals = Object.entries(juryRankings).filter(([k])=>Number(k)!==tid).map(([,v])=>v);
       if(rank==='empathy' && otherVals.filter(v=>v==='empathy').length >= 2) {
-        toast('🌟 「同理心加成卡 (+10 CQ)」每回合最多發放 2 張！');
+        toast('「同理心加成卡 (+10 CQ)」每回合最多發放 2 張！');
         return;
       }
       if(rank==='veto' && otherVals.filter(v=>v==='veto').length >= 1) {
-        toast('⚡ 「文化踩雷否決卡 (-15 CQ)」每回合限用 1 張！');
+        toast('「文化踩雷否決卡 (-15 CQ)」每回合限用 1 張！');
         return;
       }
       juryRankings[tid]=rank;
@@ -140,7 +140,16 @@ function render(){
 function votingMarkup(){
   const hasVoted = Boolean(state.vote?.choice);
   const c = state.cascade;
+  const juryAlert = state.jurySubmitted ? `<div class="jury-status-banner">
+    <div class="jury-status-banner-head">
+      <span class="jury-status-tag">角色席動態</span>
+      <strong>第 5 組【角色席】已完成全班道具配發</strong>
+    </div>
+    <p>發出 ${state.jurySummary?.empathyCount||0} 張同理心加成卡、${state.jurySummary?.vetoCount||0} 張文化踩雷否決卡，揭曉時公開對象！</p>
+  </div>` : '';
   return `<div class="mobile-timer"><span class="timer-label" data-debate>${state.roundIndex===3?'三方協商辯論':'小組研討時間'}</span><span class="clock" data-clock>--:--</span></div>
+
+  ${juryAlert}
 
   ${c?`<div class="cascade-banner ${c.type==='buff'?'is-buff':'is-penalty'}">
     <div class="cascade-head"><span class="cascade-badge">${esc(c.badge)}</span><strong>${esc(c.title)}</strong></div>
@@ -198,8 +207,8 @@ function juryVotingMarkup(){
       <h3>實質籌碼賦權 · 申辯裁決卡</h3>
       <p class="muted" style="margin:4px 0 10px; font-size:13px;">聆聽第 1～4 組申辯後，分派本回合籌碼卡（直接加扣該組 CQ 分數）：</p>
       <div class="jury-quota-bar">
-        <span class="quota-pill empathy-pill">🌟 同理心加成 (+10 CQ)：剩餘 <strong id="quota-empathy">${Math.max(0, 2 - empUsed)} / 2 張</strong></span>
-        <span class="quota-pill veto-pill">⚡ 文化踩雷否決 (-15 CQ)：剩餘 <strong id="quota-veto">${Math.max(0, 1 - vetoUsed)} / 1 張</strong></span>
+        <span class="quota-pill empathy-pill">同理心加成 (+10 CQ)：剩餘 <strong id="quota-empathy">${Math.max(0, 2 - empUsed)} / 2 張</strong></span>
+        <span class="quota-pill veto-pill">文化踩雷否決 (-15 CQ)：剩餘 <strong id="quota-veto">${Math.max(0, 1 - vetoUsed)} / 1 張</strong></span>
       </div>
     </div>
     <div class="jury-cards-list">
@@ -211,9 +220,9 @@ function juryVotingMarkup(){
           ${opt?`<div class="eval-body"><strong>${esc(opt.title)}</strong><p>${esc(opt.text)}</p></div>`:''}
           <div class="eval-controls">
             <div class="chip-buttons-group">
-              <button type="button" class="chip-btn empathy-btn" data-jury-team="${g.id}" data-rank="empathy" aria-pressed="${currentRank==='empathy'}" ${juryLocked?'disabled':''}>🌟 同理心加成 (+10 CQ)</button>
-              <button type="button" class="chip-btn neutral-btn" data-jury-team="${g.id}" data-rank="neutral" aria-pressed="${currentRank==='neutral'}" ${juryLocked?'disabled':''}>⚖️ 中立觀察 (0 CQ)</button>
-              <button type="button" class="chip-btn veto-btn" data-jury-team="${g.id}" data-rank="veto" aria-pressed="${currentRank==='veto'}" ${juryLocked?'disabled':''}>⚡ 文化踩雷否決 (-15 CQ)</button>
+              <button type="button" class="chip-btn empathy-btn" data-jury-team="${g.id}" data-rank="empathy" aria-pressed="${currentRank==='empathy'}" ${juryLocked?'disabled':''}>同理心加成 (+10 CQ)</button>
+              <button type="button" class="chip-btn neutral-btn" data-jury-team="${g.id}" data-rank="neutral" aria-pressed="${currentRank==='neutral'}" ${juryLocked?'disabled':''}>中立觀察 (0 CQ)</button>
+              <button type="button" class="chip-btn veto-btn" data-jury-team="${g.id}" data-rank="veto" aria-pressed="${currentRank==='veto'}" ${juryLocked?'disabled':''}>文化踩雷否決 (-15 CQ)</button>
             </div>
           </div>
         </div>`;
@@ -241,7 +250,38 @@ function resultMarkup(){
     </div>
     <div class="cq-summary"><span>團隊 CQ 韌性值 ${cqBefore} → ${cqAfter}<br><small>${delta>0?'決策與說服展現高度文化同理心，有效守護跨國信任！':delta===0?'CQ 韌性維持持平。':'決策觸碰深層文化盲點，團隊信任受損。'}</small></span><strong class="${delta>=0?'positive-text':'negative-text'}">${delta>0?'+':''}${delta} CQ</strong></div>
     <div class="review-insight"><div class="eyebrow">文化盲點 · 重新看見</div><p>${esc(result.blindspot)}</p></div>
-  </section>`;
+  </section>
+
+  ${state.publicBoard ? `<section class="card public-jury-board">
+    <div class="eyebrow">PUBLIC SHOWCASE · 全班決策 ＆ 第 5 組道具配發公開榜</div>
+    <h2>全班各組決策 ＆ 第 5 組道具配發公開榜</h2>
+    <div class="public-board-list">
+      ${state.publicBoard.map(g => {
+        const isMe = g.id === state.member.group;
+        const bonus = g.juryBonus ?? 0;
+        let verdictTag = '';
+        if (g.juryRank === 'empathy' || bonus > 0) verdictTag = '<span class="jury-tag-pill is-buff">同理心加成 (+10 CQ)</span>';
+        else if (g.juryRank === 'veto' || bonus < 0) verdictTag = '<span class="jury-tag-pill is-veto">文化踩雷否決 (-15 CQ)</span>';
+        else if (g.juryRank === 'neutral') verdictTag = '<span class="jury-tag-pill is-neutral">中立觀察 (0 CQ)</span>';
+        else if (g.juryVerdict) verdictTag = `<span class="jury-tag-pill">${esc(g.juryVerdict)}</span>`;
+        return `<div class="public-board-item ${isMe ? 'is-me' : ''}">
+          <div class="board-item-header">
+            <div class="board-group-title">
+              <strong>第 ${g.id} 組</strong>${isMe ? ' <span class="me-pill">本組</span>' : ''}
+            </div>
+            <span class="board-cq-delta ${g.actualDelta > 0 ? 'positive-text' : g.actualDelta < 0 ? 'negative-text' : ''}">
+              ${g.actualDelta > 0 ? '+' : ''}${g.actualDelta} CQ
+            </span>
+          </div>
+          <div class="board-item-details">
+            <span class="board-option">方案 ${g.optionId === 'X' ? '破局' : g.optionId || '—'} · ${esc(g.optionTitle || '未提交')}</span>
+            <span class="board-score-calc">(基礎 ${g.baseDelta > 0 ? '+' : ''}${g.baseDelta} / 道具 ${g.juryBonus > 0 ? '+' : ''}${g.juryBonus})</span>
+          </div>
+          ${verdictTag ? `<div class="board-verdict-row">${verdictTag}</div>` : ''}
+        </div>`;
+      }).join('')}
+    </div>
+  </section>` : ''}`;
 }
 
 function juryResultMarkup(){
@@ -255,7 +295,7 @@ function juryResultMarkup(){
         const delta=res?.actualDelta;
         const baseDelta=res?.baseDelta ?? res?.cq;
         const juryBonus=res?.juryBonus ?? 0;
-        let rkLabel = res?.juryVerdict || (rk==='empathy'?'🌟 同理心加成 (+10 CQ)':rk==='veto'?'⚡ 文化踩雷否決 (-15 CQ)':rk==='neutral'?'⚖️ 中立觀察 (0 CQ)':rk?`說服回饋：第 ${rk} 名`:'未評定');
+        let rkLabel = res?.juryVerdict || (rk==='empathy'?'同理心加成 (+10 CQ)':rk==='veto'?'文化踩雷否決 (-15 CQ)':rk==='neutral'?'中立觀察 (0 CQ)':rk?`說服回饋：第 ${rk} 名`:'未評定');
         return `<div class="jury-summary-row">
           <div>
             <strong>第 ${g.id} 組</strong> · 方案 ${res?.id||'—'} ${baseDelta!==undefined?`<small class="muted">(方案 ${baseDelta>0?'+':''}${baseDelta}${juryBonus?` / 裁判 ${juryBonus>0?'+':''}${juryBonus}`:''})</small>`:''}
