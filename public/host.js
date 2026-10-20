@@ -128,14 +128,17 @@ function scenarioMarkup(){
           </div>
           <div class="stat-number">${state.completed}<small>/ 4 組</small></div>
         </div>
-        <div class="progress-groups">
-          ${decisionGroups.map(g=>`<div class="progress-group ${g.submitted?'done':''}">
-            <span class="status-circle">${g.submitted?'✓':''}</span>
-            <span>第 ${g.id} 組 · ${g.submitted?'已鎖定':g.count?'討論中':'未加入'}${g.cascade?` <small class="cascade-mini">(${esc(g.cascade.badge)})</small>`:''}</span>
+        <div class="progress-chips-row">
+          ${decisionGroups.map(g=>`<div class="progress-chip ${g.submitted?'is-done':g.count?'is-active':''}">
+            <span class="chip-dot"></span>
+            <span class="chip-name">第 ${g.id} 組</span>
+            <span class="chip-status">${g.submitted?'已鎖定':g.count?'討論中':'未加入'}</span>
+            ${g.cascade?`<small class="cascade-mini">(${esc(g.cascade.badge)})</small>`:''}
           </div>`).join('')}
-          <div class="progress-group jury-progress-group ${state.jurySubmitted?'done':''}">
-            <span class="status-circle">${state.jurySubmitted?'✓':''}</span>
-            <span>第 5 組【${esc(r.juryRole?.short || '角色席')}】· ${state.jurySubmitted?'籌碼已鎖定':'審視中'}</span>
+          <div class="progress-chip is-jury ${state.jurySubmitted?'is-done':''}">
+            <span class="chip-dot"></span>
+            <span class="chip-name">第 5 組</span>
+            <span class="chip-status">${state.jurySubmitted?'已鎖定':'審視中'}</span>
           </div>
         </div>
       </section>

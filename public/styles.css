@@ -2146,6 +2146,147 @@ body.clean-stage .host-main {
   color: #166534;
 }
 
+/* ==========================================================================
+   Progress Card Optimization - Compact Horizontal Chips (方案 A)
+   ========================================================================== */
+.progress-card {
+  padding: 14px 18px !important;
+  margin-top: 8px !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  align-items: stretch !important;
+}
+
+.progress-intro {
+  display: flex !important;
+  align-items: baseline !important;
+  justify-content: space-between !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+.progress-intro h2 {
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  margin: 0 0 2px 0 !important;
+  display: inline-block;
+}
+
+.progress-intro p {
+  font-size: 11px !important;
+  color: var(--faint) !important;
+  margin: 0 !important;
+  display: inline-block;
+  margin-left: 8px;
+}
+
+.progress-intro .stat-number {
+  font-size: 22px !important;
+  line-height: 1 !important;
+}
+
+.progress-intro .stat-number small {
+  font-size: 12px !important;
+}
+
+.progress-chips-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+.progress-chip {
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  padding: 5px 10px !important;
+  border-radius: 8px !important;
+  background: #f8f7f3 !important;
+  border: 1px solid var(--line) !important;
+  font-size: 11.5px !important;
+  color: var(--muted) !important;
+  white-space: nowrap !important;
+  line-height: 1.2 !important;
+}
+
+.progress-chip .chip-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  border: 1.5px dashed #b5ae9f;
+  background: transparent;
+  flex-shrink: 0;
+}
+
+.progress-chip .chip-name {
+  font-weight: 600;
+  color: var(--ink);
+}
+
+.progress-chip .chip-status {
+  color: var(--faint);
+}
+
+/* 狀態樣式：討論中 / 有人加入 */
+.progress-chip.is-active {
+  background: #fdfaf3 !important;
+  border-color: #ebdcb9 !important;
+}
+.progress-chip.is-active .chip-dot {
+  border-style: solid;
+  border-color: #d49a3d;
+  background: #d49a3d;
+}
+.progress-chip.is-active .chip-status {
+  color: #926315;
+  font-weight: 500;
+}
+
+/* 狀態樣式：已就緒 / 已鎖定 */
+.progress-chip.is-done {
+  background: #f1f6ed !important;
+  border-color: #d1e2cb !important;
+}
+.progress-chip.is-done .chip-dot {
+  border: none;
+  background: #39724b;
+}
+.progress-chip.is-done .chip-status {
+  color: #39724b;
+  font-weight: 600;
+}
+
+/* 第 5 組專屬 (Jury) */
+.progress-chip.is-jury {
+  background: rgba(124, 58, 237, 0.05) !important;
+  border-color: rgba(124, 58, 237, 0.25) !important;
+}
+.progress-chip.is-jury .chip-dot {
+  border-color: #7c3aed;
+}
+.progress-chip.is-jury .chip-name {
+  color: #7c3aed;
+}
+.progress-chip.is-jury .chip-status {
+  color: #7c3aed;
+}
+.progress-chip.is-jury.is-done {
+  background: rgba(124, 58, 237, 0.1) !important;
+  border-color: rgba(124, 58, 237, 0.4) !important;
+}
+.progress-chip.is-jury.is-done .chip-dot {
+  border: none;
+  background: #7c3aed;
+}
+.progress-chip.is-jury.is-done .chip-status {
+  color: #7c3aed;
+  font-weight: 600;
+}
+
+
 
 
 
