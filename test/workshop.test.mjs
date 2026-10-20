@@ -38,8 +38,7 @@ test('five groups join independently; groups 1-4 decision and group 5 jury',asyn
     assert.equal(data.member.group,i+1);
     assert.equal(data.member.isRepresentative,true);
     assert.equal(data.member.isJury,false);
-    assert.equal(data.group.anger,25);
-    assert.equal(data.group.cq,25);
+    assert.equal(data.group.cq,100);
     assert.equal('groups' in data,false);
     assert.equal('count' in data.group,false);
     assert.equal('cq' in data.round.options[0],false);
@@ -99,10 +98,11 @@ test('votes can be updated before reveal, reveal is applied once, and stale vote
   assert.equal((await host('reveal',{})).status,200);
   const afterReveal=(await host()).data;
   assert.equal(afterReveal.results[1].tension,35);
-  assert.equal(afterReveal.groups[0].anger,10);
-  assert.equal(afterReveal.results[1].actualDelta,-15);
+  assert.equal(afterReveal.groups[0].cq,100);
+  assert.equal(afterReveal.results[1].actualDelta,0); // capped at 100
   assert.equal(afterReveal.results[4].tension,92);
-  assert.equal(afterReveal.groups[3].anger,70);
+  assert.equal(afterReveal.groups[3].cq,70);
+  assert.equal(afterReveal.results[4].actualDelta,-30);
   assert.equal((await host('reveal',{})).status,409);
   assert.equal((await request('vote',{choice:'D',epoch:before.epoch,roundIndex:0},memberCookies[0])).status,409);
   assert.equal((await request('state',undefined,memberCookies[0])).data.result.tension,35);
@@ -119,7 +119,7 @@ test('pause/resume uses shared server deadlines and incomplete reveal needs expl
   await request('vote',{choice:'C',epoch:state.epoch,roundIndex:1},memberCookies[0]);
   await request('jury-rank',{rankings:{1:1},epoch:state.epoch,roundIndex:1},memberCookies[4]);
   assert.equal((await host('reveal',{confirmIncomplete:true})).status,200);
-  state=(await host()).data;assert.equal(state.groups[0].anger,0);
+  state=(await host()).data;assert.equal(state.groups[0].cq,100);
   await host('next',{});await host('start',{});await host('reveal',{confirmIncomplete:true});await host('next',{});
 });
 
@@ -142,7 +142,7 @@ test('representative transfer and reset preserve only host access',async()=>{
   assert.equal((await request('state',undefined,memberCookies[0])).data.member.isRepresentative,false);
   assert.equal((await host('reset',{confirm:'RESET'})).status,200);
   assert.equal((await request('state',undefined,memberCookies[0])).status,401);
-  const state=(await host()).data;assert.equal(state.phase,'waiting');assert.ok(state.groups.every(g=>g.anger===25&&g.count===0));
+  const state=(await host()).data;assert.equal(state.phase,'waiting');assert.ok(state.groups.every(g=>g.cq===100&&g.count===0));
 });
 
 test('all tension values match the requested matrix; answers are not in static client code',async()=>{
