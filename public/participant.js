@@ -38,17 +38,17 @@ function render(){
     ? `<div class="mobile-identity"><div class="identity-bar"><div class="identity-pill"><span class="identity-name">${esc(member.name)}</span> <span aria-hidden="true">｜</span> 第 5 組 · ${esc(r.juryRole?.short || '角色席')}</div><span class="rep-tag jury-tag">${esc(r.juryRole?.title || '跨文化角色席')}</span></div><div class="mobile-health"><span class="health-label">角色席</span><div class="health-track"><div class="health-fill" style="width:100%; background:var(--accent,#7c3aed);"></div></div><span class="cq-value">JURY<small> 角色對手席</small></span></div></div>`
     : `<div class="mobile-identity"><div class="identity-bar"><div class="identity-pill"><span class="identity-name">${esc(member.name)}</span> <span aria-hidden="true">｜</span> 第 ${member.group} 組 (${esc(r.juryRole?.counterpart || '決策組')})</div><span class="rep-tag">${member.isRepresentative?'本組決策代表':'與夥伴一起思考'}</span></div><div class="mobile-health"><span class="health-label">團隊 CQ 韌性值</span><div class="health-track" role="progressbar" aria-label="本組 CQ 韌性值" aria-valuenow="${cq}" aria-valuemin="0" aria-valuemax="100"><div class="health-fill ${cqClass}" style="width:${cq}%"></div></div><span class="cq-value">${cq}<small>/ 100 CQ</small></span></div></div>`;
 
-  $('#app').innerHTML=`${identityBar}${roundNav(state.roundIndex)}${state.phase==='finished'?'<div class="finished-banner">四回合探索完成，謝謝你為對話留出空間。</div>':''}<section class="mobile-scenario">${scene}<div class="topic-row"><span class="topic-badge">ROUND ${String(state.roundIndex+1).padStart(2,'0')} · ${r.dimension}</span><span class="topic-location">${esc(r.location)}</span></div><h1>${esc(r.title)}</h1><p class="scenario-context">${esc(r.context)}</p></section>${revealed?tensionCard(state.result||state.results?.[1],true):''}${dialogue(r)}<div class="question-prompt">${esc(r.prompt)}</div>
-  ${['waiting','ready'].includes(state.phase)?`<section class="card waiting-card"><span class="waiting-orbit" aria-hidden="true"></span><h2>先聽聽彼此的想法。</h2><p>等待簡報者開放本回合研討。<br>${member.isJury?`你是第 5 組代表，本回合扮演【${esc(r.juryRole?.title || '對手方席位')}】，稍後各組將向你們進行 30 秒申辯說服。`:member.isRepresentative?`你是本組代表，本回合扮演【${esc(r.juryRole?.counterpart || '決策代表')}】，稍後請提交決策，並準備${esc(r.juryRole?.pitchTarget || '向第 5 組申辯')}。`:`本組代表：${esc(state.group.representativeName)}`}</p></section>`:state.phase==='voting'?(member.isJury?juryVotingMarkup():votingMarkup()):(member.isJury?juryResultMarkup():resultMarkup())}
-  <p class="simulation-note">${revealed?'張力與 CQ 數值為課堂情境模型。<br>文化脈絡用於理解情境，不代表所有個人的行為。':member.isJury?`角色提示：你們扮演【${esc(r.juryRole?.short || '對手席')}】，請在各組申辯時從本方文化與立場審視並給予回饋！`:`重要提醒：本回合決策將影響團隊 CQ 韌性值！提交後請派代表準備 30 秒申辯說服第 5 組【${esc(r.juryRole?.short || '對手方')}】。`}</p>`;
+  $('#app').innerHTML=`${identityBar}${roundNav(state.roundIndex)}${state.phase==='finished'?'<div class="finished-banner">四回合探索完成！</div>':''}<section class="mobile-scenario"><div class="topic-row"><span class="topic-badge">ROUND ${String(state.roundIndex+1).padStart(2,'0')} · ${r.dimension}</span><span class="topic-location">${esc(r.location)}</span></div><h1>${esc(r.title)}</h1><p class="scenario-context">${esc(r.context)}</p></section>${revealed?tensionCard(state.result||state.results?.[1],true):''}${dialogue(r)}<div class="question-prompt"><span class="prompt-badge">🎯 本題決策焦點</span><div class="prompt-title">${esc(r.prompt)}</div></div>
+  ${revealed ? (member.isJury?juryResultMarkup():resultMarkup()) : (member.isJury?juryVotingMarkup():votingMarkup())}`;
 
   document.querySelector('.mobile-action')?.remove();
   const footer=document.createElement('footer');footer.className='mobile-action';
 
   if(member.isJury) {
-    footer.innerHTML=`<div class="mobile-action-inner">${state.phase==='voting'?`<p class="action-hint">${state.jurySubmitted?'回饋已送出，可隨時修改更新':'聆聽各組 30 秒申辯，提供跨文化觀點回饋'}</p><button id="submit-jury" class="button primary" type="button">${state.jurySubmitted?'更新角色回饋':'送出角色回饋'} <span aria-hidden="true">↗</span></button>`:`<div class="button secondary wide">${state.phase==='finished'?'本次課堂已完成':revealed?'回饋已揭曉 · 等待下一回合':'等待簡報者開放研討'}<span aria-hidden="true">${revealed?'✓':'◷'}</span></div>`}</div>`;
+    footer.innerHTML=`<div class="mobile-action-inner">${state.phase==='voting'?`<button id="submit-jury" class="button primary" type="button">${state.jurySubmitted?'更新裁決回饋':'送出裁決回饋'} <span aria-hidden="true">↗</span></button>`:`<div class="button secondary wide">${state.phase==='finished'?'本次課堂已完成':revealed?'回饋已揭曉 · 等待下一回合':'等待簡報者開放研討'}</div>`}</div>`;
   } else {
-    footer.innerHTML=`<div class="mobile-action-inner">${state.phase==='voting'?(member.isRepresentative?`<p class="action-hint">${state.vote?`已提交，請準備${esc(r.juryRole?.pitchTarget || '向第 5 組申辯說服')}`:'與組員達成共識後，由你提交'}</p><button id="submit-vote" class="button primary" type="button">${state.vote?'更新本組決策':'提交本組決策'} <span aria-hidden="true">↗</span></button>`:`<p class="action-hint">決策代表：${esc(state.group.representativeName)}</p><div class="button secondary wide">${state.vote?'本組已提交 · 請派代表準備申辯':'請與組員討論，由本組代表提交'}</div>`):`<div class="button secondary wide">${state.phase==='finished'?'本次課堂已完成':revealed?'本組結果已揭曉 · 等待下一回合':'等待簡報者開放研討'}<span aria-hidden="true">${revealed?'✓':'◷'}</span></div>`}</div>`;
+    const isWaiting = ['waiting','ready'].includes(state.phase);
+    footer.innerHTML=`<div class="mobile-action-inner">${revealed?`<div class="button secondary wide">${state.phase==='finished'?'本次課堂已完成':'本組結果已揭曉 · 等待下一回合'}<span aria-hidden="true">✓</span></div>`:isWaiting?`<button id="submit-vote" class="button primary" type="button">${state.vote?'已預選方案 '+state.vote.choice:'預選方案（等待開始）'} <span aria-hidden="true">↗</span></button>`:`<button id="submit-vote" class="button primary" type="button">${state.vote?'更新本組決策 ('+state.vote.choice+')':'提交本組決策'} <span aria-hidden="true">↗</span></button>`}</div>`;
   }
 
   document.body.append(footer);
@@ -69,85 +69,64 @@ function render(){
 }
 
 function votingMarkup(){
-  return `<div class="mobile-timer"><span class="timer-label" data-debate>${state.roundIndex===3?'三方結構化辯論':'小組研討時間'}</span><span class="clock" data-clock>--:--</span></div>
+  return `<div class="mobile-timer"><span class="timer-label" data-debate>${state.roundIndex===3?'三方協商辯論':'小組研討時間'}</span><span class="clock" data-clock>--:--</span></div>
 
-  <div class="debate-tip-box">
-    📢 <strong>本回合重要規則</strong>：第 1~4 組扮演<strong>【${esc(state.round.juryRole?.counterpart || '決策小組')}】</strong>，決策方案將直接影響<strong>【團隊 CQ 韌性值】</strong>（最佳方案 +20 CQ，不慎踩中文化禁忌將重扣 15~35 CQ）。送出決策後，請派代表準備 <strong>30 秒申辯</strong>，${esc(state.round.juryRole?.pitchTarget || '向第 5 組說明')}如何照顧其文化顧慮與面子！
-  </div>
-
-  ${state.vote?`<div class="submitted-banner pitch-ready-banner">
-    <div class="pitch-badge">✓ 本組已提交${state.vote.choice==='X'?'三方未達成共識':`方案 ${state.vote.choice}`}</div>
-    <strong style="display:block; margin-top:8px; font-size:14px;">🎤 請派代表準備 30 秒申辯說服【${esc(state.round.juryRole?.short || '第 5 組')}】！</strong>
-    <p>說明重點：為何選此方案？如何照顧【${esc(state.round.juryRole?.short || '對方')}】的面子與文化立場？</p>
+  ${state.vote?`<div class="submitted-banner">
+    <strong>✓ 本組已提交${state.vote.choice==='X'?'未達成協議':`方案 ${state.vote.choice}`}</strong>
+    <p>請派代表準備向【${esc(state.round.juryRole?.short || '第 5 組')}】說明</p>
   </div>`:''}
 
-  <div class="options-list" role="radiogroup" aria-label="本組決策方案">${state.round.options.map(o=>`<button type="button" class="option-card" role="radio" aria-checked="${selection===o.id}" data-choice="${o.id}" ${!state.member.isRepresentative?'disabled':''}><span class="letter">${o.id}</span><span><strong>${esc(o.title)}</strong><p>${esc(o.text)}</p></span></button>`).join('')}</div>
+  <div class="options-list" role="radiogroup" aria-label="本組決策方案">${state.round.options.map(o=>`<button type="button" class="option-card" role="radio" aria-checked="${selection===o.id}" data-choice="${o.id}"><span class="letter">${o.id}</span><span><strong>${esc(o.title)}</strong><p>${esc(o.text)}</p></span></button>`).join('')}</div>
 
-  ${state.roundIndex===3?`<section class="card debate-card"><div class="eyebrow">20s + 20s + 20s</div><h2>給三方各一次發言的機會。</h2><p class="muted">組內分配角色；可由一人兼任。代表記錄三方實際表態，任一方拒絕即為未達成協議。</p><div class="role-guide"><strong>總部</strong>：考量市場回應、時程與組織責任。<br><strong>東京</strong>：考量技術事實、專業尊嚴與品質。<br><strong>客戶</strong>：考量交付可信度、驗證與營運風險。</div>${['總部代表','東京代表','客戶代表'].map((name,i)=>`<div class="consensus-row"><span>${name}</span><div class="consensus-options"><button type="button" data-consensus="${i}" data-value="true" aria-pressed="${consensus[i]===true}" ${!state.member.isRepresentative?'disabled':''}>同意</button><button type="button" class="refuse" data-consensus="${i}" data-value="false" aria-pressed="${consensus[i]===false}" ${!state.member.isRepresentative?'disabled':''}>拒絕</button></div></div>`).join('')}</section>`:''}`;
+  ${state.roundIndex===3?`<section class="card debate-card"><div class="eyebrow">三方協商</div><h2>三方表態確認</h2><p class="muted">任一方拒絕即為未達成協議。</p>${['總部代表','東京代表','客戶代表'].map((name,i)=>`<div class="consensus-row"><span>${name}</span><div class="consensus-options"><button type="button" data-consensus="${i}" data-value="true" aria-pressed="${consensus[i]===true}">同意</button><button type="button" class="refuse" data-consensus="${i}" data-value="false" aria-pressed="${consensus[i]===false}">拒絕</button></div></div>`).join('')}</section>`:''}`;
 }
 
 function juryVotingMarkup(){
   const isRound4 = (state.roundIndex===3);
-  return `<div class="mobile-timer"><span class="timer-label">角色席監控與對話席</span><span class="clock" data-clock>--:--</span></div>
+  return `<div class="mobile-timer"><span class="timer-label">第 5 組角色席</span><span class="clock" data-clock>--:--</span></div>
 
   <section class="card jury-mission-card">
-    <div class="eyebrow">ROLEPLAY & DIALOGUE · 跨文化角色席</div>
-    <h2>🎭 本回合角色：${esc(state.round.juryRole?.title || '跨文化角色席')}</h2>
+    <div class="eyebrow">跨文化角色席</div>
+    <h2>🎭 角色：${esc(state.round.juryRole?.title || '角色席')}</h2>
     <p class="jury-mission-text">
-      <strong>【你們的立場與在乎點】：</strong>${esc(state.round.juryRole?.stance || '聆聽各組申辯，從本方文化與立場審視。')}<br><br>
-      各組選完方案後，將進行 <strong>30 秒申辯</strong> 向你們說服。請對照下方暗藏文化代價情報，審視各組是否真正照顧到你們的尊嚴與文化顧慮，並給予回饋評定：
+      <strong>【立場與顧慮】：</strong>${esc(state.round.juryRole?.stance || '聆聽各組申辯，從本方文化審視。')}
     </p>
-    <div class="jury-rules-legend">
-      ${isRound4 ? `
-        <div class="legend-item"><span class="pill positive">卓越雙贏 (Tier 1)</span>說服極佳 · 全面雙贏</div>
-        <div class="legend-item"><span class="pill muted">局部妥協 (Tier 2)</span>勉強妥協但留隱憂</div>
-        <div class="legend-item"><span class="pill negative">嚴重破局 (Tier 3)</span>激化矛盾導致破裂</div>
-      ` : `
-        <div class="legend-item"><span class="pill positive">第 1 名</span>說服極佳 · 成功平息顧慮</div>
-        <div class="legend-item"><span class="pill muted">第 2 名</span>輕微摩擦 · 大致過關</div>
-        <div class="legend-item"><span class="pill warning">第 3 名</span>說服不足 · 防衛未解</div>
-        <div class="legend-item"><span class="pill negative">第 4 名</span>嚴重觸雷 · 衝突激化</div>
-      `}
-    </div>
-    <div class="jury-rules-subnote">💡 支援同名次並列！此回饋將作為各組覆盤的重要文化鏡子。</div>
   </section>
 
   <section class="card jury-monitor-summary">
-    <div class="eyebrow">JURY LIVE MONITOR</div>
-    <h2>第 1~4 決策組提交動態</h2>
+    <div class="eyebrow">各組進度</div>
     <div class="jury-progress-chips">
-      ${state.decisionGroups.map(g=>`<span class="jury-chip ${g.submitted?'done':'wait'}">第 ${g.id} 組：${g.submitted?'已提交 ('+g.choice+')':'研討中…'}</span>`).join('')}
+      ${state.decisionGroups.map(g=>`<span class="jury-chip ${g.submitted?'done':'wait'}">第 ${g.id} 組：${g.submitted?'已選 '+g.choice:'討論中…'}</span>`).join('')}
     </div>
   </section>
 
   <section class="card jury-intel-card">
-    <div class="eyebrow">EXCLUSIVE DOSSIER · 角色專屬情報</div>
-    <h2>本回合方案暗藏文化代價（秘密情報）</h2>
+    <div class="eyebrow">情報解密</div>
+    <h2>方案暗藏文化代價</h2>
     <div class="jury-options-intel">
-      ${state.optionsWithIntel.map(o=>`<div class="intel-item"><div class="intel-head"><span class="letter">${o.id}</span><strong>${esc(o.title)}</strong></div><p class="intel-text">${esc(o.text)}</p><div class="intel-blindspot"><strong>【暗藏文化代價】：</strong>${esc(o.blindspot)}</div></div>`).join('')}
+      ${state.optionsWithIntel.map(o=>`<div class="intel-item"><div class="intel-head"><span class="letter">${o.id}</span><strong>${esc(o.title)}</strong></div><p class="intel-text">${esc(o.text)}</p><div class="intel-blindspot"><strong>【代價】：</strong>${esc(o.blindspot)}</div></div>`).join('')}
     </div>
   </section>
 
   <section class="jury-eval-section">
-    <div class="section-title"><h3>各組申辯說服回饋評定（支援同名次並列）</h3><span class="section-tip">聽完各組向你們的 30 秒申辯後點選回饋</span></div>
+    <div class="section-title"><h3>各組申辯回饋評定（可並列）</h3></div>
     <div class="jury-cards-list">
       ${state.decisionGroups.map(g=>{
         const opt = g.choice ? state.optionsWithIntel.find(o=>o.id===g.choice) : null;
         const currentRank = juryRankings[g.id];
         return `<div class="card jury-group-eval-card">
-          <div class="eval-head"><strong>第 ${g.id} 組</strong><span class="pill ${g.submitted?'positive':'muted'}">${g.submitted?'已選方案 '+g.choice:'等待提交中'}</span></div>
-          ${opt?`<div class="eval-body"><strong>${esc(opt.title)}</strong><p>${esc(opt.text)}</p><div class="eval-blindspot-box"><strong>審查要點（暗藏代價）：</strong>${esc(opt.blindspot)}</div></div>`:'<p class="muted">該組正在組內激烈研商中…</p>'}
+          <div class="eval-head"><strong>第 ${g.id} 組</strong><span class="pill ${g.submitted?'positive':'muted'}">${g.submitted?'方案 '+g.choice:'等待提交'}</span></div>
+          ${opt?`<div class="eval-body"><strong>${esc(opt.title)}</strong><p>${esc(opt.text)}</p></div>`:''}
           <div class="eval-controls">
-            <span class="control-label">${isRound4?'協商說服評價回饋：':'申辯說服回饋評定：'}</span>
             ${isRound4?`<div class="tier-buttons-group">
-              <button type="button" class="tier-btn" data-jury-team="${g.id}" data-rank="tier1" aria-pressed="${currentRank==='tier1'}">卓越雙贏 Tier 1<small>說服極佳</small></button>
-              <button type="button" class="tier-btn" data-jury-team="${g.id}" data-rank="tier2" aria-pressed="${currentRank==='tier2'}">局部妥協 Tier 2<small>勉強過關</small></button>
-              <button type="button" class="tier-btn" data-jury-team="${g.id}" data-rank="tier3" aria-pressed="${currentRank==='tier3'}">嚴重破局 Tier 3<small>協商失敗</small></button>
+              <button type="button" class="tier-btn" data-jury-team="${g.id}" data-rank="tier1" aria-pressed="${currentRank==='tier1'}">卓越雙贏 Tier 1</button>
+              <button type="button" class="tier-btn" data-jury-team="${g.id}" data-rank="tier2" aria-pressed="${currentRank==='tier2'}">局部妥協 Tier 2</button>
+              <button type="button" class="tier-btn" data-jury-team="${g.id}" data-rank="tier3" aria-pressed="${currentRank==='tier3'}">嚴重破局 Tier 3</button>
             </div>`:`<div class="rank-buttons-group">
-              <button type="button" class="rank-btn" data-jury-team="${g.id}" data-rank="1" aria-pressed="${currentRank===1||currentRank==='1'}">第 1 名<small>說服極佳</small></button>
-              <button type="button" class="rank-btn" data-jury-team="${g.id}" data-rank="2" aria-pressed="${currentRank===2||currentRank==='2'}">第 2 名<small>大致過關</small></button>
-              <button type="button" class="rank-btn" data-jury-team="${g.id}" data-rank="3" aria-pressed="${currentRank===3||currentRank==='3'}">第 3 名<small>說服不足</small></button>
-              <button type="button" class="rank-btn" data-jury-team="${g.id}" data-rank="4" aria-pressed="${currentRank===4||currentRank==='4'}">第 4 名<small>嚴重觸雷</small></button>
+              <button type="button" class="rank-btn" data-jury-team="${g.id}" data-rank="1" aria-pressed="${currentRank===1||currentRank==='1'}">第 1 名</button>
+              <button type="button" class="rank-btn" data-jury-team="${g.id}" data-rank="2" aria-pressed="${currentRank===2||currentRank==='2'}">第 2 名</button>
+              <button type="button" class="rank-btn" data-jury-team="${g.id}" data-rank="3" aria-pressed="${currentRank===3||currentRank==='3'}">第 3 名</button>
+              <button type="button" class="rank-btn" data-jury-team="${g.id}" data-rank="4" aria-pressed="${currentRank===4||currentRank==='4'}">第 4 名</button>
             </div>`}
           </div>
         </div>`;
@@ -220,6 +199,9 @@ async function submitVote(){
   });
 
   try{
+    if(!state.member.isRepresentative) {
+      try { await api('claim-rep',{},'member'); } catch(e){}
+    }
     await api('vote',{choice:selection,consensus,roundIndex:state.roundIndex,epoch:state.epoch});
     toast('本組代表決策已提交 ✓');
   }catch(e){

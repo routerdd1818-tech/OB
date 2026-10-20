@@ -360,3 +360,142 @@
   width: fit-content;
 }
 
+/* ==========================================================================
+   Question Prompt & Options Enhancement (Enlarged & De-cluttered)
+   ========================================================================== */
+.question-prompt {
+  display: block !important;
+  background: #ffffff !important;
+  border: 2px solid var(--accent, #0071e3) !important;
+  border-radius: 16px !important;
+  padding: 18px 22px !important;
+  margin: 18px 0 22px !important;
+  box-shadow: 0 4px 20px rgba(0, 113, 227, 0.12) !important;
+}
+
+.prompt-badge {
+  display: inline-block;
+  background: var(--accent, #0071e3);
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 20px;
+  margin-bottom: 8px;
+  letter-spacing: 0.5px;
+}
+
+.prompt-title, .prompt-text {
+  font-size: 23px !important;
+  font-weight: 800 !important;
+  line-height: 1.45 !important;
+  color: var(--ink) !important;
+  display: block !important;
+}
+
+.mobile-main .question-prompt {
+  padding: 18px 18px !important;
+  margin: 16px 0 20px !important;
+  border-width: 2px !important;
+}
+
+.mobile-main .prompt-title {
+  font-size: 21px !important;
+  font-weight: 800 !important;
+  line-height: 1.45 !important;
+}
+
+.host-main .question-prompt {
+  padding: 24px 32px !important;
+  border-width: 3px !important;
+  border-radius: 20px !important;
+  margin: 22px 0 28px !important;
+}
+
+.host-main .prompt-badge {
+  font-size: 16px !important;
+  padding: 6px 16px !important;
+  margin-bottom: 12px !important;
+}
+
+.host-main .prompt-text {
+  font-size: 32px !important;
+  font-weight: 800 !important;
+  line-height: 1.4 !important;
+}
+
+/* Option Cards - Enlarged, clean & interactive */
+.options-list {
+  display: grid;
+  gap: 14px;
+}
+
+.option-card {
+  background: #ffffff !important;
+  border: 2px solid var(--line) !important;
+  border-radius: 18px !important;
+  padding: 20px 18px !important;
+  display: flex !important;
+  gap: 16px !important;
+  text-align: left !important;
+  color: var(--ink) !important;
+  cursor: pointer !important;
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04) !important;
+  transition: all 0.18s ease-in-out !important;
+  min-height: 84px !important;
+}
+
+.option-card:hover {
+  border-color: #a3b899 !important;
+  background: #fbfbf9 !important;
+  transform: translateY(-1px);
+}
+
+.option-card .letter {
+  width: 40px !important;
+  height: 40px !important;
+  font-size: 19px !important;
+  font-weight: 800 !important;
+  border-radius: 10px !important;
+  background: var(--oat) !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--line) !important;
+  display: grid !important;
+  place-items: center !important;
+  flex-shrink: 0 !important;
+}
+
+.option-card strong {
+  display: block !important;
+  font-size: 19px !important;
+  font-weight: 800 !important;
+  line-height: 1.35 !important;
+  color: var(--ink) !important;
+  margin-bottom: 6px !important;
+}
+
+.option-card p {
+  font-size: 15px !important;
+  line-height: 1.65 !important;
+  color: var(--muted) !important;
+  margin: 0 !important;
+}
+
+.option-card[aria-checked="true"] {
+  border-color: #39724b !important;
+  background: #f2f7ef !important;
+  box-shadow: 0 0 0 3px rgba(57, 114, 75, 0.25) !important;
+}
+
+.option-card[aria-checked="true"] .letter {
+  background: #39724b !important;
+  color: #ffffff !important;
+  border-color: #39724b !important;
+}
+
+.option-card[aria-checked="true"] strong {
+  color: #275235 !important;
+}
+

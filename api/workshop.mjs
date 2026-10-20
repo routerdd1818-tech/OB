@@ -139,6 +139,10 @@ export default async function handler(req,res) {
     await mutate(state=>{
       const user=session(req,state,role);
       if(role==='member') {
+        if(action==='claim-rep') {
+          state.groups[user.group-1].representative=user.id;
+          return;
+        }
         if(action==='jury-rank') {
           if(user.group!==5) fail('只有第 5 組（裁判組）可進行評定裁決',403);
           if(state.phase!=='voting') fail('目前非評定階段',409);
