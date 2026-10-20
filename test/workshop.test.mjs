@@ -157,3 +157,23 @@ test('all tension values match the requested matrix; answers are not in static c
 test('cross-origin writes are rejected',async()=>{
   const response=await fetch(base+'/api/workshop?action=join',{method:'POST',headers:{origin:'https://other.example','content-type':'application/json'},body:JSON.stringify({name:'x',group:1})});assert.equal(response.status,403);
 });
+
+test('juryRole dynamically changes each round to match the background perspective', async () => {
+  const roundRoles = [
+    { title: '【公司方】東京研發團隊代表席', short: '公司方 · 東京團隊' },
+    { title: '【總部方】矽谷高層決策席', short: '總部方 · 矽谷高層' },
+    { title: '【公司方】東京第一線研發工程團隊', short: '公司方 · 東京工程師' },
+    { title: '【關鍵方】全球客戶與獨立董事審查席', short: '關鍵方 · 客戶與董事' }
+  ];
+  const { publicRound } = await import('../lib/rounds.mjs');
+  for (let i = 0; i < 4; i++) {
+    const pr = publicRound(i);
+    assert.ok(pr.juryRole, `Round ${i+1} must have juryRole`);
+    assert.equal(pr.juryRole.title, roundRoles[i].title);
+    assert.equal(pr.juryRole.short, roundRoles[i].short);
+    assert.ok(pr.juryRole.counterpart);
+    assert.ok(pr.juryRole.stance);
+    assert.ok(pr.juryRole.pitchTarget);
+  }
+});
+

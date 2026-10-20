@@ -35,12 +35,12 @@ function render(){
   const anger = state.group.anger ?? state.group.cq ?? 25;
   const angerClass = anger > 55 ? 'critical' : anger > 25 ? 'low' : '';
   const identityBar = member.isJury
-    ? `<div class="mobile-identity"><div class="identity-bar"><div class="identity-pill"><span class="identity-name">${esc(member.name)}</span> <span aria-hidden="true">｜</span> 第 5 組 · 裁判組</div><span class="rep-tag jury-tag">跨文化裁判席</span></div><div class="mobile-health"><span class="health-label">評定席</span><div class="health-track"><div class="health-fill" style="width:100%; background:var(--accent,#7c3aed);"></div></div><span class="cq-value">JURY<small> 裁判公正席</small></span></div></div>`
-    : `<div class="mobile-identity"><div class="identity-bar"><div class="identity-pill"><span class="identity-name">${esc(member.name)}</span> <span aria-hidden="true">｜</span> 第 ${member.group} 組</div><span class="rep-tag">${member.isRepresentative?'本組決策代表':'與夥伴一起思考'}</span></div><div class="mobile-health"><span class="health-label">溝通怒氣值</span><div class="health-track" role="progressbar" aria-label="本組溝通怒氣值" aria-valuenow="${anger}" aria-valuemin="0" aria-valuemax="100"><div class="health-fill ${angerClass}" style="width:${anger}%"></div></div><span class="cq-value">${anger}<small>/ 100 怒氣</small></span></div></div>`;
+    ? `<div class="mobile-identity"><div class="identity-bar"><div class="identity-pill"><span class="identity-name">${esc(member.name)}</span> <span aria-hidden="true">｜</span> 第 5 組 · ${esc(r.juryRole?.short || '裁判席')}</div><span class="rep-tag jury-tag">${esc(r.juryRole?.title || '跨文化角色席')}</span></div><div class="mobile-health"><span class="health-label">評定席</span><div class="health-track"><div class="health-fill" style="width:100%; background:var(--accent,#7c3aed);"></div></div><span class="cq-value">JURY<small> 角色評判席</small></span></div></div>`
+    : `<div class="mobile-identity"><div class="identity-bar"><div class="identity-pill"><span class="identity-name">${esc(member.name)}</span> <span aria-hidden="true">｜</span> 第 ${member.group} 組 (${esc(r.juryRole?.counterpart || '決策組')})</div><span class="rep-tag">${member.isRepresentative?'本組決策代表':'與夥伴一起思考'}</span></div><div class="mobile-health"><span class="health-label">溝通怒氣值</span><div class="health-track" role="progressbar" aria-label="本組溝通怒氣值" aria-valuenow="${anger}" aria-valuemin="0" aria-valuemax="100"><div class="health-fill ${angerClass}" style="width:${anger}%"></div></div><span class="cq-value">${anger}<small>/ 100 怒氣</small></span></div></div>`;
 
   $('#app').innerHTML=`${identityBar}${roundNav(state.roundIndex)}${state.phase==='finished'?'<div class="finished-banner">四回合探索完成，謝謝你為對話留出空間。</div>':''}<section class="mobile-scenario">${scene}<div class="topic-row"><span class="topic-badge">ROUND ${String(state.roundIndex+1).padStart(2,'0')} · ${r.dimension}</span><span class="topic-location">${esc(r.location)}</span></div><h1>${esc(r.title)}</h1><p class="scenario-context">${esc(r.context)}</p></section>${revealed?tensionCard(state.result||state.results?.[1],true):''}${dialogue(r)}<div class="question-prompt">${esc(r.prompt)}</div>
-  ${['waiting','ready'].includes(state.phase)?`<section class="card waiting-card"><span class="waiting-orbit" aria-hidden="true"></span><h2>先聽聽彼此的想法。</h2><p>等待簡報者開放本回合研討。<br>${member.isJury?'你是第 5 組裁判代表，手握怒氣裁決大權，稍後將依各組 30 秒申辯評定名次。':member.isRepresentative?'你是本組代表，稍後請提交共同決策，並準備向第 5 組申辯。':`本組代表：${esc(state.group.representativeName)}`}</p></section>`:state.phase==='voting'?(member.isJury?juryVotingMarkup():votingMarkup()):(member.isJury?juryResultMarkup():resultMarkup())}
-  <p class="simulation-note">${revealed?'張力數值為課堂情境模型；怒氣由第 5 組裁決決定。<br>文化脈絡用於理解情境，不代表所有個人的行為。':member.isJury?'裁判提示：本回合怒氣值增減完全由你們判定（支援並列同名次）！請依各組申辯說服力評定。':'重要提醒：本回合怒氣值完全由第 5 組判定！提交後請派代表準備 30 秒申辯說服裁判組。'}</p>`;
+  ${['waiting','ready'].includes(state.phase)?`<section class="card waiting-card"><span class="waiting-orbit" aria-hidden="true"></span><h2>先聽聽彼此的想法。</h2><p>等待簡報者開放本回合研討。<br>${member.isJury?`你是第 5 組代表，本回合扮演【${esc(r.juryRole?.title || '裁判席')}】，手握怒氣裁決大權，稍後將依各組 30 秒申辯評定名次。`:member.isRepresentative?`你是本組代表，本回合扮演【${esc(r.juryRole?.counterpart || '決策代表')}】，稍後請提交決策，並準備${esc(r.juryRole?.pitchTarget || '向第 5 組申辯')}。`:`本組代表：${esc(state.group.representativeName)}`}</p></section>`:state.phase==='voting'?(member.isJury?juryVotingMarkup():votingMarkup()):(member.isJury?juryResultMarkup():resultMarkup())}
+  <p class="simulation-note">${revealed?'張力數值為課堂情境模型；怒氣由第 5 組裁決決定。<br>文化脈絡用於理解情境，不代表所有個人的行為。':member.isJury?`裁判提示：你們扮演【${esc(r.juryRole?.short || '評判席')}】，怒氣值增減完全由你們判定（支援並列）！請依各組申辯說服力評定。`:`重要提醒：本回合怒氣值完全由第 5 組【${esc(r.juryRole?.short || '對手方')}】判定！提交後請派代表準備 30 秒申辯說服對方。`}</p>`;
 
   document.querySelector('.mobile-action')?.remove();
   const footer=document.createElement('footer');footer.className='mobile-action';
@@ -48,7 +48,7 @@ function render(){
   if(member.isJury) {
     footer.innerHTML=`<div class="mobile-action-inner">${state.phase==='voting'?`<p class="action-hint">${state.jurySubmitted?'裁決已送出，可隨時修改更新':'聆聽各組 30 秒申辯，評定名次直接決定怒氣'}</p><button id="submit-jury" class="button primary" type="button">${state.jurySubmitted?'更新裁判裁決':'提交裁判裁決'} <span aria-hidden="true">↗</span></button>`:`<div class="button secondary wide">${state.phase==='finished'?'本次課堂已完成':revealed?'裁決已揭曉 · 等待下一回合':'等待簡報者開放研討'}<span aria-hidden="true">${revealed?'✓':'◷'}</span></div>`}</div>`;
   } else {
-    footer.innerHTML=`<div class="mobile-action-inner">${state.phase==='voting'?(member.isRepresentative?`<p class="action-hint">${state.vote?'已提交，請準備向第 5 組申辯說服':'與組員達成共識後，由你提交'}</p><button id="submit-vote" class="button primary" type="button">${state.vote?'更新本組決策':'提交本組決策'} <span aria-hidden="true">↗</span></button>`:`<p class="action-hint">決策代表：${esc(state.group.representativeName)}</p><div class="button secondary wide">${state.vote?'本組已提交 · 請派代表準備申辯':'請與組員討論，由本組代表提交'}</div>`):`<div class="button secondary wide">${state.phase==='finished'?'本次課堂已完成':revealed?'本組結果已揭曉 · 等待下一回合':'等待簡報者開放研討'}<span aria-hidden="true">${revealed?'✓':'◷'}</span></div>`}</div>`;
+    footer.innerHTML=`<div class="mobile-action-inner">${state.phase==='voting'?(member.isRepresentative?`<p class="action-hint">${state.vote?`已提交，請準備${esc(r.juryRole?.pitchTarget || '向第 5 組申辯說服')}`:'與組員達成共識後，由你提交'}</p><button id="submit-vote" class="button primary" type="button">${state.vote?'更新本組決策':'提交本組決策'} <span aria-hidden="true">↗</span></button>`:`<p class="action-hint">決策代表：${esc(state.group.representativeName)}</p><div class="button secondary wide">${state.vote?'本組已提交 · 請派代表準備申辯':'請與組員討論，由本組代表提交'}</div>`):`<div class="button secondary wide">${state.phase==='finished'?'本次課堂已完成':revealed?'本組結果已揭曉 · 等待下一回合':'等待簡報者開放研討'}<span aria-hidden="true">${revealed?'✓':'◷'}</span></div>`}</div>`;
   }
 
   document.body.append(footer);
@@ -72,13 +72,13 @@ function votingMarkup(){
   return `<div class="mobile-timer"><span class="timer-label" data-debate>${state.roundIndex===3?'三方結構化辯論':'小組研討時間'}</span><span class="clock" data-clock>--:--</span></div>
 
   <div class="debate-tip-box">
-    📢 <strong>本回合重要規則</strong>：溝通怒氣值<strong>完全由第 5 組裁判評定</strong>！請在送出決策後，由代表準備 <strong>30 秒申辯</strong> 說服第 5 組。只要能說清楚如何化解文化風險，即使選了高風險方案也能獲得第 1 名平息怒氣（-15）！
+    📢 <strong>本回合角色對決</strong>：第 1~4 組扮演<strong>【${esc(state.round.juryRole?.counterpart || '決策小組')}】</strong>，溝通怒氣值<strong>完全由第 5 組【${esc(state.round.juryRole?.title || '評判席')}】評定</strong>！請在送出決策後，由代表準備 <strong>30 秒申辯</strong> 說服第 5 組。只要能說清楚如何化解對方的文化風險與面子顧慮，即使選了高風險方案也能獲得第 1 名平息怒氣（-15）！
   </div>
 
   ${state.vote?`<div class="submitted-banner pitch-ready-banner">
     <div class="pitch-badge">✓ 本組已提交${state.vote.choice==='X'?'三方未達成共識':`方案 ${state.vote.choice}`}</div>
-    <strong style="display:block; margin-top:8px; font-size:14px;">🎤 請派代表準備 30 秒申辯說服第 5 組！</strong>
-    <p>說明重點：為何選此方案？如何照顧對方的面子與文化感受？爭取第 5 組評定為第 1 名！</p>
+    <strong style="display:block; margin-top:8px; font-size:14px;">🎤 請派代表準備 30 秒申辯說服【${esc(state.round.juryRole?.short || '第 5 組')}】！</strong>
+    <p>說明重點：為何選此方案？如何照顧【${esc(state.round.juryRole?.short || '對方')}】的面子與文化立場？爭取第 5 組評定為第 1 名！</p>
   </div>`:''}
 
   <div class="options-list" role="radiogroup" aria-label="本組決策方案">${state.round.options.map(o=>`<button type="button" class="option-card" role="radio" aria-checked="${selection===o.id}" data-choice="${o.id}" ${!state.member.isRepresentative?'disabled':''}><span class="letter">${o.id}</span><span><strong>${esc(o.title)}</strong><p>${esc(o.text)}</p></span></button>`).join('')}</div>
@@ -91,11 +91,11 @@ function juryVotingMarkup(){
   return `<div class="mobile-timer"><span class="timer-label">裁判組監控與評定席</span><span class="clock" data-clock>--:--</span></div>
 
   <section class="card jury-mission-card">
-    <div class="eyebrow">SUPREME JURY CHAMBER · 跨文化仲裁庭</div>
-    <h2>⚖️ 掌握全場怒氣裁決大權</h2>
+    <div class="eyebrow">ROLEPLAY & ARBITRATION · 跨文化角色評判席</div>
+    <h2>⚖️ 本回合角色：${esc(state.round.juryRole?.title || '跨文化仲裁庭')}</h2>
     <p class="jury-mission-text">
-      <strong>本回合各組怒氣值完全由第 5 組判定！</strong><br>
-      各組選完方案後，將進行 <strong>30 秒申辯</strong> 說明理由。請對照下方暗藏文化代價情報，評定其說服力與跨文化同理心：
+      <strong>【你們的立場與在乎點】：</strong>${esc(state.round.juryRole?.stance || '聆聽各組申辯，評定其跨文化說服力。')}<br><br>
+      <strong>本回合各組怒氣值完全由你們判定！</strong>各組選完方案後，將進行 <strong>30 秒申辯</strong> 說服你們。請對照下方暗藏文化代價情報，評定其說服力與同理心：
     </p>
     <div class="jury-rules-legend">
       ${isRound4 ? `
@@ -129,7 +129,7 @@ function juryVotingMarkup(){
   </section>
 
   <section class="jury-eval-section">
-    <div class="section-title"><h3>各組申辯評定（支援同名次並列）</h3><span class="section-tip">聽完各組 30 秒申辯後點選評定</span></div>
+    <div class="section-title"><h3>各組申辯評定（支援同名次並列）</h3><span class="section-tip">聽完各組向你們的 30 秒申辯後點選評定</span></div>
     <div class="jury-cards-list">
       ${state.decisionGroups.map(g=>{
         const opt = g.choice ? state.optionsWithIntel.find(o=>o.id===g.choice) : null;
@@ -174,7 +174,7 @@ function resultMarkup(){
   return `<section class="card mobile-review">
     <div class="eyebrow">GROUP ${state.member.group} · YOUR DECISION & JURY VERDICT</div>
     <h2>${result.id==='X'?'三方未達成協議':`方案 ${result.id} · ${esc(result.title)}`}</h2>
-    <div class="jury-verdict-pill">⚖️ 第 5 組裁判評定：<strong>${esc(result.juryVerdict || (rankText ? rankText + ' 評定完成' : '裁判評定完成'))}</strong></div>
+    <div class="jury-verdict-pill">⚖️ 第 5 組【${esc(state.round.juryRole?.short || '裁判席')}】評定：<strong>${esc(result.juryVerdict || (rankText ? rankText + ' 評定完成' : '評定完成'))}</strong></div>
     <div class="cq-summary"><span>溝通怒氣值 ${angerBefore} → ${angerAfter}<br><small>${delta<=0?'經 30 秒申辯成功說服第 5 組，成功平息對方怒氣！':delta<=10?'溝通說服大致過關，怒氣微幅受控。':'第 5 組評定說服不足或防衛升溫，怒氣上升。'}</small></span><strong class="${delta>0?'negative-text':'positive-text'}">${delta>0?'+':''}${delta} 怒氣</strong></div>
     <div class="review-insight"><div class="eyebrow">文化盲點 · 重新看見</div><p>${esc(result.blindspot)}</p></div>
   </section>`;
@@ -182,7 +182,7 @@ function resultMarkup(){
 
 function juryResultMarkup(){
   return `<section class="card mobile-review">
-    <div class="eyebrow">JURY DEBRIEF · 裁判裁決成果揭曉</div>
+    <div class="eyebrow">ROLEPLAY DEBRIEF · 【${esc(state.round.juryRole?.short || '裁判組')}】裁決成果揭曉</div>
     <h2>全班體感衝突與申辯裁決總結</h2>
     <div class="jury-results-summary">
       ${state.decisionGroups.map(g=>{
