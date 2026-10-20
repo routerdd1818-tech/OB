@@ -1,5 +1,5 @@
 import { $,esc,api,toast,status,scene,roundNav,tensionCard,dialogue,startClock,broadcastSync,listenSync,playRevealDrum,toggleSound,isSoundEnabled } from './common.js';
-let state=null,lastSignature='',selectedReview='B',busy=false,previousReveal='',confirmResolve,boardSort='cq';
+let state=null,lastSignature='',selectedReview='B',busy=false,previousReveal='',confirmResolve;
 function ask(title,text,label='確認'){const modal=$('#confirm-dialog');$('#confirm-title').textContent=title;$('#confirm-text').textContent=text;$('#confirm-yes').textContent=label;modal.showModal();return new Promise(resolve=>confirmResolve=resolve);}
 function closeConfirm(value){$('#confirm-dialog').close();confirmResolve?.(value);confirmResolve=null;}
 $('#confirm-yes').addEventListener('click',()=>closeConfirm(true));$('#confirm-no').addEventListener('click',()=>closeConfirm(false));$('#confirm-dialog').addEventListener('cancel',e=>{e.preventDefault();closeConfirm(false);});
@@ -32,10 +32,6 @@ function render(){
   document.querySelectorAll('[data-host-action]').forEach(el=>el.addEventListener('click',()=>hostAction(el.dataset.hostAction)));
   $('#finish-manage')?.addEventListener('click',openManage);
   document.querySelectorAll('[data-review]').forEach(el=>el.addEventListener('click',()=>{selectedReview=el.dataset.review;renderReview();}));
-  document.querySelectorAll('[data-sort]').forEach(el => el.addEventListener('click', () => {
-    boardSort = el.dataset.sort;
-    render();
-  }));
   document.querySelectorAll('[data-pitch-group]').forEach(btn => btn.addEventListener('click', async () => {
     const group = btn.dataset.pitchGroup;
     try {
@@ -203,7 +199,7 @@ function resultsMarkup(){
   const current=values.length?Math.round(values.reduce((sum,r)=>sum+r.tension,0)/values.length*10)/10:null;
   const reduction=current===null?0:Math.round((state.round.baseline-current)*10)/10;
 
-  // Sort groups according to boardSort
+  // Strictly sort groups by Group 5 (Jury) ranking and verdict
   const sortedGroups = state.groups.slice(0, 4).map(g => {
     const res = state.results[g.id];
     const rk = state.juryRankings?.[g.id];
@@ -215,19 +211,12 @@ function resultsMarkup(){
       order,
       totalCq: g.cq ?? 100,
       actualDelta: res?.actualDelta ?? 0,
+      baseDelta: res?.baseDelta ?? res?.cq ?? 0,
       juryBonus: res?.juryBonus ?? 0
     };
   });
 
-  if (boardSort === 'cq') {
-    sortedGroups.sort((a, b) => b.totalCq - a.totalCq || a.group.id - b.group.id);
-  } else if (boardSort === 'delta') {
-    sortedGroups.sort((a, b) => b.actualDelta - a.actualDelta || a.group.id - b.group.id);
-  } else if (boardSort === 'jury') {
-    sortedGroups.sort((a, b) => (a.order - b.order) || (b.juryBonus - a.juryBonus) || a.group.id - b.group.id);
-  } else if (boardSort === 'id') {
-    sortedGroups.sort((a, b) => a.group.id - b.group.id);
-  }
+  sortedGroups.sort((a, b) => (a.order - b.order) || (b.juryBonus - a.juryBonus) || a.group.id - b.group.id);
 
   return `
     <div class="compact-reveal-header">
@@ -259,13 +248,11 @@ function resultsMarkup(){
       <!-- Col 2: Central Leaderboard & Jury Showcase (Main Focus!) -->
       <section class="card bento-col bento-col-leaderboard">
         <div class="leaderboard-head">
-          <div class="eyebrow">GROUP RANKINGS & JURY VERDICTS</div>
-          <h2>全班決策排行 ＆ 第 5 組裁決榜</h2>
-          <div class="board-sort-tabs" role="tablist" aria-label="排行榜排序切換">
-            <button type="button" class="sort-tab ${boardSort==='cq'?'active':''}" data-sort="cq">依總 CQ 排名</button>
-            <button type="button" class="sort-tab ${boardSort==='delta'?'active':''}" data-sort="delta">依本輪得分</button>
-            <button type="button" class="sort-tab ${boardSort==='jury'?'active':''}" data-sort="jury">依第 5 組排序</button>
-            <button type="button" class="sort-tab ${boardSort==='id'?'active':''}" data-sort="id">依組別編號</button>
+          <div class="eyebrow">JURY RANKINGS & CHIP CARDS</div>
+          <h2>第 5 組【角色席】裁決與名次榜</h2>
+          <div class="host-jury-role-strip">
+            <span>審查視角：<strong>${esc(r.juryRole?.title || '跨文化角色席')}</strong></span>
+            <span class="jury-status-pill">申辯評選排序</span>
           </div>
         </div>
 
@@ -274,15 +261,15 @@ function resultsMarkup(){
             const g = item.group;
             const res = item.res;
             const rk = item.rk;
-            const order = item.order;
             const delta = item.actualDelta;
             const totalCq = item.totalCq;
+            const displayRank = item.order <= 4 ? item.order : (idx + 1);
             let verdictLabel = '';
             let verdictClass = '';
-            if (rk === 'empathy' || res?.juryBonus > 0) {
+            if (rk === 'empathy' || item.juryBonus > 0) {
               verdictLabel = '同理心加成 (+10 CQ)';
               verdictClass = 'is-buff';
-            } else if (rk === 'veto' || res?.juryBonus < 0) {
+            } else if (rk === 'veto' || item.juryBonus < 0) {
               verdictLabel = '文化踩雷否決 (-15 CQ)';
               verdictClass = 'is-veto';
             } else {
@@ -290,30 +277,30 @@ function resultsMarkup(){
               verdictClass = 'is-neutral';
             }
             return `
-              <div class="host-board-row rank-${idx+1} ${verdictClass}">
-                <div class="board-row-left">
-                  <span class="board-rank-badge rank-${idx+1}">第 ${idx+1} 名</span>
-                  <div class="board-team-info">
-                    <strong>第 ${g.id} 組</strong>
-                    <span class="board-opt-tag">方案 ${res?.id === 'X' ? '破局' : res?.id || '—'} · ${esc(res?.shortTitle || res?.title || '未提交')}</span>
+              <div class="host-board-row rank-${displayRank} ${verdictClass}">
+                <div class="board-row-main">
+                  <div class="board-row-left">
+                    <span class="board-rank-badge rank-${displayRank}">第 ${displayRank} 名</span>
+                    <span class="board-group-title">第 ${g.id} 組</span>
+                    <span class="jury-tag-pill ${verdictClass}">${verdictLabel}</span>
+                  </div>
+                  <div class="board-row-right">
+                    <strong class="delta-val ${delta > 0 ? 'positive-text' : delta < 0 ? 'negative-text' : ''}">
+                      ${delta > 0 ? '+' : ''}${delta} CQ
+                    </strong>
+                    <span class="total-cq-val">總計 ${totalCq} CQ</span>
                   </div>
                 </div>
-                <div class="board-row-center">
-                  <span class="jury-order-tag">${order <= 4 ? `裁判排第 ${order} 名` : '未排名次'}</span>
-                  <span class="jury-tag-pill ${verdictClass}">${verdictLabel}</span>
-                </div>
-                <div class="board-row-right">
-                  <strong class="delta-val ${delta > 0 ? 'positive-text' : delta < 0 ? 'negative-text' : ''}">
-                    ${delta > 0 ? '+' : ''}${delta} CQ
-                  </strong>
-                  <span class="total-cq-val">總計 ${totalCq} CQ</span>
+                <div class="board-row-sub">
+                  <span class="board-opt-tag">方案 ${res?.id === 'X' ? '破局' : res?.id || '—'} · ${esc(res?.shortTitle || res?.title || '未提交')}</span>
+                  <span class="board-calc-tag">(方案 ${item.baseDelta > 0 ? '+' : ''}${item.baseDelta} / 裁判 ${item.juryBonus > 0 ? '+' : ''}${item.juryBonus})</span>
                 </div>
               </div>
             `;
           }).join('')}
           <div class="host-jury-seat-footer">
             <span>第 5 組 · 角色裁決席</span>
-            <span class="pill positive">道具裁決已全數生效</span>
+            <span class="pill positive">道具籌碼與名次已全數結算生效</span>
           </div>
         </div>
       </section>

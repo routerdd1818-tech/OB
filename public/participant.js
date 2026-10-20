@@ -360,32 +360,15 @@ function juryVotingMarkup(){
 function renderPublicBoard() {
   if (!state.publicBoard) return '';
   let sortedBoard = [...state.publicBoard];
-  if (participantBoardSort === 'cq') {
-    sortedBoard.sort((a,b) => (b.cq ?? 100) - (a.cq ?? 100) || a.id - b.id);
-  } else if (participantBoardSort === 'delta') {
-    sortedBoard.sort((a,b) => (b.actualDelta ?? 0) - (a.actualDelta ?? 0) || a.id - b.id);
-  } else if (participantBoardSort === 'jury') {
-    const rankScore = (g) => {
-      if (g.juryOrder) return 100 - g.juryOrder;
-      if (g.juryRank === 'empathy' || (g.juryBonus ?? 0) > 0) return 50;
-      if (g.juryRank === 'neutral' || (g.juryBonus ?? 0) === 0) return 20;
-      if (g.juryRank === 'veto' || (g.juryBonus ?? 0) < 0) return 0;
-      return 10;
-    };
-    sortedBoard.sort((a,b) => rankScore(b) - rankScore(a) || a.id - b.id);
-  } else if (participantBoardSort === 'id') {
-    sortedBoard.sort((a,b) => a.id - b.id);
-  }
+  sortedBoard.sort((a,b) => {
+    const orderA = a.juryOrder ?? 99;
+    const orderB = b.juryOrder ?? 99;
+    return (orderA - orderB) || ((b.juryBonus ?? 0) - (a.juryBonus ?? 0)) || (a.id - b.id);
+  });
 
   return `<section class="card public-jury-board">
-    <div class="eyebrow">PUBLIC SHOWCASE · 全班決策 ＆ 第 5 組道具配發公開榜</div>
-    <h2>全班各組決策 ＆ 第 5 組裁決榜</h2>
-    <div class="board-sort-tabs" role="tablist" aria-label="排行榜排序切換">
-      <button type="button" class="sort-tab ${participantBoardSort==='cq'?'active':''}" data-part-sort="cq">依總 CQ 排名</button>
-      <button type="button" class="sort-tab ${participantBoardSort==='delta'?'active':''}" data-part-sort="delta">依本輪得分</button>
-      <button type="button" class="sort-tab ${participantBoardSort==='jury'?'active':''}" data-part-sort="jury">依裁判評定</button>
-      <button type="button" class="sort-tab ${participantBoardSort==='id'?'active':''}" data-part-sort="id">依組別編號</button>
-    </div>
+    <div class="eyebrow">JURY RANKINGS & CHIP CARDS</div>
+    <h2>第 5 組【角色席】裁決與名次榜</h2>
     <div class="public-board-list">
       ${sortedBoard.map((g, idx) => {
         const isMe = g.id === state.member?.group;
@@ -395,8 +378,8 @@ function renderPublicBoard() {
         else if (g.juryRank === 'veto' || bonus < 0) verdictTag = '<span class="jury-tag-pill is-veto">文化踩雷否決 (-15 CQ)</span>';
         else if (g.juryRank === 'neutral') verdictTag = '<span class="jury-tag-pill is-neutral">中立觀察 (0 CQ)</span>';
         else if (g.juryVerdict) verdictTag = `<span class="jury-tag-pill">${esc(g.juryVerdict)}</span>`;
-        const orderTag = g.juryOrder ? `<span class="jury-tag-pill is-order">說服第 ${g.juryOrder} 名</span>` : '';
-        const rankBadge = participantBoardSort !== 'id' ? `<span class="board-rank-badge rank-${idx+1}">第 ${idx+1} 名</span>` : '';
+        const displayRank = g.juryOrder && g.juryOrder <= 4 ? g.juryOrder : (idx + 1);
+        const rankBadge = `<span class="board-rank-badge rank-${displayRank}">第 ${displayRank} 名</span>`;
         return `<div class="public-board-item ${isMe ? 'is-me' : ''}">
           <div class="board-item-header">
             <div class="board-group-title">
@@ -413,7 +396,7 @@ function renderPublicBoard() {
             <span class="board-option">方案 ${g.optionId === 'X' ? '破局' : g.optionId || '—'} · ${esc(g.optionTitle || '未提交')}</span>
             <span class="board-score-calc">(基礎 ${g.baseDelta > 0 ? '+' : ''}${g.baseDelta} / 道具 ${g.juryBonus > 0 ? '+' : ''}${g.juryBonus})</span>
           </div>
-          ${(verdictTag || orderTag) ? `<div class="board-verdict-row">${verdictTag}${orderTag}</div>` : ''}
+          ${verdictTag ? `<div class="board-verdict-row">${verdictTag}</div>` : ''}
         </div>`;
       }).join('')}
     </div>
@@ -617,12 +600,6 @@ $('#app').addEventListener('click', e => {
   if (e.target.closest('#skip-jury-pitch')) {
     juryPitchSkipped = true;
     currentJuryStage = 3;
-    render();
-    return;
-  }
-  const sortBtn = e.target.closest('[data-part-sort]');
-  if (sortBtn) {
-    participantBoardSort = sortBtn.dataset.partSort;
     render();
     return;
   }
