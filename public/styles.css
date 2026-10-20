@@ -519,4 +519,57 @@
   color: #ffffff;
 }
 
+/* ==========================================================================
+   Scenario Typography Balancing:
+   - Scenario Title ("同一個時程，不同的回應。") smaller
+   - Scenario Context ("併購後的第一次跨洋董事會...") larger and clearer
+   - Clean, professional case-study aesthetic (decluttered)
+   ========================================================================== */
+
+.mobile-scenario h1 {
+  font-size: 21px !important;
+  font-weight: 600 !important;
+  line-height: 1.4 !important;
+  color: var(--muted) !important;
+  margin: 10px 0 12px !important;
+  letter-spacing: -0.2px !important;
+}
+
+.mobile-scenario .scenario-context {
+  font-size: 19.5px !important;
+  line-height: 1.8 !important;
+  color: #24211e !important;
+  font-weight: 500 !important;
+  margin: 12px 0 16px !important;
+  letter-spacing: 0.2px !important;
+}
+
+.scenario h1 {
+  font-size: 30px !important;
+  font-weight: 600 !important;
+  line-height: 1.35 !important;
+  color: var(--muted) !important;
+  margin-bottom: 12px !important;
+  letter-spacing: -0.5px !important;
+}
+
+.scenario-context {
+  font-size: 24px !important;
+  line-height: 1.85 !important;
+  color: #24211e !important;
+  font-weight: 500 !important;
+  max-width: 720px !important;
+  letter-spacing: 0.25px !important;
+}
+
+@media (min-width: 1600px) {
+  .scenario h1 {
+    font-size: 34px !important;
+  }
+  .scenario-context {
+    font-size: 27px !important;
+  }
+}
+
+
 

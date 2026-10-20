@@ -37,7 +37,7 @@ function render(){
     ? `<div class="mobile-identity"><div class="identity-bar"><div class="identity-pill"><span class="identity-name">${esc(member.name)}</span> <span aria-hidden="true">｜</span> 第 5 組 · ${esc(r.juryRole?.short || '角色席')}</div><button type="button" class="switch-group-btn" id="open-switch-group" aria-label="更換組別">換組</button><span class="rep-tag jury-tag">${esc(r.juryRole?.title || '跨文化角色席')}</span></div><div class="mobile-health"><span class="health-label">角色席</span><div class="health-track"><div class="health-fill" style="width:100%; background:var(--accent,#7c3aed);"></div></div><span class="cq-value">JURY<small> 角色對手席</small></span></div></div>`
     : `<div class="mobile-identity"><div class="identity-bar"><div class="identity-pill"><span class="identity-name">${esc(member.name)}</span> <span aria-hidden="true">｜</span> 第 ${member.group} 組 (${esc(r.juryRole?.counterpart || '決策組')})</div><button type="button" class="switch-group-btn" id="open-switch-group" aria-label="更換組別">換組</button><span class="rep-tag">${member.isRepresentative?'本組決策代表':'與夥伴一起思考'}</span></div><div class="mobile-health"><span class="health-label">團隊 CQ 韌性值</span><div class="health-track" role="progressbar" aria-label="本組 CQ 韌性值" aria-valuenow="${cq}" aria-valuemin="0" aria-valuemax="100"><div class="health-fill ${cqClass}" style="width:${cq}%"></div></div><span class="cq-value">${cq}<small>/ 100 CQ</small></span></div></div>`;
 
-  $('#app').innerHTML=`${identityBar}${roundNav(state.roundIndex)}${state.phase==='finished'?'<div class="finished-banner">四回合探索完成！</div>':''}<section class="mobile-scenario"><div class="topic-row"><span class="topic-badge">ROUND ${String(state.roundIndex+1).padStart(2,'0')} · ${r.dimension}</span><span class="topic-location">${esc(r.location)}</span></div><h1>${esc(r.title)}</h1><p class="scenario-context">${esc(r.context)}</p></section>${revealed?tensionCard(state.result||state.results?.[1],true):''}${dialogue(r)}<div class="question-prompt"><span class="prompt-badge">🎯 本題決策焦點</span><div class="prompt-title">${esc(r.prompt)}</div></div>
+  $('#app').innerHTML=`${identityBar}${roundNav(state.roundIndex)}${state.phase==='finished'?'<div class="finished-banner">四回合探索完成！</div>':''}<section class="mobile-scenario"><div class="topic-row"><span class="topic-badge">ROUND ${String(state.roundIndex+1).padStart(2,'0')} · ${r.dimension}</span><span class="topic-location">${esc(r.location)}</span></div><h1>${esc(r.title)}</h1><p class="scenario-context">${esc(r.context)}</p></section>${revealed?tensionCard(state.result||state.results?.[1],true):''}${dialogue(r)}<div class="question-prompt"><span class="prompt-badge">決策焦點</span><div class="prompt-title">${esc(r.prompt)}</div></div>
   ${revealed ? (member.isJury?juryResultMarkup():resultMarkup()) : (member.isJury?juryVotingMarkup():votingMarkup())}`;
 
   document.querySelector('.mobile-action')?.remove();
@@ -98,7 +98,7 @@ function juryVotingMarkup(){
 
   <section class="card jury-mission-card">
     <div class="eyebrow">跨文化角色席</div>
-    <h2>🎭 角色：${esc(state.round.juryRole?.title || '角色席')}</h2>
+    <h2>角色：${esc(state.round.juryRole?.title || '角色席')}</h2>
     <p class="jury-mission-text">
       <strong>【立場與顧慮】：</strong>${esc(state.round.juryRole?.stance || '聆聽各組申辯，從本方文化審視。')}
     </p>
@@ -164,7 +164,7 @@ function resultMarkup(){
   return `<section class="card mobile-review">
     <div class="eyebrow">GROUP ${state.member.group} · YOUR DECISION & CQ IMPACT</div>
     <h2>${result.id==='X'?'三方未達成協議':`方案 ${result.id} · ${esc(result.title)}`}</h2>
-    ${result.juryVerdict?`<div class="jury-verdict-pill">🎭 ${esc(result.juryVerdict)}</div>`:''}
+    ${result.juryVerdict?`<div class="jury-verdict-pill">${esc(result.juryVerdict)}</div>`:''}
     <div class="cq-summary"><span>團隊 CQ 韌性值 ${cqBefore} → ${cqAfter}<br><small>${delta>0?'決策展現高度文化同理心，有效守護跨國信任！':delta===0?'CQ 韌性維持持平。':'決策觸碰深層文化盲點，團隊信任受損。'}</small></span><strong class="${delta>=0?'positive-text':'negative-text'}">${delta>0?'+':''}${delta} CQ</strong></div>
     <div class="review-insight"><div class="eyebrow">文化盲點 · 重新看見</div><p>${esc(result.blindspot)}</p></div>
   </section>`;

@@ -32,12 +32,12 @@ function scenarioMarkup(){
   const r=state.round;
   const decisionGroups=state.groups.slice(0,4);
   const allDecisionDone=state.completed>=4;
-  return `<section class="scenario"><div class="scenario-copy"><div class="topic-row"><span class="topic-badge">ROUND ${String(state.roundIndex+1).padStart(2,'0')} · ${r.dimension}</span><span class="topic-location">${esc(r.location)}</span></div><h1>${esc(r.title)}</h1><p class="scenario-context">${esc(r.context)}</p></div>${dialogue(r)}</section><div class="question-prompt"><span class="prompt-badge">🎯 本題決策焦點</span><span class="prompt-text">${esc(r.prompt)}</span></div>
+  return `<section class="scenario"><div class="scenario-copy"><div class="topic-row"><span class="topic-badge">ROUND ${String(state.roundIndex+1).padStart(2,'0')} · ${r.dimension}</span><span class="topic-location">${esc(r.location)}</span></div><h1>${esc(r.title)}</h1><p class="scenario-context">${esc(r.context)}</p></div>${dialogue(r)}</section><div class="question-prompt"><span class="prompt-badge">決策焦點</span><span class="prompt-text">${esc(r.prompt)}</span></div>
   ${allDecisionDone && state.phase==='voting' ? `<div class="card pitch-stage-callout">
-    <h2>🎤 全組已提交！進入【各組 30 秒申辯說服】</h2>
+    <h2>全組已提交！進入【各組 30 秒申辯說服】</h2>
     <p>請第 1~4 組依序向第 5 組【${esc(r.juryRole?.short || '角色席')}】申辯說明；第 5 組手機即時評定回饋！</p>
   </div>` : ''}
-  <section class="progress-card card" aria-label="全班投票進度"><div class="progress-intro"><div><h2>決策進度</h2><p>${state.phase==='voting'?(allDecisionDone?`🎤 請依序進行 30 秒申辯`:`各組討論提交中`):'學員加入後即可開始'}</p></div></div><div class="stat-number">${state.completed}<small>/ 4 組</small></div><div class="progress-groups">${decisionGroups.map(g=>`<div class="progress-group ${g.submitted?'done':''}"><span class="status-circle">${g.submitted?'✓':''}</span><span>第 ${g.id} 組 · ${g.submitted?'已提交':g.count?'討論中':'未加入'}</span></div>`).join('')}<div class="progress-group jury-progress-group ${state.jurySubmitted?'done':''}"><span class="status-circle">${state.jurySubmitted?'✓':''}</span><span>第 5 組【${esc(r.juryRole?.short || '角色席')}】· ${state.jurySubmitted?'已回饋':'聆聽中'}</span></div></div></section>`;
+  <section class="progress-card card" aria-label="全班投票進度"><div class="progress-intro"><div><h2>決策進度</h2><p>${state.phase==='voting'?(allDecisionDone?`請依序進行 30 秒申辯`:`各組討論提交中`):'學員加入後即可開始'}</p></div></div><div class="stat-number">${state.completed}<small>/ 4 組</small></div><div class="progress-groups">${decisionGroups.map(g=>`<div class="progress-group ${g.submitted?'done':''}"><span class="status-circle">${g.submitted?'✓':''}</span><span>第 ${g.id} 組 · ${g.submitted?'已提交':g.count?'討論中':'未加入'}</span></div>`).join('')}<div class="progress-group jury-progress-group ${state.jurySubmitted?'done':''}"><span class="status-circle">${state.jurySubmitted?'✓':''}</span><span>第 5 組【${esc(r.juryRole?.short || '角色席')}】· ${state.jurySubmitted?'已回饋':'聆聽中'}</span></div></div></section>`;
 }
 
 function resultsMarkup(){
