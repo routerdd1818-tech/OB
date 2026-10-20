@@ -12,8 +12,7 @@ function render(){
   
   const cqStripHtml = state.groups.map(g=>{
     if(g.id===5) {
-      const juryTitle = r.juryRole?.short || '跨文化角色席';
-      return `<div class="cq-group card jury-cq-group"><div class="cq-group-head"><span class="group-label">第 5 組 <span>${esc(juryTitle)}</span></span><div class="cq-value" style="font-size:18px;">JURY<small> 角色席</small></div></div><div class="health-track"><div class="health-fill" style="width:100%; background:var(--accent,#7c3aed);"></div></div><span class="cq-float" style="color:var(--accent,#7c3aed);">${state.jurySubmitted?'籌碼就緒':'對話席'}</span></div>`;
+      return `<div class="cq-group card jury-cq-group"><div class="cq-group-head"><span class="group-label">第 5 組</span><div class="cq-value" style="font-size:16px;">${state.jurySubmitted?'已鎖定':'審視中'}</div></div><div class="health-track"><div class="health-fill" style="width:100%; background:#7c3aed;"></div></div></div>`;
     }
     const cq = g.cq ?? 100;
     const res = state.results?.[g.id];
@@ -22,13 +21,13 @@ function render(){
     const cqClass = cq < 50 ? 'critical' : cq < 75 ? 'low' : '';
     const animClass = animate && delta !== undefined ? (delta < 0 ? 'cq-damage-shake' : delta > 0 ? 'cq-heal-glow' : '') : '';
     const cascadePill = !revealed && g.cascade ? `<span class="host-cascade-pill ${g.cascade.type==='buff'?'is-buff':'is-penalty'}">${esc(g.cascade.badge)}</span>` : '';
-    return `<div class="cq-group card ${animClass}"><div class="cq-group-head"><span class="group-label">第 ${g.id} 組 <span>${esc(r.juryRole?.counterpart || '決策組')}</span>${cascadePill}</span><div class="cq-value">${cq}<small>CQ</small></div></div><div class="health-track" role="progressbar" aria-label="第 ${g.id} 組 CQ 韌性值" aria-valuenow="${cq}" aria-valuemin="0" aria-valuemax="100"><div class="health-fill ${cqClass}" style="width:${cq}%"></div></div>${animate&&delta!==undefined?`<span class="cq-float ${delta<0?'loss':''}">${delta>0?'+':''}${delta} CQ${juryBonus?` (${juryBonus>0?'+10':'-15'})`:''}</span>`:''}</div>`;
+    return `<div class="cq-group card ${animClass}"><div class="cq-group-head"><span class="group-label">第 ${g.id} 組${cascadePill}</span><div class="cq-value">${cq}<small>CQ</small></div></div><div class="health-track" role="progressbar" aria-label="第 ${g.id} 組 CQ 韌性值" aria-valuenow="${cq}" aria-valuemin="0" aria-valuemax="100"><div class="health-fill ${cqClass}" style="width:${cq}%"></div></div>${animate&&delta!==undefined?`<span class="cq-float ${delta<0?'loss':''}">${delta>0?'+':''}${delta} CQ${juryBonus?` (${juryBonus>0?'+10':'-15'})`:''}</span>`:''}</div>`;
   }).join('');
 
   $('#app').innerHTML=`<section class="cq-strip" aria-label="各組 CQ 韌性值即時監控">${cqStripHtml}</section>${roundNav(state.roundIndex)}${state.phase==='finished'?'<div class="finished-banner">四回合探索完成 · 帶著理解，回到下一場真實對話。</div>':''}${revealed?resultsMarkup():scenarioMarkup()}`;
   
   document.querySelector('.host-controls')?.remove();const controls=document.createElement('footer');controls.className='host-controls';
-  controls.innerHTML=`<div class="timer-wrap">${revealed?`<span class="clock">${String(state.roundIndex+1).padStart(2,'0')} / 04</span><span class="timer-label">${state.phase==='finished'?'課堂已完成':'本回合已揭曉'}</span>`:`<span class="clock" data-clock>--:--</span><div class="timer-label"><strong data-debate>${state.roundIndex===3?'三方結構化辯論':'小組研討時間'}</strong>${state.deadline?'倒數進行中':state.remaining!==null?'計時已暫停':'準備好，就開始'}</div>`}${state.phase==='voting'?`<button class="icon-button" data-host-action="timer" aria-label="${state.deadline?'暫停':'繼續'}計時">${state.deadline?'Ⅱ':'▷'}</button>`:''}</div><div class="control-right"><span class="control-note">${revealed?'每一個決策，都是一次理解的練習。':state.phase==='voting'?`第 1~4 組研討決策，第 5 組【${esc(r.juryRole?.short || '角色席')}】手握 2 張同理加成卡 (+10) 與 1 張踩雷否決卡 (-15)。`:`邀請學員掃碼加入，第 1~4 組為【${esc(r.juryRole?.counterpart || '決策組')}】，第 5 組為【${esc(r.juryRole?.short || '角色席')}】。`}</span>${state.phase==='finished'?'<button class="button secondary" id="finish-manage">課堂管理</button>':`<button class="button primary" data-host-action="${revealed?'next':state.phase==='voting'?'reveal':'start'}">${revealed?(state.roundIndex===3?'完成本次課堂':'進入下一回合'):state.phase==='voting'?'揭曉決策與 CQ 韌性':'開始本回合研討'} <span aria-hidden="true">${state.phase==='voting'?'↗':'→'}</span></button>`}</div>`;
+  controls.innerHTML=`<div class="timer-wrap">${revealed?`<span class="clock">${String(state.roundIndex+1).padStart(2,'0')} / 04</span><span class="timer-label">${state.phase==='finished'?'課堂已完成':'本回合已揭曉'}</span>`:`<span class="clock" data-clock>--:--</span><div class="timer-label"><strong data-debate>${state.roundIndex===3?'三方結構化辯論':'小組研討時間'}</strong>${state.deadline?'倒數進行中':state.remaining!==null?'計時已暫停':'準備好，就開始'}</div>`}${state.phase==='voting'?`<button class="icon-button" data-host-action="timer" aria-label="${state.deadline?'暫停':'繼續'}計時">${state.deadline?'Ⅱ':'▷'}</button>`:''}</div><div class="control-right"><span class="control-note">${revealed?'每一個決策，都是一次理解的練習。':state.phase==='voting'?'第 1~4 組研討決策，第 5 組手握 2 張同理加成卡 (+10) 與 1 張踩雷否決卡 (-15)。':'邀請學員掃碼加入，第 1~4 組為決策組，第 5 組為角色席。'}</span>${state.phase==='finished'?'<button class="button secondary" id="finish-manage">課堂管理</button>':`<button class="button primary" data-host-action="${revealed?'next':state.phase==='voting'?'reveal':'start'}">${revealed?(state.roundIndex===3?'完成本次課堂':'進入下一回合'):state.phase==='voting'?'揭曉決策與 CQ 韌性':'開始本回合研討'} <span aria-hidden="true">${state.phase==='voting'?'↗':'→'}</span></button>`}</div>`;
   document.body.append(controls);
   document.querySelectorAll('[data-host-action]').forEach(el=>el.addEventListener('click',()=>hostAction(el.dataset.hostAction)));
   $('#finish-manage')?.addEventListener('click',openManage);
@@ -116,7 +115,7 @@ function scenarioMarkup(){
       ${pitchCardHtml}
 
       ${state.jurySubmitted && state.phase==='voting' ? `<div class="card jury-host-status-banner" style="margin: 0 0 12px;">
-        <span class="prompt-badge" style="background:#7c3aed;">第 5 組【${esc(r.juryRole?.short || '角色席')}】裁決就緒</span>
+        <span class="prompt-badge" style="background:#7c3aed;">第 5 組裁決就緒</span>
         <p>已完成全班道具配發（${state.jurySummary?.empathyCount || 0} 張同理加成卡、${state.jurySummary?.vetoCount || 0} 張踩雷否決卡），揭曉時公開受獎對象！</p>
       </div>` : ''}
 
@@ -129,13 +128,13 @@ function scenarioMarkup(){
           <div class="stat-number">${state.completed}<small>/ 4 組</small></div>
         </div>
         <div class="progress-chips-row">
-          ${decisionGroups.map(g=>`<div class="progress-chip ${g.submitted?'is-done':g.count?'is-active':''}">
+          ${decisionGroups.map(g=>`<div class="progress-chip ${g.submitted?'is-done done':g.count?'is-active':''}">
             <span class="chip-dot"></span>
             <span class="chip-name">第 ${g.id} 組</span>
             <span class="chip-status">${g.submitted?'已鎖定':g.count?'討論中':'未加入'}</span>
             ${g.cascade?`<small class="cascade-mini">(${esc(g.cascade.badge)})</small>`:''}
           </div>`).join('')}
-          <div class="progress-chip is-jury ${state.jurySubmitted?'is-done':''}">
+          <div class="progress-chip is-jury jury-chip ${state.jurySubmitted?'is-done done':''}">
             <span class="chip-dot"></span>
             <span class="chip-name">第 5 組</span>
             <span class="chip-status">${state.jurySubmitted?'已鎖定':'審視中'}</span>
@@ -162,25 +161,25 @@ function quadrantMatrixMarkup(){
 
   return `<div class="quadrant-matrix-wrap">
     <div class="section-heading" style="margin-bottom:4px;">
-      <h2>2×2 跨文化決策象限落點圖</h2>
+      <h2>2×2 跨文化領導決策象限（HBR Being the Boss）</h2>
       <span>點擊座標點切換右側解析</span>
     </div>
     <div class="quadrant-axis-header">
-      <span>▲ 平等賦權（專業自治 · 對等協作）</span>
+      <span>▲ 共識型決策 Consensual（大 D 承諾 · 全員校準）</span>
     </div>
-    <div class="quadrant-board" role="region" aria-label="2x2 跨文化決策象限圖">
-      <div class="q-cell q-tl"><span class="q-zone-name">去層級直球區</span><small>高任務 × 高賦權</small></div>
-      <div class="q-cell q-tr"><span class="q-zone-name">跨文化共創區</span><small>高關係 × 高賦權</small></div>
-      <div class="q-cell q-bl"><span class="q-zone-name">高壓防衛區</span><small>高任務 × 高控制</small></div>
-      <div class="q-cell q-br"><span class="q-zone-name">表面和諧區</span><small>高關係 × 高控制</small></div>
+    <div class="quadrant-board" role="region" aria-label="2x2 跨文化領導決策象限圖">
+      <div class="q-cell q-tl"><span class="q-zone-name">共識 × 平等區</span><small>北歐 / 荷蘭 · 促進者模式</small></div>
+      <div class="q-cell q-tr"><span class="q-zone-name">共識 × 階層區</span><small>日本 / 德國 · 根回稟議大 D</small></div>
+      <div class="q-cell q-bl"><span class="q-zone-name">由上而下 × 平等區</span><small>美國 / 英國 · 小 d 靈活速決</small></div>
+      <div class="q-cell q-br"><span class="q-zone-name">由上而下 × 階層區</span><small>中國 / 法印 · 導演明確指令</small></div>
       <div class="q-axis-h"></div>
       <div class="q-axis-v"></div>
       ${pointsHtml}
     </div>
     <div class="quadrant-axis-footer">
-      <span>◀ 任務導向</span>
-      <span>▼ 階級控制</span>
-      <span>關係導向 ▶</span>
+      <span>◀ 平等主義 Egalitarian</span>
+      <span>▼ 由上而下 Top-Down（小 d 速決 · 敏捷試錯）</span>
+      <span>階層制 Hierarchical ▶</span>
     </div>
   </div>`;
 }
@@ -248,7 +247,7 @@ function resultsMarkup(){
       <section class="card bento-col bento-col-leaderboard">
         <div class="leaderboard-head">
           <div class="eyebrow">GROUP RANKINGS & JURY VERDICTS</div>
-          <h2>全班決策排行 ＆ 第 5 組【${esc(r.juryRole?.short || '角色席')}】裁決榜</h2>
+          <h2>全班決策排行 ＆ 第 5 組裁決榜</h2>
           <div class="board-sort-tabs" role="tablist" aria-label="排行榜排序切換">
             <button type="button" class="sort-tab ${boardSort==='cq'?'active':''}" data-sort="cq">依總 CQ 排名</button>
             <button type="button" class="sort-tab ${boardSort==='delta'?'active':''}" data-sort="delta">依本輪得分</button>
@@ -300,7 +299,7 @@ function resultsMarkup(){
             `;
           }).join('')}
           <div class="host-jury-seat-footer">
-            <span>第 5 組【${esc(r.juryRole?.short || '角色席')}】· ${esc(r.juryRole?.title || '角色對手席')}</span>
+            <span>第 5 組 · 角色裁決席</span>
             <span class="pill positive">道具裁決已全數生效</span>
           </div>
         </div>

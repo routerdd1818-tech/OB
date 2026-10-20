@@ -1469,6 +1469,17 @@ body.clean-stage .host-main {
   .cq-strip {
     flex-shrink: 0;
     margin-bottom: 8px;
+    gap: 10px;
+  }
+
+  .cq-group {
+    padding: 10px 14px;
+  }
+
+  .round-nav {
+    margin: 4px auto 10px;
+    gap: 12px;
+    flex-shrink: 0;
   }
 
   .compact-reveal-header {
@@ -1531,6 +1542,10 @@ body.clean-stage .host-main {
 
   .bento-col-matrix {
     overflow-y: auto;
+  }
+
+  .bento-col-matrix .quadrant-board {
+    height: clamp(230px, 30vh, 300px);
   }
 
   .bento-col-leaderboard {
@@ -2246,42 +2261,53 @@ body.clean-stage .host-main {
 }
 
 /* 狀態樣式：已就緒 / 已鎖定 */
-.progress-chip.is-done {
+.progress-chip.is-done,
+.progress-chip.done {
   background: #f1f6ed !important;
   border-color: #d1e2cb !important;
 }
-.progress-chip.is-done .chip-dot {
+.progress-chip.is-done .chip-dot,
+.progress-chip.done .chip-dot {
   border: none;
   background: #39724b;
 }
-.progress-chip.is-done .chip-status {
+.progress-chip.is-done .chip-status,
+.progress-chip.done .chip-status,
+.progress-chip.done b {
   color: #39724b;
   font-weight: 600;
 }
 
 /* 第 5 組專屬 (Jury) */
-.progress-chip.is-jury {
+.progress-chip.is-jury,
+.progress-chip.jury-chip {
   background: rgba(124, 58, 237, 0.05) !important;
   border-color: rgba(124, 58, 237, 0.25) !important;
 }
-.progress-chip.is-jury .chip-dot {
+.progress-chip.is-jury .chip-dot,
+.progress-chip.jury-chip .chip-dot {
   border-color: #7c3aed;
 }
-.progress-chip.is-jury .chip-name {
+.progress-chip.is-jury .chip-name,
+.progress-chip.jury-chip span {
   color: #7c3aed;
 }
-.progress-chip.is-jury .chip-status {
+.progress-chip.is-jury .chip-status,
+.progress-chip.jury-chip b {
   color: #7c3aed;
 }
-.progress-chip.is-jury.is-done {
+.progress-chip.is-jury.is-done,
+.progress-chip.jury-chip.done {
   background: rgba(124, 58, 237, 0.1) !important;
   border-color: rgba(124, 58, 237, 0.4) !important;
 }
-.progress-chip.is-jury.is-done .chip-dot {
+.progress-chip.is-jury.is-done .chip-dot,
+.progress-chip.jury-chip.done .chip-dot {
   border: none;
   background: #7c3aed;
 }
-.progress-chip.is-jury.is-done .chip-status {
+.progress-chip.is-jury.is-done .chip-status,
+.progress-chip.jury-chip.done b {
   color: #7c3aed;
   font-weight: 600;
 }
