@@ -1,18 +1,73 @@
-import { randomBytes, createHash, timingSafeEqual } from 'node:crypto';
+import { randomBytes, createHash, createHmac, timingSafeEqual } from 'node:crypto';
 import { readState, mutate, initialState } from '../lib/store.mjs';
 import { rounds, publicRound, outcome } from '../lib/rounds.mjs';
 
 const hash = value => createHash('sha256').update(value).digest('hex');
 const fail = (message, status=400) => { throw Object.assign(new Error(message),{status}); };
+const SECRET = process.env.SESSION_SECRET || 'cq-dialogue-lab-secret-key-2026';
+
+function signMemberToken(member, epoch) {
+  const payload = JSON.stringify({ id: member.id, name: member.name, group: member.group, expires: member.expires, epoch: epoch || member.epoch });
+  const b64 = Buffer.from(payload).toString('base64url');
+  const sig = createHmac('sha256', SECRET).update(b64).digest('base64url');
+  return `${b64}.${sig}`;
+}
+
+function verifyMemberToken(token) {
+  if (!token || typeof token !== 'string' || !token.includes('.')) return null;
+  const [b64, sig] = token.split('.');
+  if (!b64 || !sig) return null;
+  const expected = createHmac('sha256', SECRET).update(b64).digest('base64url');
+  if (sig !== expected) return null;
+  try {
+    const data = JSON.parse(Buffer.from(b64, 'base64url').toString('utf8'));
+    if (!data.id || !data.name || !data.group || !data.expires) return null;
+    if (data.expires < Date.now()) return null;
+    return data;
+  } catch {
+    return null;
+  }
+}
+
 function cookies(req) { return Object.fromEntries((req.headers.cookie || '').split(';').filter(x=>x.includes('=')).map(x=>{const i=x.indexOf('=');return [x.slice(0,i).trim(),x.slice(i+1)];})); }
+
+function extractToken(req) {
+  const auth = req.headers.authorization;
+  if (auth && auth.startsWith('Bearer ')) {
+    return auth.slice(7).trim();
+  }
+  return cookies(req)['cq_member'];
+}
+
 function session(req,state,role) {
   if(role==='host') return { host:true };
-  const token = cookies(req)['cq_member'];
-  const found = token && state.participants[hash(token)];
+  const token = extractToken(req);
+  if (!token) fail('請重新填寫姓名與組別',401);
+
+  // 1. Verify signed HMAC token (survives cold starts & serverless container switching)
+  const verified = verifyMemberToken(token);
+  if (verified) {
+    if (verified.epoch && verified.epoch !== state.epoch) {
+      fail('課堂已重設，請重新填寫姓名與組別',401);
+    }
+    const key = hash(token);
+    const existing = state.participants[key] || Object.values(state.participants).find(p => p.id === verified.id && p.expires > Date.now());
+    if (!existing) {
+      // Auto-heal session in state
+      state.participants[key] = verified;
+      const target = state.groups[verified.group - 1];
+      if (target && !target.representative) target.representative = verified.id;
+      return verified;
+    }
+    return existing;
+  }
+
+  // 2. Fallback to hash lookup
+  const found = state.participants[hash(token)];
   if (!found || found.expires < Date.now()) fail('請重新填寫姓名與組別',401);
   return found;
 }
-function setCookie(res,role,token) { res.setHeader('Set-Cookie',`cq_${role}=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=43200${process.env.VERCEL?'; Secure':''}`); }
+function setCookie(res,role,token) { res.setHeader('Set-Cookie',`cq_${role}=${token}; HttpOnly; SameSite=Lax; Path=/; Max-Age=43200${process.env.VERCEL?'; Secure':''}`); }
 function shared(state,options) { return { epoch:state.epoch, revision:state.revision, roundIndex:state.round, phase:state.phase, deadline:state.deadline, remaining:state.remaining, serverTime:Date.now(), round:publicRound(state.round,options) }; }
 function memberView(state,member) {
   const group=state.groups[member.group-1];
@@ -67,15 +122,19 @@ export default async function handler(req,res) {
     if(action==='join') {
       const name=typeof body.name==='string'?body.name.trim():'';const group=Number(body.group);
       if(!name||name.length>30||!Number.isInteger(group)||group<1||group>5) fail('請填寫 1–30 字姓名並選擇組別');
-      const token=randomBytes(32).toString('hex');
+      const memberId=randomBytes(12).toString('hex');
+      let member={id:memberId,name,group,expires:Date.now()+43200000};
+      let token='';
       await mutate(state=>{
-        const old=cookies(req).cq_member;const prior=old && state.participants[hash(old)];
-        if(prior && prior.expires>Date.now()) fail('已加入課堂，不能切換至其他組別',409);
-        const member={id:randomBytes(12).toString('hex'),name,group,expires:Date.now()+43200000};
+        const old=extractToken(req);
+        const prior=old && (verifyMemberToken(old) || state.participants[hash(old)]);
+        if(prior && prior.expires>Date.now() && (prior.group!==group || prior.name!==name)) fail('已加入課堂，不能切換至其他組別',409);
+        member.epoch=state.epoch;
+        token=signMemberToken(member,state.epoch);
         state.participants[hash(token)]=member;
         const target=state.groups[group-1];
         if(!Object.values(state.participants).some(p=>p.id===target.representative&&p.expires>Date.now())) target.representative=member.id;
-      });setCookie(res,'member',token);res.end(JSON.stringify({ok:true}));return;
+      });setCookie(res,'member',token);res.end(JSON.stringify({ok:true,token,member}));return;
     }
     await mutate(state=>{
       const user=session(req,state,role);

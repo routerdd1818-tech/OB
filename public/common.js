@@ -2,7 +2,10 @@ export const $ = selector => document.querySelector(selector);
 export const esc = value => String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 export async function api(action='state',body,role='member') {
   const controller=new AbortController();const timeout=setTimeout(()=>controller.abort(),10000);
-  try{const response=await fetch(`/api/workshop?action=${action}&role=${role}`,{method:body?'POST':'GET',headers:body?{'Content-Type':'application/json'}:{},body:body?JSON.stringify(body):undefined,cache:'no-store',signal:controller.signal});
+  const token = (typeof localStorage!=='undefined' && role==='member') ? localStorage.getItem('cq_member_token') : null;
+  const headers = body ? {'Content-Type':'application/json'} : {};
+  if(token) headers['Authorization'] = `Bearer ${token}`;
+  try{const response=await fetch(`/api/workshop?action=${action}&role=${role}`,{method:body?'POST':'GET',headers,body:body?JSON.stringify(body):undefined,cache:'no-store',signal:controller.signal});
     const data=await response.json();if(!response.ok) throw Object.assign(new Error(data.error),{status:response.status});return data;
   } catch(error){if(error.name==='AbortError') throw new Error('連線逾時，請重試');throw error;} finally{clearTimeout(timeout);}
 }

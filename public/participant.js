@@ -223,35 +223,57 @@ async function submitJuryVerdict(){
   finally{busy=false;updateChoiceUI();}
 }
 
+let consecutive401=0;
 async function refresh(){
   try{
     const next=await api();
     next.clockOffset=next.serverTime-Date.now();
     const signature=JSON.stringify({...next,serverTime:0,clockOffset:0});
-    state=next;online=true;status(true);
+    state=next;online=true;status(true);consecutive401=0;
     if(gate.open)gate.close();
     if(signature!==lastSignature){lastSignature=signature;render();}
     updateChoiceUI();
   }catch(e){
     if(e.status===401){
-      state=null;lastSignature='';roundKey='';
-      document.querySelector('.mobile-action')?.remove();
-      $('#app').innerHTML='<div class="loading">歡迎加入今天的對話。</div>';
-      if(!gate.open)gate.showModal();
-      status(true);
+      consecutive401++;
+      if(consecutive401>=2){
+        state=null;lastSignature='';roundKey='';
+        document.querySelector('.mobile-action')?.remove();
+        $('#app').innerHTML='<div class="loading">歡迎加入今天的對話。</div>';
+        if(!gate.open)gate.showModal();
+        status(true);
+      }
     }else{
       online=false;status(false);updateChoiceUI();
     }
   }
 }
 
+try{
+  const last=JSON.parse(localStorage.getItem('cq_last_join')||'{}');
+  if(last.name) $('#name').value=last.name;
+  if(last.group){
+    const r=document.querySelector(`input[name="group"][value="${last.group}"]`);
+    if(r) r.checked=true;
+  }
+}catch{}
+
 $('#join-form').addEventListener('submit',async e=>{
   e.preventDefault();
   const button=e.currentTarget.querySelector('button');
   button.disabled=true;$('#join-error').textContent='';
   const form=new FormData(e.currentTarget);
+  const name=form.get('name');
+  const group=Number(form.get('group'));
   try{
-    await api('join',{name:form.get('name'),group:Number(form.get('group'))});
+    const res=await api('join',{name,group});
+    if(res.token){
+      try{
+        localStorage.setItem('cq_member_token',res.token);
+        localStorage.setItem('cq_last_join',JSON.stringify({name,group}));
+      }catch{}
+    }
+    consecutive401=0;
     gate.close();
     await refresh();
   }catch(error){$('#join-error').textContent=error.message;}
