@@ -1,4 +1,4 @@
-import { $,esc,api,toast,status,scene,roundNav,tensionCard,dialogue,startClock } from './common.js';
+import { $,esc,api,toast,status,scene,roundNav,tensionCard,dialogue,startClock,broadcastSync,listenSync } from './common.js';
 let state=null,lastSignature='',selectedReview='B',busy=false,previousReveal='',confirmResolve;
 function ask(title,text,label='確認'){const modal=$('#confirm-dialog');$('#confirm-title').textContent=title;$('#confirm-text').textContent=text;$('#confirm-yes').textContent=label;modal.showModal();return new Promise(resolve=>confirmResolve=resolve);}
 function closeConfirm(value){$('#confirm-dialog').close();confirmResolve?.(value);confirmResolve=null;}
@@ -86,6 +86,7 @@ async function hostAction(action,extra={}){
   busy=true;document.querySelectorAll('[data-host-action]').forEach(el=>el.disabled=true);
   try{
     await api(action,extra,'host');
+    broadcastSync('host_action',{ action, roundIndex: state?.roundIndex });
     lastSignature='';
     await refresh();
   }catch(e){toast(e.message);await refresh();}
@@ -139,5 +140,31 @@ function openManage(){
 
 $('#manage-open').addEventListener('click',openManage);
 $('#reset').addEventListener('click',async()=>{if(await ask('重新開始這堂課？','將清除全部成員、投票、回合結果與 CQ，學員需要重新加入。此操作無法復原。','清除並重新開始')){$('#manage-dialog').close();await hostAction('reset',{confirm:'RESET'});}});
+
+listenSync(packet => {
+  if (!packet || !state) return;
+  if (packet.type === 'group_vote') {
+    if (packet.roundIndex === state.roundIndex) {
+      const gid = Number(packet.group);
+      if (gid >= 1 && gid <= 4) {
+        const g = state.groups?.find(grp => grp.id === gid);
+        if (g && !g.submitted) {
+          g.submitted = true;
+          state.completed = state.groups.slice(0, 4).filter(grp => grp.submitted).length;
+          render();
+        }
+      }
+    }
+  } else if (packet.type === 'jury_verdict') {
+    if (packet.roundIndex === state.roundIndex) {
+      state.jurySubmitted = true;
+      state.juryRankings = packet.rankings || {};
+      const g = state.groups?.find(grp => grp.id === 5);
+      if (g) g.submitted = true;
+      render();
+    }
+  }
+});
+
 async function poll(){await refresh();setTimeout(poll,document.hidden?5000:1500);}
 startClock(()=>state);poll();

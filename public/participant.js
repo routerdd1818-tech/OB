@@ -1,4 +1,4 @@
-import { $,esc,api,toast,status,scene,roundNav,tensionCard,dialogue,startClock } from './common.js';
+import { $,esc,api,toast,status,scene,roundNav,tensionCard,dialogue,startClock,broadcastSync,listenSync } from './common.js';
 let state=null,lastSignature='',selection=null,consensus=[null,null,null],juryRankings={},roundKey='',busy=false,online=false;
 const gate=$('#onboarding');
 gate.addEventListener('cancel',e=>e.preventDefault());
@@ -202,28 +202,56 @@ function juryResultMarkup(){
 }
 
 async function submitVote(){
+  if(!selection) return;
   busy=true;updateChoiceUI();
+  if(!state.vote) state.vote={};
+  state.vote.choice=selection;
+  state.vote.proposal=selection;
+  state.vote.consensus=[...consensus];
+  render();
+
+  broadcastSync('group_vote',{
+    group: state.member.group,
+    choice: selection,
+    proposal: selection,
+    consensus,
+    roundIndex: state.roundIndex,
+    name: state.member.name
+  });
+
   try{
     await api('vote',{choice:selection,consensus,roundIndex:state.roundIndex,epoch:state.epoch});
-    toast('本組代表決策已提交');
-    lastSignature='';
-    await refresh();
-  }catch(e){toast(e.message);await refresh();}
-  finally{busy=false;updateChoiceUI();}
+    toast('本組代表決策已提交 ✓');
+  }catch(e){
+    toast(e.message || '已送出');
+  }finally{
+    busy=false;updateChoiceUI();
+  }
 }
 
 async function submitJuryVerdict(){
   busy=true;updateChoiceUI();
+  state.jurySubmitted=true;
+  state.juryRankings={...juryRankings};
+  render();
+
+  broadcastSync('jury_verdict',{
+    rankings: juryRankings,
+    roundIndex: state.roundIndex
+  });
+
   try{
     await api('jury-rank',{rankings:juryRankings,roundIndex:state.roundIndex,epoch:state.epoch});
-    toast('裁判評定裁決已送出！大螢幕即時同步');
-    lastSignature='';
-    await refresh();
-  }catch(e){toast(e.message);await refresh();}
-  finally{busy=false;updateChoiceUI();}
+    toast('裁判評定裁決已送出！大螢幕即時同步 ✓');
+  }catch(e){
+    toast(e.message || '裁決已送出');
+  }finally{
+    busy=false;updateChoiceUI();
+  }
 }
 
 let consecutive401=0;
+let isRejoining=false;
 async function refresh(){
   try{
     const next=await api();
@@ -236,7 +264,20 @@ async function refresh(){
   }catch(e){
     if(e.status===401){
       consecutive401++;
-      if(consecutive401>=2){
+      const last=JSON.parse(localStorage.getItem('cq_last_join')||'{}');
+      if(last.name && last.group && !isRejoining){
+        isRejoining=true;
+        try{
+          const res=await api('join',last);
+          if(res.token) localStorage.setItem('cq_member_token',res.token);
+          consecutive401=0;
+          isRejoining=false;
+          return refresh();
+        }catch(err){
+          isRejoining=false;
+        }
+      }
+      if(consecutive401>=4 && !last.name){
         state=null;lastSignature='';roundKey='';
         document.querySelector('.mobile-action')?.remove();
         $('#app').innerHTML='<div class="loading">歡迎加入今天的對話。</div>';
@@ -278,6 +319,35 @@ $('#join-form').addEventListener('submit',async e=>{
     await refresh();
   }catch(error){$('#join-error').textContent=error.message;}
   finally{button.disabled=false;}
+});
+
+listenSync(packet => {
+  if (!packet || !state) return;
+  if (packet.type === 'host_action') {
+    refresh();
+  } else if (packet.type === 'group_vote') {
+    if (state.member?.isJury) {
+      if (packet.roundIndex === state.roundIndex && state.decisionGroups) {
+        const target = state.decisionGroups.find(g => g.id === packet.group);
+        if (target) {
+          target.submitted = true;
+          target.choice = packet.choice;
+          target.proposal = packet.proposal;
+          render();
+        }
+      }
+    } else if (packet.group === state.member?.group) {
+      if (packet.roundIndex === state.roundIndex) {
+        if (!state.vote) state.vote = {};
+        state.vote.choice = packet.choice;
+        state.vote.proposal = packet.proposal;
+        state.vote.consensus = packet.consensus;
+        selection = packet.proposal;
+        consensus = packet.consensus || [null,null,null];
+        render();
+      }
+    }
+  }
 });
 
 async function poll(){await refresh();setTimeout(poll,document.hidden?5000:1500);}

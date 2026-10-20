@@ -142,7 +142,7 @@ export default async function handler(req,res) {
         if(action==='jury-rank') {
           if(user.group!==5) fail('只有第 5 組（裁判組）可進行評定裁決',403);
           if(state.phase!=='voting') fail('目前非評定階段',409);
-          if(body.epoch!==state.epoch||body.roundIndex!==state.round) fail('回合已更新，請重新整理',409);
+          if(body.roundIndex!==state.round) fail('回合已更新，請重新整理',409);
           if(!body.rankings||typeof body.rankings!=='object') fail('請提供評定名次');
           if(!state.juryRankings) state.juryRankings=[{},{},{},{}];
           if(!state.jurySubmitted) state.jurySubmitted=[false,false,false,false];
@@ -153,8 +153,10 @@ export default async function handler(req,res) {
         if(action!=='vote') fail('無權執行此操作',403);
         if(user.group===5) fail('第 5 組為裁判組，不參與決策投票',403);
         if(state.phase!=='voting') fail('目前未開放投票',409);
-        if(body.epoch!==state.epoch||body.roundIndex!==state.round) fail('回合已更新，請重新整理',409);
-        if(state.groups[user.group-1].representative!==user.id) fail('請由本組代表提交決策',403);
+        if(body.roundIndex!==state.round) fail('回合已更新，請重新整理',409);
+        const targetGroup = state.groups[user.group-1];
+        if(!targetGroup.representative) targetGroup.representative = user.id;
+        if(targetGroup.representative!==user.id) fail('請由本組代表提交決策',403);
         if(!['A','B','C','D'].includes(body.choice)) fail('請選擇方案');
         let choice=body.choice;
         if(state.round===3) {
@@ -213,7 +215,7 @@ export default async function handler(req,res) {
         if(!member) fail('找不到此成員');state.groups[member.group-1].representative=member.id;
       } else if(action==='reset') {
         if(body.confirm!=='RESET') fail('請確認重設');
-        const fresh=initialState();fresh.hosts=state.hosts;fresh.revision=state.revision;Object.assign(state,fresh);
+        const fresh=initialState('cq-reset-'+Date.now());fresh.hosts=state.hosts;fresh.revision=state.revision;Object.assign(state,fresh);
       } else fail('未知操作',404);
     });
     res.end(JSON.stringify({ok:true}));
