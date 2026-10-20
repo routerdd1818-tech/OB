@@ -177,3 +177,18 @@ test('juryRole dynamically changes each round to match the background perspectiv
   }
 });
 
+test('participants can switch groups freely via switch-group action', async () => {
+  const user = await request('join', { name: '換組測試員', group: 1, allowSwitch: true });
+  assert.equal(user.status, 200);
+  assert.equal(user.data.member.group, 1);
+
+  const switchRes = await request('switch-group', { name: '換組測試員', group: 4 }, user.cookie);
+  assert.equal(switchRes.status, 200);
+  assert.equal(switchRes.data.member.group, 4);
+
+  const view = await request('state', undefined, switchRes.cookie || user.cookie);
+  assert.equal(view.status, 200);
+  assert.equal(view.data.member.group, 4);
+});
+
+

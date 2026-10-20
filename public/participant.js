@@ -1,7 +1,7 @@
 import { $,esc,api,toast,status,scene,roundNav,tensionCard,dialogue,startClock,broadcastSync,listenSync } from './common.js';
 let state=null,lastSignature='',selection=null,consensus=[null,null,null],juryRankings={},roundKey='',busy=false,online=false;
 const gate=$('#onboarding');
-gate.addEventListener('cancel',e=>e.preventDefault());
+gate.addEventListener('cancel',e=>{ if(!state?.member) e.preventDefault(); });
 
 function updateChoiceUI(){
   if(state?.member?.isJury) {
@@ -34,8 +34,8 @@ function render(){
   const cq = state.group.cq ?? 100;
   const cqClass = cq < 50 ? 'critical' : cq < 75 ? 'low' : '';
   const identityBar = member.isJury
-    ? `<div class="mobile-identity"><div class="identity-bar"><div class="identity-pill"><span class="identity-name">${esc(member.name)}</span> <span aria-hidden="true">｜</span> 第 5 組 · ${esc(r.juryRole?.short || '角色席')}</div><span class="rep-tag jury-tag">${esc(r.juryRole?.title || '跨文化角色席')}</span></div><div class="mobile-health"><span class="health-label">角色席</span><div class="health-track"><div class="health-fill" style="width:100%; background:var(--accent,#7c3aed);"></div></div><span class="cq-value">JURY<small> 角色對手席</small></span></div></div>`
-    : `<div class="mobile-identity"><div class="identity-bar"><div class="identity-pill"><span class="identity-name">${esc(member.name)}</span> <span aria-hidden="true">｜</span> 第 ${member.group} 組 (${esc(r.juryRole?.counterpart || '決策組')})</div><span class="rep-tag">${member.isRepresentative?'本組決策代表':'與夥伴一起思考'}</span></div><div class="mobile-health"><span class="health-label">團隊 CQ 韌性值</span><div class="health-track" role="progressbar" aria-label="本組 CQ 韌性值" aria-valuenow="${cq}" aria-valuemin="0" aria-valuemax="100"><div class="health-fill ${cqClass}" style="width:${cq}%"></div></div><span class="cq-value">${cq}<small>/ 100 CQ</small></span></div></div>`;
+    ? `<div class="mobile-identity"><div class="identity-bar"><div class="identity-pill"><span class="identity-name">${esc(member.name)}</span> <span aria-hidden="true">｜</span> 第 5 組 · ${esc(r.juryRole?.short || '角色席')}</div><button type="button" class="switch-group-btn" id="open-switch-group" aria-label="更換組別">換組</button><span class="rep-tag jury-tag">${esc(r.juryRole?.title || '跨文化角色席')}</span></div><div class="mobile-health"><span class="health-label">角色席</span><div class="health-track"><div class="health-fill" style="width:100%; background:var(--accent,#7c3aed);"></div></div><span class="cq-value">JURY<small> 角色對手席</small></span></div></div>`
+    : `<div class="mobile-identity"><div class="identity-bar"><div class="identity-pill"><span class="identity-name">${esc(member.name)}</span> <span aria-hidden="true">｜</span> 第 ${member.group} 組 (${esc(r.juryRole?.counterpart || '決策組')})</div><button type="button" class="switch-group-btn" id="open-switch-group" aria-label="更換組別">換組</button><span class="rep-tag">${member.isRepresentative?'本組決策代表':'與夥伴一起思考'}</span></div><div class="mobile-health"><span class="health-label">團隊 CQ 韌性值</span><div class="health-track" role="progressbar" aria-label="本組 CQ 韌性值" aria-valuenow="${cq}" aria-valuemin="0" aria-valuemax="100"><div class="health-fill ${cqClass}" style="width:${cq}%"></div></div><span class="cq-value">${cq}<small>/ 100 CQ</small></span></div></div>`;
 
   $('#app').innerHTML=`${identityBar}${roundNav(state.roundIndex)}${state.phase==='finished'?'<div class="finished-banner">四回合探索完成！</div>':''}<section class="mobile-scenario"><div class="topic-row"><span class="topic-badge">ROUND ${String(state.roundIndex+1).padStart(2,'0')} · ${r.dimension}</span><span class="topic-location">${esc(r.location)}</span></div><h1>${esc(r.title)}</h1><p class="scenario-context">${esc(r.context)}</p></section>${revealed?tensionCard(state.result||state.results?.[1],true):''}${dialogue(r)}<div class="question-prompt"><span class="prompt-badge">🎯 本題決策焦點</span><div class="prompt-title">${esc(r.prompt)}</div></div>
   ${revealed ? (member.isJury?juryResultMarkup():resultMarkup()) : (member.isJury?juryVotingMarkup():votingMarkup())}`;
@@ -216,6 +216,28 @@ async function submitVote(){
     await api('vote',{choice:selection,consensus,roundIndex:state.roundIndex,epoch:state.epoch});
     toast('本組代表決策已提交 ✓');
   }catch(e){
+    if(e.status===401){
+      const last=JSON.parse(localStorage.getItem('cq_last_join')||'{}');
+      if(last.name && last.group){
+        try{
+          const joinRes=await api('join',{name:last.name,group:last.group,allowSwitch:true});
+          if(joinRes.token) localStorage.setItem('cq_member_token',joinRes.token);
+          const next=await api();
+          next.clockOffset=next.serverTime-Date.now();
+          state=next;
+          try { await api('claim-rep',{},'member'); } catch(err){}
+          await api('vote',{choice:selection,consensus,roundIndex:state.roundIndex,epoch:state.epoch});
+          toast('本組代表決策已提交 ✓');
+          render();
+          busy=false;updateChoiceUI();
+          return;
+        }catch(retryErr){
+          toast(retryErr.message || '課堂已更新，請重新整理');
+          busy=false;updateChoiceUI();
+          return;
+        }
+      }
+    }
     toast(e.message || '已送出');
   }finally{
     busy=false;updateChoiceUI();
@@ -237,6 +259,23 @@ async function submitJuryVerdict(){
     await api('jury-rank',{rankings:juryRankings,roundIndex:state.roundIndex,epoch:state.epoch});
     toast('裁判評定裁決已送出！大螢幕即時同步 ✓');
   }catch(e){
+    if(e.status===401){
+      const last=JSON.parse(localStorage.getItem('cq_last_join')||'{}');
+      if(last.name && last.group){
+        try{
+          const joinRes=await api('join',{name:last.name,group:last.group,allowSwitch:true});
+          if(joinRes.token) localStorage.setItem('cq_member_token',joinRes.token);
+          const next=await api();
+          next.clockOffset=next.serverTime-Date.now();
+          state=next;
+          await api('jury-rank',{rankings:juryRankings,roundIndex:state.roundIndex,epoch:state.epoch});
+          toast('裁判評定裁決已送出！大螢幕即時同步 ✓');
+          render();
+          busy=false;updateChoiceUI();
+          return;
+        }catch(retryErr){}
+      }
+    }
     toast(e.message || '裁決已送出');
   }finally{
     busy=false;updateChoiceUI();
@@ -261,7 +300,7 @@ async function refresh(){
       if(last.name && last.group && !isRejoining){
         isRejoining=true;
         try{
-          const res=await api('join',last);
+          const res=await api('join',{name:last.name,group:last.group,allowSwitch:true});
           if(res.token) localStorage.setItem('cq_member_token',res.token);
           consecutive401=0;
           isRejoining=false;
@@ -292,15 +331,40 @@ try{
   }
 }catch{}
 
+$('#app').addEventListener('click', e => {
+  if (e.target.closest('#open-switch-group')) {
+    if (!state?.member) return;
+    $('#join-title').innerHTML = '更換組別 / 姓名';
+    $('#name').value = state.member.name;
+    const r = document.querySelector(`input[name="group"][value="${state.member.group}"]`);
+    if (r) r.checked = true;
+    const closeBtn = $('#close-onboarding');
+    if (closeBtn) closeBtn.style.display = 'grid';
+    const subBtn = $('#join-form button[type="submit"]');
+    if (subBtn) subBtn.innerHTML = '確認更換組別 <span aria-hidden="true">↗</span>';
+    gate.showModal();
+  }
+});
+
+$('#close-onboarding')?.addEventListener('click', () => {
+  gate.close();
+});
+
 $('#join-form').addEventListener('submit',async e=>{
   e.preventDefault();
-  const button=e.currentTarget.querySelector('button');
+  const button=e.currentTarget.querySelector('button[type="submit"]') || e.currentTarget.querySelector('button');
   button.disabled=true;$('#join-error').textContent='';
   const form=new FormData(e.currentTarget);
   const name=form.get('name');
   const group=Number(form.get('group'));
   try{
-    const res=await api('join',{name,group});
+    let res;
+    if(state?.member) {
+      res=await api('switch-group',{name,group});
+      toast(`已更換至第 ${group} 組 ✓`);
+    } else {
+      res=await api('join',{name,group,allowSwitch:true});
+    }
     if(res.token){
       try{
         localStorage.setItem('cq_member_token',res.token);
@@ -310,7 +374,22 @@ $('#join-form').addEventListener('submit',async e=>{
     consecutive401=0;
     gate.close();
     await refresh();
-  }catch(error){$('#join-error').textContent=error.message;}
+  }catch(error){
+    try {
+      const res=await api('join',{name,group,allowSwitch:true});
+      if(res.token){
+        localStorage.setItem('cq_member_token',res.token);
+        localStorage.setItem('cq_last_join',JSON.stringify({name,group}));
+      }
+      consecutive401=0;
+      toast(`已更換至第 ${group} 組 ✓`);
+      gate.close();
+      await refresh();
+      return;
+    } catch(err2) {
+      $('#join-error').textContent=err2.message || error.message;
+    }
+  }
   finally{button.disabled=false;}
 });
 

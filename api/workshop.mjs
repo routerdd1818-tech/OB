@@ -128,13 +128,44 @@ export default async function handler(req,res) {
       await mutate(state=>{
         const old=extractToken(req);
         const prior=old && (verifyMemberToken(old) || state.participants[hash(old)]);
-        if(prior && prior.expires>Date.now() && (prior.group!==group || prior.name!==name)) fail('已加入課堂，不能切換至其他組別',409);
+        if(prior && prior.expires>Date.now() && (prior.group!==group || prior.name!==name)) {
+          if(!body.allowSwitch) fail('已加入課堂，不能切換至其他組別',409);
+        }
         member.epoch=state.epoch;
         token=signMemberToken(member,state.epoch);
         state.participants[hash(token)]=member;
         const target=state.groups[group-1];
         if(!Object.values(state.participants).some(p=>p.id===target.representative&&p.expires>Date.now())) target.representative=member.id;
       });setCookie(res,'member',token);res.end(JSON.stringify({ok:true,token,member}));return;
+    }
+    if(action==='switch-group') {
+      const group=Number(body.group);
+      const name=typeof body.name==='string'&&body.name.trim()?body.name.trim():'';
+      if(!Number.isInteger(group)||group<1||group>5) fail('請選擇 1–5 組');
+      let member=null;
+      let token='';
+      await mutate(state=>{
+        const user=session(req,state,role);
+        const oldGroup=user.group;
+        const oldId=user.id;
+        user.group=group;
+        if(name) user.name=name;
+        const oldTarget=state.groups[oldGroup-1];
+        if(oldTarget && oldTarget.representative===oldId){
+          const nextRep=Object.values(state.participants).find(p=>p.group===oldGroup&&p.id!==oldId&&p.expires>Date.now());
+          oldTarget.representative=nextRep?nextRep.id:null;
+        }
+        const newTarget=state.groups[group-1];
+        if(newTarget && !newTarget.representative){
+          newTarget.representative=oldId;
+        }
+        token=signMemberToken(user,state.epoch);
+        state.participants[hash(token)]=user;
+        member=user;
+      });
+      setCookie(res,'member',token);
+      res.end(JSON.stringify({ok:true,token,member}));
+      return;
     }
     await mutate(state=>{
       const user=session(req,state,role);
