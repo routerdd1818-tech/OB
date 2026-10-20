@@ -176,7 +176,7 @@ export default async function handler(req,res) {
         }
         if(action==='jury-rank') {
           if(user.group!==5) fail('只有第 5 組（裁判組）可進行評定裁決',403);
-          if(state.phase!=='voting') fail('目前非評定階段',409);
+          if(!['voting','ready','waiting'].includes(state.phase)) fail('目前非評定階段',409);
           if(body.roundIndex!==state.round) fail('回合已更新，請重新整理',409);
           if(!body.rankings||typeof body.rankings!=='object') fail('請提供評定名次');
           if(!state.juryRankings) state.juryRankings=[{},{},{},{}];
@@ -187,7 +187,7 @@ export default async function handler(req,res) {
         }
         if(action!=='vote') fail('無權執行此操作',403);
         if(user.group===5) fail('第 5 組為裁判組，不參與決策投票',403);
-        if(state.phase!=='voting') fail('目前未開放投票',409);
+        if(!['voting','ready','waiting'].includes(state.phase)) fail('目前未開放投票',409);
         if(body.roundIndex!==state.round) fail('回合已更新，請重新整理',409);
         const targetGroup = state.groups[user.group-1];
         if(!targetGroup.representative) targetGroup.representative = user.id;
@@ -201,7 +201,7 @@ export default async function handler(req,res) {
         state.votes[state.round][user.group]={choice,proposal:body.choice,submittedBy:user.id,...(state.round===3?{consensus:body.consensus}:{})};return;
       }
       if(action==='start') {
-        if(!['waiting','ready'].includes(state.phase)) fail('本回合已開始',409);
+        if(!['waiting','ready','voting'].includes(state.phase)) fail('本回合已揭曉或已結束',409);
         state.phase='voting';state.deadline=Date.now()+rounds[state.round].seconds*1000;state.remaining=null;
       } else if(action==='timer') {
         if(state.phase!=='voting') fail('目前不是研討階段',409);

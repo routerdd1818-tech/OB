@@ -519,6 +519,22 @@
   color: #ffffff;
 }
 
+.revealed-status-pill {
+  cursor: pointer !important;
+  background: var(--oat) !important;
+  border: 1px solid var(--line) !important;
+  color: var(--muted) !important;
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  text-align: center !important;
+  transition: all 0.2s ease !important;
+}
+
+.revealed-status-pill:hover {
+  background: #e4dfd3 !important;
+  color: var(--ink) !important;
+}
+
 /* ==========================================================================
    Scenario Typography Balancing:
    - Scenario Title ("同一個時程，不同的回應。") smaller

@@ -70,6 +70,22 @@ function renderReview(){
 
 async function hostAction(action,extra={}){
   if(busy)return;
+  if(action==='next'){
+    busy=true;document.querySelectorAll('[data-host-action]').forEach(el=>el.disabled=true);
+    try{
+      await api('next',extra,'host');
+      const latest=await api('state',undefined,'host');
+      if(latest.roundIndex <= 3 && latest.phase !== 'finished') {
+        try { await api('start',{},'host'); } catch(err){}
+      }
+      broadcastSync('host_action',{ action:'next', roundIndex: latest.roundIndex });
+      lastSignature='';
+      await refresh();
+      toast(latest.phase==='finished'?'四回合已全部完成！':`已進入第 ${latest.roundIndex+1} 回合研討 ✓`);
+    }catch(e){toast(e.message);await refresh();}
+    finally{busy=false;document.querySelectorAll('[data-host-action]').forEach(el=>el.disabled=false);}
+    return;
+  }
   if(action==='reveal'){
     busy=true;
     try{

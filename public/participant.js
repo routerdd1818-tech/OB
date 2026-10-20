@@ -44,14 +44,14 @@ function render(){
   const footer=document.createElement('footer');footer.className='mobile-action';
 
   if(member.isJury) {
-    footer.innerHTML=`<div class="mobile-action-inner">${state.phase==='voting'?`<button id="submit-jury" class="button primary" type="button">${state.jurySubmitted?'更新裁決回饋':'送出裁決回饋'} <span aria-hidden="true">↗</span></button>`:`<div class="button secondary wide">${state.phase==='finished'?'本次課堂已完成':revealed?'回饋已揭曉 · 等待下一回合':'等待簡報者開放研討'}</div>`}</div>`;
+    footer.innerHTML=`<div class="mobile-action-inner">${state.phase==='voting'?`<button id="submit-jury" class="button primary" type="button">${state.jurySubmitted?'更新裁決回饋':'送出裁決回饋'} <span aria-hidden="true">↗</span></button>`:`<div class="button secondary wide revealed-status-pill" id="revealed-status-pill">${state.phase==='finished'?'本次課堂已完成 · 感謝參與':revealed?'回饋已揭曉 · 等待大螢幕進入下一題':'等待講師開放研討'}</div>`}</div>`;
   } else {
     const isWaiting = ['waiting','ready'].includes(state.phase);
     const hasVoted = Boolean(state.vote?.choice);
     const isChanged = hasVoted && selection && selection !== state.vote.choice;
-    let buttonText = '提交本組決策';
+    let buttonText = '提交本組決策 ↗';
     if (isWaiting) {
-      buttonText = selection ? `已預選方案 ${selection}（等待開始）` : '預選方案（等待開始）';
+      buttonText = selection ? `已預選方案 ${selection}（可隨時送出 ↗）` : '預選方案（可隨時送出 ↗）';
     } else if (isChanged) {
       buttonText = `改選方案 ${selection} 並重新送出 ↗`;
     } else if (hasVoted) {
@@ -59,7 +59,7 @@ function render(){
     } else if (selection) {
       buttonText = `提交方案 ${selection} ↗`;
     }
-    footer.innerHTML=`<div class="mobile-action-inner">${revealed?`<div class="button secondary wide">${state.phase==='finished'?'本次課堂已完成':'本組結果已揭曉 · 等待下一回合'}<span aria-hidden="true">✓</span></div>`:`<button id="submit-vote" class="button primary" type="button" ${!selection?'disabled':''}>${buttonText}</button>`}</div>`;
+    footer.innerHTML=`<div class="mobile-action-inner">${revealed?`<div class="button secondary wide revealed-status-pill" id="revealed-status-pill">${state.phase==='finished'?'本次課堂已完成 · 感謝參與':'本回合已揭曉 · 等待大螢幕進入下一題'}</div>`:`<button id="submit-vote" class="button primary" type="button" ${!selection?'disabled':''}>${buttonText}</button>`}</div>`;
   }
 
   document.body.append(footer);
@@ -348,6 +348,12 @@ $('#app').addEventListener('click', e => {
 
 $('#close-onboarding')?.addEventListener('click', () => {
   gate.close();
+});
+
+document.body.addEventListener('click', e => {
+  if (e.target.closest('#revealed-status-pill')) {
+    toast(state?.phase === 'finished' ? '四個回合已全部完成！' : '本回合已揭曉！請看大螢幕，由講師進入下一回合。');
+  }
 });
 
 $('#join-form').addEventListener('submit',async e=>{
