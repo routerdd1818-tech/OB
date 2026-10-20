@@ -105,16 +105,17 @@ function scenarioMarkup(){
         </div>
         <p class="scenario-context">${esc(r.context)}</p>
       </section>
-      ${dialogue(r)}
       <div class="question-prompt">
         <span class="prompt-badge">決策焦點</span>
         <span class="prompt-text">${esc(r.prompt)}</span>
       </div>
     </div>
     <div class="voting-right-col">
+      ${dialogue(r)}
+
       ${pitchCardHtml}
 
-      ${state.jurySubmitted && state.phase==='voting' ? `<div class="card jury-host-status-banner" style="margin: 0 0 12px;">
+      ${state.jurySubmitted && state.phase==='voting' ? `<div class="card jury-host-status-banner" style="margin: 0 0 10px;">
         <span class="prompt-badge" style="background:#7c3aed;">第 5 組裁決就緒</span>
         <p>已完成全班道具配發（${state.jurySummary?.empathyCount || 0} 張同理加成卡、${state.jurySummary?.vetoCount || 0} 張踩雷否決卡），揭曉時公開受獎對象！</p>
       </div>` : ''}
@@ -129,15 +130,27 @@ function scenarioMarkup(){
         </div>
         <div class="progress-chips-row">
           ${decisionGroups.map(g=>`<div class="progress-chip ${g.submitted?'is-done done':g.count?'is-active':''}">
-            <span class="chip-dot"></span>
+            <span class="chip-dot" aria-hidden="true"></span>
             <span class="chip-name">第 ${g.id} 組</span>
             <span class="chip-status">${g.submitted?'已鎖定':g.count?'討論中':'未加入'}</span>
             ${g.cascade?`<small class="cascade-mini">(${esc(g.cascade.badge)})</small>`:''}
           </div>`).join('')}
           <div class="progress-chip is-jury jury-chip ${state.jurySubmitted?'is-done done':''}">
-            <span class="chip-dot"></span>
+            <span class="chip-dot" aria-hidden="true"></span>
             <span class="chip-name">第 5 組</span>
             <span class="chip-status">${state.jurySubmitted?'已鎖定':'審視中'}</span>
+          </div>
+        </div>
+        <div class="role-matchup-strip">
+          <div class="matchup-item">
+            <span class="matchup-tag">第 1–4 組</span>
+            <strong>${esc(r.juryRole?.counterpart || '跨國決策組')}</strong>
+            <small>研討選出最佳方案，全組鎖定後進行 30 秒論述</small>
+          </div>
+          <div class="matchup-item is-jury-matchup">
+            <span class="matchup-tag jury-tag">第 5 組</span>
+            <strong>${esc(r.juryRole?.title || '跨文化裁判席')}</strong>
+            <small>聆聽論述後排定 1–4 名，配發同理加成 (+10) 與踩雷否決 (-15)</small>
           </div>
         </div>
       </section>
