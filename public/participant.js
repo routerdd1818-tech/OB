@@ -6,6 +6,14 @@ gate.addEventListener('cancel',e=>{ if(!state?.member) e.preventDefault(); });
 function updateChoiceUI(){
   if(state?.member?.isJury) {
     const juryLocked = Boolean(state.jurySubmitted);
+    const vals = Object.values(juryRankings);
+    const empUsed = vals.filter(v => v === 'empathy').length;
+    const vetoUsed = vals.filter(v => v === 'veto').length;
+    const empEl = $('#quota-empathy');
+    if (empEl) empEl.textContent = `${Math.max(0, 2 - empUsed)} / 2 張`;
+    const vetoEl = $('#quota-veto');
+    if (vetoEl) vetoEl.textContent = `${Math.max(0, 1 - vetoUsed)} / 1 張`;
+
     document.querySelectorAll('[data-jury-team]').forEach(btn=>{
       const tid=Number(btn.dataset.juryTeam);const rank=btn.dataset.rank;
       btn.setAttribute('aria-pressed',String(juryRankings[tid]===rank||juryRankings[tid]===Number(rank)));
@@ -96,6 +104,20 @@ function render(){
     document.querySelectorAll('[data-jury-team]').forEach(btn=>btn.addEventListener('click',()=>{
       if(juryLocked) return;
       const tid=Number(btn.dataset.juryTeam);const rank=btn.dataset.rank;
+      if(juryRankings[tid]===rank) {
+        delete juryRankings[tid];
+        updateChoiceUI();
+        return;
+      }
+      const otherVals = Object.entries(juryRankings).filter(([k])=>Number(k)!==tid).map(([,v])=>v);
+      if(rank==='empathy' && otherVals.filter(v=>v==='empathy').length >= 2) {
+        toast('🌟 「同理心加成卡 (+10 CQ)」每回合最多發放 2 張！');
+        return;
+      }
+      if(rank==='veto' && otherVals.filter(v=>v==='veto').length >= 1) {
+        toast('⚡ 「文化踩雷否決卡 (-15 CQ)」每回合限用 1 張！');
+        return;
+      }
       juryRankings[tid]=rank;
       updateChoiceUI();
     }));
@@ -117,7 +139,14 @@ function render(){
 
 function votingMarkup(){
   const hasVoted = Boolean(state.vote?.choice);
+  const c = state.cascade;
   return `<div class="mobile-timer"><span class="timer-label" data-debate>${state.roundIndex===3?'三方協商辯論':'小組研討時間'}</span><span class="clock" data-clock>--:--</span></div>
+
+  ${c?`<div class="cascade-banner ${c.type==='buff'?'is-buff':'is-penalty'}">
+    <div class="cascade-head"><span class="cascade-badge">${esc(c.badge)}</span><strong>${esc(c.title)}</strong></div>
+    <p class="cascade-effect">${esc(c.effectText)}</p>
+    ${c.hint?`<div class="cascade-intel-box">${esc(c.hint)}</div>`:''}
+  </div>`:''}
 
   ${hasVoted?`<div class="submitted-banner is-locked">
     <strong>✓ 本組已提交${state.vote.choice==='X'?'未達成協議':`方案 ${state.vote.choice}`} · 決策已鎖定</strong>
@@ -130,8 +159,10 @@ function votingMarkup(){
 }
 
 function juryVotingMarkup(){
-  const isRound4 = (state.roundIndex===3);
   const juryLocked = Boolean(state.jurySubmitted);
+  const vals = Object.values(juryRankings);
+  const empUsed = vals.filter(v => v === 'empathy').length;
+  const vetoUsed = vals.filter(v => v === 'veto').length;
   return `<div class="mobile-timer"><span class="timer-label">第 5 組角色席</span><span class="clock" data-clock>--:--</span></div>
 
   ${juryLocked?`<div class="submitted-banner is-locked">
@@ -150,7 +181,7 @@ function juryVotingMarkup(){
   <section class="card jury-monitor-summary">
     <div class="eyebrow">各組進度</div>
     <div class="jury-progress-chips">
-      ${state.decisionGroups.map(g=>`<span class="jury-chip ${g.submitted?'done':'wait'}">第 ${g.id} 組：${g.submitted?'已選 '+g.choice:'討論中…'}</span>`).join('')}
+      ${state.decisionGroups.map(g=>`<span class="jury-chip ${g.submitted?'done':'wait'}">第 ${g.id} 組：${g.submitted?'已選 '+g.choice:'討論中…'}${g.cascade?` (${esc(g.cascade.badge)})`:''}</span>`).join('')}
     </div>
   </section>
 
@@ -163,7 +194,14 @@ function juryVotingMarkup(){
   </section>
 
   <section class="jury-eval-section">
-    <div class="section-title"><h3>各組申辯回饋評定（可並列）</h3></div>
+    <div class="section-title">
+      <h3>實質籌碼賦權 · 申辯裁決卡</h3>
+      <p class="muted" style="margin:4px 0 10px; font-size:13px;">聆聽第 1～4 組申辯後，分派本回合籌碼卡（直接加扣該組 CQ 分數）：</p>
+      <div class="jury-quota-bar">
+        <span class="quota-pill empathy-pill">🌟 同理心加成 (+10 CQ)：剩餘 <strong id="quota-empathy">${Math.max(0, 2 - empUsed)} / 2 張</strong></span>
+        <span class="quota-pill veto-pill">⚡ 文化踩雷否決 (-15 CQ)：剩餘 <strong id="quota-veto">${Math.max(0, 1 - vetoUsed)} / 1 張</strong></span>
+      </div>
+    </div>
     <div class="jury-cards-list">
       ${state.decisionGroups.map(g=>{
         const opt = g.choice ? state.optionsWithIntel.find(o=>o.id===g.choice) : null;
@@ -172,16 +210,11 @@ function juryVotingMarkup(){
           <div class="eval-head"><strong>第 ${g.id} 組</strong><span class="pill ${g.submitted?'positive':'muted'}">${g.submitted?'方案 '+g.choice:'等待提交'}</span></div>
           ${opt?`<div class="eval-body"><strong>${esc(opt.title)}</strong><p>${esc(opt.text)}</p></div>`:''}
           <div class="eval-controls">
-            ${isRound4?`<div class="tier-buttons-group">
-              <button type="button" class="tier-btn" data-jury-team="${g.id}" data-rank="tier1" aria-pressed="${currentRank==='tier1'}" ${juryLocked?'disabled':''}>卓越雙贏 Tier 1</button>
-              <button type="button" class="tier-btn" data-jury-team="${g.id}" data-rank="tier2" aria-pressed="${currentRank==='tier2'}" ${juryLocked?'disabled':''}>局部妥協 Tier 2</button>
-              <button type="button" class="tier-btn" data-jury-team="${g.id}" data-rank="tier3" aria-pressed="${currentRank==='tier3'}" ${juryLocked?'disabled':''}>嚴重破局 Tier 3</button>
-            </div>`:`<div class="rank-buttons-group">
-              <button type="button" class="rank-btn" data-jury-team="${g.id}" data-rank="1" aria-pressed="${currentRank===1||currentRank==='1'}" ${juryLocked?'disabled':''}>第 1 名</button>
-              <button type="button" class="rank-btn" data-jury-team="${g.id}" data-rank="2" aria-pressed="${currentRank===2||currentRank==='2'}" ${juryLocked?'disabled':''}>第 2 名</button>
-              <button type="button" class="rank-btn" data-jury-team="${g.id}" data-rank="3" aria-pressed="${currentRank===3||currentRank==='3'}" ${juryLocked?'disabled':''}>第 3 名</button>
-              <button type="button" class="rank-btn" data-jury-team="${g.id}" data-rank="4" aria-pressed="${currentRank===4||currentRank==='4'}" ${juryLocked?'disabled':''}>第 4 名</button>
-            </div>`}
+            <div class="chip-buttons-group">
+              <button type="button" class="chip-btn empathy-btn" data-jury-team="${g.id}" data-rank="empathy" aria-pressed="${currentRank==='empathy'}" ${juryLocked?'disabled':''}>🌟 同理心加成 (+10 CQ)</button>
+              <button type="button" class="chip-btn neutral-btn" data-jury-team="${g.id}" data-rank="neutral" aria-pressed="${currentRank==='neutral'}" ${juryLocked?'disabled':''}>⚖️ 中立觀察 (0 CQ)</button>
+              <button type="button" class="chip-btn veto-btn" data-jury-team="${g.id}" data-rank="veto" aria-pressed="${currentRank==='veto'}" ${juryLocked?'disabled':''}>⚡ 文化踩雷否決 (-15 CQ)</button>
+            </div>
           </div>
         </div>`;
       }).join('')}
@@ -192,23 +225,21 @@ function juryVotingMarkup(){
 function resultMarkup(){
   const result=state.result;
   if(!result)return '<section class="card waiting-card"><h2>本組本回合未提交決策</h2><p>團隊 CQ 韌性值維持原值，請跟隨簡報者一起覆盤。</p></section>';
-  const juryRank=result.juryRank || state.juryRank;
-  let rankText='';
-  if(juryRank){
-    if(state.roundIndex===3){
-      rankText=juryRank==='tier1'?'卓越雙贏 (Tier 1)':juryRank==='tier2'?'局部妥協 (Tier 2)':'嚴重破局 (Tier 3)';
-    }else{
-      rankText=`並列第 ${juryRank} 名`;
-    }
-  }
   const cqBefore = result.cqBefore ?? 100;
   const cqAfter = result.cqAfter ?? 100;
+  const baseDelta = result.baseDelta ?? result.cq ?? 0;
+  const juryBonus = result.juryBonus ?? 0;
   const delta = result.actualDelta ?? 0;
   return `<section class="card mobile-review">
     <div class="eyebrow">GROUP ${state.member.group} · YOUR DECISION & CQ IMPACT</div>
     <h2>${result.id==='X'?'三方未達成協議':`方案 ${result.id} · ${esc(result.title)}`}</h2>
-    ${result.juryVerdict?`<div class="jury-verdict-pill">${esc(result.juryVerdict)}</div>`:''}
-    <div class="cq-summary"><span>團隊 CQ 韌性值 ${cqBefore} → ${cqAfter}<br><small>${delta>0?'決策展現高度文化同理心，有效守護跨國信任！':delta===0?'CQ 韌性維持持平。':'決策觸碰深層文化盲點，團隊信任受損。'}</small></span><strong class="${delta>=0?'positive-text':'negative-text'}">${delta>0?'+':''}${delta} CQ</strong></div>
+    ${result.juryVerdict?`<div class="jury-verdict-pill ${juryBonus>0?'is-buff':juryBonus<0?'is-veto':''}">${esc(result.juryVerdict)}</div>`:''}
+    <div class="score-breakdown-row">
+      <span>方案基礎：<strong>${baseDelta>0?'+':''}${baseDelta} CQ</strong></span>
+      <span>｜</span>
+      <span>裁判籌碼：<strong class="${juryBonus>0?'positive-text':juryBonus<0?'negative-text':''}">${juryBonus>0?'+':''}${juryBonus} CQ</strong></span>
+    </div>
+    <div class="cq-summary"><span>團隊 CQ 韌性值 ${cqBefore} → ${cqAfter}<br><small>${delta>0?'決策與說服展現高度文化同理心，有效守護跨國信任！':delta===0?'CQ 韌性維持持平。':'決策觸碰深層文化盲點，團隊信任受損。'}</small></span><strong class="${delta>=0?'positive-text':'negative-text'}">${delta>0?'+':''}${delta} CQ</strong></div>
     <div class="review-insight"><div class="eyebrow">文化盲點 · 重新看見</div><p>${esc(result.blindspot)}</p></div>
   </section>`;
 }
@@ -222,10 +253,13 @@ function juryResultMarkup(){
         const res=state.results?.[g.id];
         const rk=state.juryRankings?.[g.id];
         const delta=res?.actualDelta;
+        const baseDelta=res?.baseDelta ?? res?.cq;
+        const juryBonus=res?.juryBonus ?? 0;
+        let rkLabel = res?.juryVerdict || (rk==='empathy'?'🌟 同理心加成 (+10 CQ)':rk==='veto'?'⚡ 文化踩雷否決 (-15 CQ)':rk==='neutral'?'⚖️ 中立觀察 (0 CQ)':rk?`說服回饋：第 ${rk} 名`:'未評定');
         return `<div class="jury-summary-row">
           <div>
-            <strong>第 ${g.id} 組</strong> · 方案 ${res?.id||'—'}
-            <div style="font-size:11px; color:var(--muted); margin-top:3px;">${res?.juryVerdict||(rk?`說服回饋：並列第 ${rk} 名`:'已評定')}</div>
+            <strong>第 ${g.id} 組</strong> · 方案 ${res?.id||'—'} ${baseDelta!==undefined?`<small class="muted">(方案 ${baseDelta>0?'+':''}${baseDelta}${juryBonus?` / 裁判 ${juryBonus>0?'+':''}${juryBonus}`:''})</small>`:''}
+            <div style="font-size:12px; color:var(--muted); margin-top:3px;">${esc(rkLabel)}</div>
           </div>
           <span class="pill ${delta>=0?'positive':'negative'}">${delta!==undefined?(delta>0?'+':'')+delta+' CQ':'—'}</span>
         </div>`;

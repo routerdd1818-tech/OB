@@ -191,4 +191,52 @@ test('participants can switch groups freely via switch-group action', async () =
   assert.equal(view.data.member.group, 4);
 });
 
+test('jury chip cards affect CQ scores on reveal and round 1 choices trigger round 2 cascading consequences', async () => {
+  await host('reset', { confirm: 'RESET' });
+  const joined = await Promise.all(Array.from({ length: 5 }, (_, i) => request('join', { name: `組長${i + 1}`, group: i + 1 })));
+  const cookies = joined.map(r => r.cookie);
+  await host('start', {});
+  const r1 = (await host()).data;
+
+  // Group 1 picks A (-25 CQ), Group 2 picks B (+20 CQ), Group 3 picks C (-15 CQ), Group 4 picks D (-30 CQ)
+  await request('vote', { choice: 'A', epoch: r1.epoch, roundIndex: 0 }, cookies[0]);
+  await request('vote', { choice: 'B', epoch: r1.epoch, roundIndex: 0 }, cookies[1]);
+  await request('vote', { choice: 'C', epoch: r1.epoch, roundIndex: 0 }, cookies[2]);
+  await request('vote', { choice: 'D', epoch: r1.epoch, roundIndex: 0 }, cookies[3]);
+
+  // Jury quota check: >2 empathy cards rejected, >1 veto card rejected
+  assert.equal((await request('jury-rank', { rankings: { 1: 'empathy', 2: 'empathy', 3: 'empathy' }, epoch: r1.epoch, roundIndex: 0 }, cookies[4])).status, 400);
+  assert.equal((await request('jury-rank', { rankings: { 1: 'veto', 2: 'veto' }, epoch: r1.epoch, roundIndex: 0 }, cookies[4])).status, 400);
+
+  // Valid jury cards: Group 1 gets empathy (+10 CQ), Group 3 gets empathy (+10 CQ), Group 4 gets veto (-15 CQ)
+  assert.equal((await request('jury-rank', { rankings: { 1: 'empathy', 2: 'neutral', 3: 'empathy', 4: 'veto' }, epoch: r1.epoch, roundIndex: 0 }, cookies[4])).status, 200);
+
+  await host('reveal', {});
+  const revealed = (await host()).data;
+  // Group 1: 100 - 25 + 10 = 85
+  assert.equal(revealed.groups[0].cq, 85);
+  assert.equal(revealed.results[1].juryBonus, 10);
+  // Group 3: 100 - 15 + 10 = 95
+  assert.equal(revealed.groups[2].cq, 95);
+  // Group 4: 100 - 30 - 15 = 55
+  assert.equal(revealed.groups[3].cq, 55);
+  assert.equal(revealed.results[4].juryBonus, -15);
+  // Quadrant metadata present in distribution results
+  assert.ok(revealed.distribution[0].result.quadrant.zone);
+
+  // Advance to Round 2 and verify Cascading Consequences
+  await host('next', {});
+  const g1R2 = (await request('state', undefined, cookies[0])).data;
+  const g2R2 = (await request('state', undefined, cookies[1])).data;
+  // Group 1 chose A in R1 -> penalty (-30s)
+  assert.equal(g1R2.cascade.type, 'penalty');
+  assert.equal(g1R2.cascade.timePenalty, 30);
+  // Group 2 chose B in R1 -> buff (intel unlocked)
+  assert.equal(g2R2.cascade.type, 'buff');
+  assert.ok(g2R2.cascade.hint.includes('情報'));
+
+  await host('reset', { confirm: 'RESET' });
+});
+
+
 
