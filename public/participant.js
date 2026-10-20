@@ -25,10 +25,9 @@ function render(){
     consensus=state.vote?.consensus || [null,null,null];
     juryRankings={...(state.juryRankings||{})};
     roundKey=key;
-  }
-  if(!member.isRepresentative && !member.isJury){
-    selection=state.vote?.proposal||null;
-    consensus=state.vote?.consensus||[null,null,null];
+  } else if(!selection && state.vote?.proposal){
+    selection=state.vote.proposal;
+    consensus=state.vote.consensus || [null,null,null];
   }
   document.documentElement.style.setProperty('--accent',r.color);
 
@@ -48,7 +47,19 @@ function render(){
     footer.innerHTML=`<div class="mobile-action-inner">${state.phase==='voting'?`<button id="submit-jury" class="button primary" type="button">${state.jurySubmitted?'更新裁決回饋':'送出裁決回饋'} <span aria-hidden="true">↗</span></button>`:`<div class="button secondary wide">${state.phase==='finished'?'本次課堂已完成':revealed?'回饋已揭曉 · 等待下一回合':'等待簡報者開放研討'}</div>`}</div>`;
   } else {
     const isWaiting = ['waiting','ready'].includes(state.phase);
-    footer.innerHTML=`<div class="mobile-action-inner">${revealed?`<div class="button secondary wide">${state.phase==='finished'?'本次課堂已完成':'本組結果已揭曉 · 等待下一回合'}<span aria-hidden="true">✓</span></div>`:isWaiting?`<button id="submit-vote" class="button primary" type="button">${state.vote?'已預選方案 '+state.vote.choice:'預選方案（等待開始）'} <span aria-hidden="true">↗</span></button>`:`<button id="submit-vote" class="button primary" type="button">${state.vote?'更新本組決策 ('+state.vote.choice+')':'提交本組決策'} <span aria-hidden="true">↗</span></button>`}</div>`;
+    const hasVoted = Boolean(state.vote?.choice);
+    const isChanged = hasVoted && selection && selection !== state.vote.choice;
+    let buttonText = '提交本組決策';
+    if (isWaiting) {
+      buttonText = selection ? `已預選方案 ${selection}（等待開始）` : '預選方案（等待開始）';
+    } else if (isChanged) {
+      buttonText = `改選方案 ${selection} 並重新送出 ↗`;
+    } else if (hasVoted) {
+      buttonText = `已提交方案 ${state.vote.choice}（可點選改選）`;
+    } else if (selection) {
+      buttonText = `提交方案 ${selection} ↗`;
+    }
+    footer.innerHTML=`<div class="mobile-action-inner">${revealed?`<div class="button secondary wide">${state.phase==='finished'?'本次課堂已完成':'本組結果已揭曉 · 等待下一回合'}<span aria-hidden="true">✓</span></div>`:`<button id="submit-vote" class="button primary" type="button" ${!selection?'disabled':''}>${buttonText}</button>`}</div>`;
   }
 
   document.body.append(footer);
@@ -73,7 +84,7 @@ function votingMarkup(){
 
   ${state.vote?`<div class="submitted-banner">
     <strong>✓ 本組已提交${state.vote.choice==='X'?'未達成協議':`方案 ${state.vote.choice}`}</strong>
-    <p>請派代表準備向【${esc(state.round.juryRole?.short || '第 5 組')}】說明</p>
+    <p>隨時點選其他選項可改選 · 請派代表準備向【${esc(state.round.juryRole?.short || '第 5 組')}】說明</p>
   </div>`:''}
 
   <div class="options-list" role="radiogroup" aria-label="本組決策方案">${state.round.options.map(o=>`<button type="button" class="option-card" role="radio" aria-checked="${selection===o.id}" data-choice="${o.id}"><span class="letter">${o.id}</span><span><strong>${esc(o.title)}</strong><p>${esc(o.text)}</p></span></button>`).join('')}</div>

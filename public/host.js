@@ -147,8 +147,9 @@ listenSync(packet => {
       const gid = Number(packet.group);
       if (gid >= 1 && gid <= 4) {
         const g = state.groups?.find(grp => grp.id === gid);
-        if (g && !g.submitted) {
+        if (g) {
           g.submitted = true;
+          g.choice = packet.choice;
           state.completed = state.groups.slice(0, 4).filter(grp => grp.submitted).length;
           render();
         }
