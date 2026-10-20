@@ -5,17 +5,29 @@ gate.addEventListener('cancel',e=>{ if(!state?.member) e.preventDefault(); });
 
 function updateChoiceUI(){
   if(state?.member?.isJury) {
+    const juryLocked = Boolean(state.jurySubmitted);
     document.querySelectorAll('[data-jury-team]').forEach(btn=>{
       const tid=Number(btn.dataset.juryTeam);const rank=btn.dataset.rank;
       btn.setAttribute('aria-pressed',String(juryRankings[tid]===rank||juryRankings[tid]===Number(rank)));
+      if(juryLocked) btn.disabled=true;
     });
     const submit=$('#submit-jury');
-    if(submit) submit.disabled=busy||!online||Object.keys(juryRankings).length===0;
+    if(submit) submit.disabled=juryLocked||busy||!online||Object.keys(juryRankings).length===0;
     return;
   }
-  document.querySelectorAll('[data-choice]').forEach(el=>el.setAttribute('aria-checked',String(el.dataset.choice===selection)));
-  document.querySelectorAll('[data-consensus]').forEach(el=>el.setAttribute('aria-pressed',String(consensus[Number(el.dataset.consensus)]===(el.dataset.value==='true'))));
-  const submit=$('#submit-vote');if(submit)submit.disabled=busy||!online||!selection||(state.roundIndex===3&&consensus.some(x=>x===null));
+  const hasVoted = Boolean(state?.vote?.choice);
+  document.querySelectorAll('[data-choice]').forEach(el=>{
+    el.setAttribute('aria-checked',String(el.dataset.choice===selection));
+    if(hasVoted) {
+      el.classList.add('locked');
+      el.disabled=true;
+    }
+  });
+  document.querySelectorAll('[data-consensus]').forEach(el=>{
+    el.setAttribute('aria-pressed',String(consensus[Number(el.dataset.consensus)]===(el.dataset.value==='true')));
+    if(hasVoted) el.disabled=true;
+  });
+  const submit=$('#submit-vote');if(submit)submit.disabled=hasVoted||busy||!online||!selection||(state?.roundIndex===3&&consensus.some(x=>x===null));
 }
 
 function render(){
@@ -44,57 +56,88 @@ function render(){
   const footer=document.createElement('footer');footer.className='mobile-action';
 
   if(member.isJury) {
-    footer.innerHTML=`<div class="mobile-action-inner">${state.phase==='voting'?`<button id="submit-jury" class="button primary" type="button">${state.jurySubmitted?'更新裁決回饋':'送出裁決回饋'} <span aria-hidden="true">↗</span></button>`:`<div class="button secondary wide revealed-status-pill" id="revealed-status-pill">${state.phase==='finished'?'本次課堂已完成 · 感謝參與':revealed?'回饋已揭曉 · 等待大螢幕進入下一題':'等待講師開放研討'}</div>`}</div>`;
+    const juryLocked = Boolean(state.jurySubmitted);
+    let juryButtonHtml = '';
+    if (state.phase === 'voting') {
+      if (juryLocked) {
+        juryButtonHtml = `<button id="submit-jury" class="button secondary wide locked-btn" type="button" disabled>✓ 裁判評定裁決已送出（已鎖定）</button>`;
+      } else {
+        juryButtonHtml = `<button id="submit-jury" class="button primary" type="button">送出裁決回饋 <span aria-hidden="true">↗</span></button>`;
+      }
+    } else {
+      juryButtonHtml = `<div class="button secondary wide revealed-status-pill" id="revealed-status-pill">${state.phase==='finished'?'本次課堂已完成 · 感謝參與':revealed?'回饋已揭曉 · 等待大螢幕進入下一題':'等待講師開放研討'}</div>`;
+    }
+    footer.innerHTML=`<div class="mobile-action-inner">${juryButtonHtml}</div>`;
   } else {
     const isWaiting = ['waiting','ready'].includes(state.phase);
     const hasVoted = Boolean(state.vote?.choice);
-    const isChanged = hasVoted && selection && selection !== state.vote.choice;
-    let buttonText = '提交本組決策 ↗';
-    if (isWaiting) {
-      buttonText = selection ? `已預選方案 ${selection}（可隨時送出 ↗）` : '預選方案（可隨時送出 ↗）';
-    } else if (isChanged) {
-      buttonText = `改選方案 ${selection} 並重新送出 ↗`;
+    let buttonHtml = '';
+    if (revealed) {
+      buttonHtml = `<div class="button secondary wide revealed-status-pill" id="revealed-status-pill">${state.phase==='finished'?'本次課堂已完成 · 感謝參與':'本回合已揭曉 · 等待大螢幕進入下一題'}</div>`;
     } else if (hasVoted) {
-      buttonText = `已提交方案 ${state.vote.choice}（可點選改選）`;
-    } else if (selection) {
-      buttonText = `提交方案 ${selection} ↗`;
+      const choiceLabel = state.vote.choice === 'X' ? '未達成協議' : `方案 ${state.vote.choice}`;
+      buttonHtml = `<button id="submit-vote" class="button secondary wide locked-btn" type="button" disabled>✓ 本組已提交${choiceLabel}（已鎖定）</button>`;
+    } else {
+      let buttonText = '提交本組決策 ↗';
+      if (isWaiting) {
+        buttonText = selection ? `已預選方案 ${selection}（可隨時送出 ↗）` : '預選方案（可隨時送出 ↗）';
+      } else if (selection) {
+        buttonText = `提交方案 ${selection} ↗`;
+      }
+      buttonHtml = `<button id="submit-vote" class="button primary" type="button" ${!selection?'disabled':''}>${buttonText}</button>`;
     }
-    footer.innerHTML=`<div class="mobile-action-inner">${revealed?`<div class="button secondary wide revealed-status-pill" id="revealed-status-pill">${state.phase==='finished'?'本次課堂已完成 · 感謝參與':'本回合已揭曉 · 等待大螢幕進入下一題'}</div>`:`<button id="submit-vote" class="button primary" type="button" ${!selection?'disabled':''}>${buttonText}</button>`}</div>`;
+    footer.innerHTML=`<div class="mobile-action-inner">${buttonHtml}</div>`;
   }
 
   document.body.append(footer);
 
   if(member.isJury) {
+    const juryLocked = Boolean(state.jurySubmitted);
     document.querySelectorAll('[data-jury-team]').forEach(btn=>btn.addEventListener('click',()=>{
+      if(juryLocked) return;
       const tid=Number(btn.dataset.juryTeam);const rank=btn.dataset.rank;
       juryRankings[tid]=rank;
       updateChoiceUI();
     }));
     $('#submit-jury')?.addEventListener('click',submitJuryVerdict);
   } else {
-    document.querySelectorAll('[data-choice]').forEach(el=>el.addEventListener('click',()=>{selection=el.dataset.choice;updateChoiceUI();}));
-    document.querySelectorAll('[data-consensus]').forEach(el=>el.addEventListener('click',()=>{consensus[Number(el.dataset.consensus)]=el.dataset.value==='true';updateChoiceUI();}));
+    const hasVoted = Boolean(state.vote?.choice);
+    document.querySelectorAll('[data-choice]').forEach(el=>el.addEventListener('click',()=>{
+      if(hasVoted) return;
+      selection=el.dataset.choice;updateChoiceUI();
+    }));
+    document.querySelectorAll('[data-consensus]').forEach(el=>el.addEventListener('click',()=>{
+      if(hasVoted) return;
+      consensus[Number(el.dataset.consensus)]=el.dataset.value==='true';updateChoiceUI();
+    }));
     $('#submit-vote')?.addEventListener('click',submitVote);
   }
   updateChoiceUI();
 }
 
 function votingMarkup(){
+  const hasVoted = Boolean(state.vote?.choice);
   return `<div class="mobile-timer"><span class="timer-label" data-debate>${state.roundIndex===3?'三方協商辯論':'小組研討時間'}</span><span class="clock" data-clock>--:--</span></div>
 
-  ${state.vote?`<div class="submitted-banner">
-    <strong>✓ 本組已提交${state.vote.choice==='X'?'未達成協議':`方案 ${state.vote.choice}`}</strong>
-    <p>隨時點選其他選項可改選 · 請派代表準備向【${esc(state.round.juryRole?.short || '第 5 組')}】說明</p>
+  ${hasVoted?`<div class="submitted-banner is-locked">
+    <strong>✓ 本組已提交${state.vote.choice==='X'?'未達成協議':`方案 ${state.vote.choice}`} · 決策已鎖定</strong>
+    <p>本回合決策已確認鎖定 · 請派代表準備向【${esc(state.round.juryRole?.short || '第 5 組')}】說明</p>
   </div>`:''}
 
-  <div class="options-list" role="radiogroup" aria-label="本組決策方案">${state.round.options.map(o=>`<button type="button" class="option-card" role="radio" aria-checked="${selection===o.id}" data-choice="${o.id}"><span class="letter">${o.id}</span><span><strong>${esc(o.title)}</strong><p>${esc(o.text)}</p></span></button>`).join('')}</div>
+  <div class="options-list" role="radiogroup" aria-label="本組決策方案">${state.round.options.map(o=>`<button type="button" class="option-card ${hasVoted?'locked':''}" role="radio" aria-checked="${selection===o.id}" data-choice="${o.id}" ${hasVoted?'disabled':''}><span class="letter">${o.id}</span><span><strong>${esc(o.title)}</strong><p>${esc(o.text)}</p></span></button>`).join('')}</div>
 
-  ${state.roundIndex===3?`<section class="card debate-card"><div class="eyebrow">三方協商</div><h2>三方表態確認</h2><p class="muted">任一方拒絕即為未達成協議。</p>${['總部代表','東京代表','客戶代表'].map((name,i)=>`<div class="consensus-row"><span>${name}</span><div class="consensus-options"><button type="button" data-consensus="${i}" data-value="true" aria-pressed="${consensus[i]===true}">同意</button><button type="button" class="refuse" data-consensus="${i}" data-value="false" aria-pressed="${consensus[i]===false}">拒絕</button></div></div>`).join('')}</section>`:''}`;
+  ${state.roundIndex===3?`<section class="card debate-card"><div class="eyebrow">三方協商</div><h2>三方表態確認</h2><p class="muted">${hasVoted?'本組三方協商表態已確認鎖定。':'任一方拒絕即為未達成協議。'}</p>${['總部代表','東京代表','客戶代表'].map((name,i)=>`<div class="consensus-row"><span>${name}</span><div class="consensus-options"><button type="button" data-consensus="${i}" data-value="true" aria-pressed="${consensus[i]===true}" ${hasVoted?'disabled':''}>同意</button><button type="button" class="refuse" data-consensus="${i}" data-value="false" aria-pressed="${consensus[i]===false}" ${hasVoted?'disabled':''}>拒絕</button></div></div>`).join('')}</section>`:''}`;
 }
 
 function juryVotingMarkup(){
   const isRound4 = (state.roundIndex===3);
+  const juryLocked = Boolean(state.jurySubmitted);
   return `<div class="mobile-timer"><span class="timer-label">第 5 組角色席</span><span class="clock" data-clock>--:--</span></div>
+
+  ${juryLocked?`<div class="submitted-banner is-locked">
+    <strong>✓ 裁判評定裁決已送出 · 評定已鎖定</strong>
+    <p>大螢幕即時同步中 · 等待講師宣布揭曉</p>
+  </div>`:''}
 
   <section class="card jury-mission-card">
     <div class="eyebrow">跨文化角色席</div>
@@ -130,14 +173,14 @@ function juryVotingMarkup(){
           ${opt?`<div class="eval-body"><strong>${esc(opt.title)}</strong><p>${esc(opt.text)}</p></div>`:''}
           <div class="eval-controls">
             ${isRound4?`<div class="tier-buttons-group">
-              <button type="button" class="tier-btn" data-jury-team="${g.id}" data-rank="tier1" aria-pressed="${currentRank==='tier1'}">卓越雙贏 Tier 1</button>
-              <button type="button" class="tier-btn" data-jury-team="${g.id}" data-rank="tier2" aria-pressed="${currentRank==='tier2'}">局部妥協 Tier 2</button>
-              <button type="button" class="tier-btn" data-jury-team="${g.id}" data-rank="tier3" aria-pressed="${currentRank==='tier3'}">嚴重破局 Tier 3</button>
+              <button type="button" class="tier-btn" data-jury-team="${g.id}" data-rank="tier1" aria-pressed="${currentRank==='tier1'}" ${juryLocked?'disabled':''}>卓越雙贏 Tier 1</button>
+              <button type="button" class="tier-btn" data-jury-team="${g.id}" data-rank="tier2" aria-pressed="${currentRank==='tier2'}" ${juryLocked?'disabled':''}>局部妥協 Tier 2</button>
+              <button type="button" class="tier-btn" data-jury-team="${g.id}" data-rank="tier3" aria-pressed="${currentRank==='tier3'}" ${juryLocked?'disabled':''}>嚴重破局 Tier 3</button>
             </div>`:`<div class="rank-buttons-group">
-              <button type="button" class="rank-btn" data-jury-team="${g.id}" data-rank="1" aria-pressed="${currentRank===1||currentRank==='1'}">第 1 名</button>
-              <button type="button" class="rank-btn" data-jury-team="${g.id}" data-rank="2" aria-pressed="${currentRank===2||currentRank==='2'}">第 2 名</button>
-              <button type="button" class="rank-btn" data-jury-team="${g.id}" data-rank="3" aria-pressed="${currentRank===3||currentRank==='3'}">第 3 名</button>
-              <button type="button" class="rank-btn" data-jury-team="${g.id}" data-rank="4" aria-pressed="${currentRank===4||currentRank==='4'}">第 4 名</button>
+              <button type="button" class="rank-btn" data-jury-team="${g.id}" data-rank="1" aria-pressed="${currentRank===1||currentRank==='1'}" ${juryLocked?'disabled':''}>第 1 名</button>
+              <button type="button" class="rank-btn" data-jury-team="${g.id}" data-rank="2" aria-pressed="${currentRank===2||currentRank==='2'}" ${juryLocked?'disabled':''}>第 2 名</button>
+              <button type="button" class="rank-btn" data-jury-team="${g.id}" data-rank="3" aria-pressed="${currentRank===3||currentRank==='3'}" ${juryLocked?'disabled':''}>第 3 名</button>
+              <button type="button" class="rank-btn" data-jury-team="${g.id}" data-rank="4" aria-pressed="${currentRank===4||currentRank==='4'}" ${juryLocked?'disabled':''}>第 4 名</button>
             </div>`}
           </div>
         </div>`;
@@ -424,6 +467,13 @@ listenSync(packet => {
         consensus = packet.consensus || [null,null,null];
         render();
       }
+    }
+  } else if (packet.type === 'jury_verdict') {
+    if (state.member?.isJury && packet.roundIndex === state.roundIndex) {
+      state.jurySubmitted = true;
+      state.juryRankings = packet.rankings;
+      juryRankings = { ...packet.rankings };
+      render();
     }
   }
 });

@@ -587,5 +587,56 @@
   }
 }
 
+/* ==========================================================================
+   Locked UI State after Submission
+   ========================================================================== */
+.option-card.locked {
+  cursor: default !important;
+  pointer-events: none !important;
+  opacity: 0.65 !important;
+  transform: none !important;
+}
+
+.option-card.locked[aria-checked="true"] {
+  opacity: 1 !important;
+  border-color: #39724b !important;
+  background: #f2f7ef !important;
+  box-shadow: 0 0 0 2px rgba(57, 114, 75, 0.25) !important;
+}
+
+.locked-btn {
+  background: #e9eee4 !important;
+  color: #355231 !important;
+  border: 1px solid #c2d6bc !important;
+  font-weight: 700 !important;
+  opacity: 1 !important;
+  cursor: default !important;
+}
+
+.submitted-banner.is-locked {
+  background: #edf5ea !important;
+  border: 1px solid #c8dec2 !important;
+  color: #274b24 !important;
+}
+
+.consensus-options button:disabled {
+  cursor: default !important;
+  pointer-events: none !important;
+  opacity: 0.6 !important;
+}
+
+.rank-buttons-group button:disabled,
+.tier-buttons-group button:disabled {
+  cursor: default !important;
+  pointer-events: none !important;
+  opacity: 0.6 !important;
+}
+
+.rank-buttons-group button:disabled[aria-pressed="true"],
+.tier-buttons-group button:disabled[aria-pressed="true"] {
+  opacity: 1 !important;
+  font-weight: 700 !important;
+}
+
 
 
