@@ -2474,6 +2474,878 @@ body.clean-stage .host-main {
   line-height: 1.35;
 }
 
+/* ==========================================================================
+   JRPG Visual System & 4-Phase Interaction UI (rpg-assets.js Integration)
+   ========================================================================== */
+
+/* 1. JRPG Stage Card & 2D Top-Down Viewport */
+.rpg-stage-card {
+  position: relative;
+  background: #0d1520;
+  border: 2px solid #334155;
+  border-radius: 20px;
+  box-shadow: 0 10px 32px rgba(0, 0, 0, 0.45);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.rpg-stage-top {
+  position: relative;
+  width: 100%;
+  height: clamp(240px, 32vh, 320px);
+  overflow: hidden;
+  background: #0f172a;
+}
+
+.rpg-map-viewport {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.rpg-scene-canvas {
+  position: relative;
+  width: 100%;
+  height: 100%;
+}
+
+.scene-bg-svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+/* 2. YEP_Event Mini Label Floating Badges */
+.mini-label-anchor {
+  position: absolute;
+  transform: translate(-50%, -100%);
+  z-index: 6;
+  pointer-events: none;
+}
+
+.yep-mini-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(240, 246, 252, 0.94);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(30, 41, 59, 0.28);
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11.5px;
+  font-weight: 750;
+  color: #0f172a;
+  white-space: nowrap;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.25);
+  position: relative;
+  animation: yep-float 3.5s ease-in-out infinite;
+}
+
+.yep-mini-label::after {
+  content: "";
+  position: absolute;
+  bottom: -5px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  border-left: 5px solid transparent;
+  border-right: 5px solid transparent;
+  border-top: 5px solid rgba(240, 246, 252, 0.94);
+}
+
+.yep-mini-label.label-synergy {
+  background: rgba(220, 252, 231, 0.96);
+  border-color: #86efac;
+  color: #14532d;
+}
+
+.yep-mini-label.label-synergy::after {
+  border-top-color: rgba(220, 252, 231, 0.96);
+}
+
+.yep-mini-label.label-crisis {
+  background: rgba(254, 226, 226, 0.96);
+  border-color: #fca5a5;
+  color: #991b1b;
+  animation: yep-float 3.5s ease-in-out infinite, pulse-urgent 1.2s infinite alternate;
+}
+
+.yep-mini-label.label-crisis::after {
+  border-top-color: rgba(254, 226, 226, 0.96);
+}
+
+@keyframes yep-float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-3.5px);
+  }
+}
+
+/* 3. Chibi Party Sprites */
+.scene-party-dock {
+  position: absolute;
+  z-index: 7;
+  transform: translate(-50%, 0);
+  pointer-events: auto;
+}
+
+.rpg-chibi-party {
+  display: flex;
+  gap: 12px;
+  align-items: flex-end;
+}
+
+.chibi-party-member {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  cursor: pointer;
+  position: relative;
+}
+
+.chibi-party-member:hover {
+  transform: translateY(-5px) scale(1.08);
+}
+
+.chibi-sprite-wrap {
+  position: relative;
+  line-height: 0;
+}
+
+.chibi-nametag {
+  margin-top: 2px;
+  font-size: 9.5px;
+  font-weight: 800;
+  background: rgba(15, 23, 42, 0.88);
+  color: #f8fafc;
+  padding: 2px 7px;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+}
+
+.chibi-crown-badge {
+  font-size: 10px;
+  line-height: 1;
+}
+
+.chibi-lock-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 6px #38bdf8;
+}
+
+.pulse-aura {
+  animation: pulse-aura 2s infinite ease-in-out;
+}
+
+.halo-spin {
+  animation: halo-spin 4s linear infinite;
+}
+
+@keyframes pulse-aura {
+  0%, 100% {
+    opacity: 0.85;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1.05);
+  }
+}
+
+@keyframes halo-spin {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: 20;
+  }
+}
+
+/* 4. GALV_MessageBusts Character Busts */
+.galv-bust-wrap {
+  position: absolute;
+  right: 12px;
+  bottom: -16px;
+  z-index: 8;
+  pointer-events: none;
+  animation: galv-bust-enter 0.45s cubic-bezier(0.16, 1, 0.3, 1) forwards, galv-breathe 4s ease-in-out infinite 0.5s;
+}
+
+.rpg-bust-figure {
+  margin: 0;
+  filter: drop-shadow(0 10px 24px rgba(0, 0, 0, 0.5));
+}
+
+.bust-art-frame {
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+}
+
+.bust-svg {
+  width: clamp(210px, 22vw, 290px);
+  height: auto;
+  max-height: 360px;
+  display: block;
+}
+
+@keyframes galv-bust-enter {
+  0% {
+    opacity: 0;
+    transform: translateX(35px) scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+@keyframes galv-breathe {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-4px);
+  }
+}
+
+/* 5. YEP_MessageCore Name Box & Classic JRPG Message Box */
+.rpg-dialogue-wrap {
+  position: relative;
+  z-index: 10;
+  margin-top: -28px;
+  padding: 0 16px 16px;
+}
+
+.yep-name-box,
+.rpg-name-box {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 18px;
+  margin-bottom: -3px;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  border: 2px solid #e2e8f0;
+  box-shadow: inset 0 0 0 2px #334155, 0 4px 14px rgba(0, 0, 0, 0.45);
+  border-radius: 8px 8px 0 0;
+  padding: 6px 20px;
+  z-index: 12;
+  position: relative;
+}
+
+.name-box-text {
+  font-size: 14.5px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.5px;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
+}
+
+.rpg-message-box {
+  background: linear-gradient(180deg, rgba(22, 34, 47, 0.96) 0%, rgba(13, 21, 30, 0.98) 100%);
+  border: 2px solid #e2e8f0;
+  box-shadow: inset 0 0 0 2px #334155, 0 10px 30px rgba(0, 0, 0, 0.55);
+  border-radius: 12px;
+  padding: 18px 24px 22px;
+  position: relative;
+  color: #f8fafc;
+  min-height: 115px;
+}
+
+.rpg-message-inner {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.rpg-dialogue-text {
+  font-size: clamp(15px, 1.4vw, 17.5px);
+  line-height: 1.75;
+  font-weight: 500;
+  color: #f8fafc;
+  margin: 0;
+}
+
+.rpg-dialogue-prompt {
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px dashed rgba(226, 232, 240, 0.22);
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.rpg-dialogue-prompt .prompt-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: #facc15;
+  background: rgba(234, 179, 8, 0.18);
+  border: 1px solid rgba(234, 179, 8, 0.35);
+  padding: 2px 7px;
+  border-radius: 4px;
+  white-space: nowrap;
+}
+
+.rpg-dialogue-prompt .prompt-text {
+  font-size: 13.5px;
+  color: #fef08a;
+  font-weight: 600;
+  line-height: 1.5;
+}
+
+.rpg-next-caret {
+  position: absolute;
+  bottom: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 11px;
+  color: #e2e8f0;
+  text-shadow: 0 0 6px rgba(255, 255, 255, 0.7);
+  animation: rpg-caret-bounce 0.8s infinite alternate ease-in-out;
+  cursor: pointer;
+}
+
+@keyframes rpg-caret-bounce {
+  0% {
+    transform: translateX(-50%) translateY(0);
+    opacity: 0.95;
+  }
+  100% {
+    transform: translateX(-50%) translateY(4px);
+    opacity: 0.35;
+  }
+}
+
+/* 6. CQ Strip & Chief Navigator Styling */
+.cq-group.is-navigator {
+  border-color: #eab308 !important;
+  background: linear-gradient(135deg, #fefce8 0%, #ffffff 100%) !important;
+  box-shadow: 0 0 0 2px #eab308, 0 4px 18px rgba(234, 179, 8, 0.25) !important;
+}
+
+.navigator-crown-pill {
+  font-size: 10px;
+  font-weight: 800;
+  color: #b45309;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+  padding: 2px 7px;
+  border-radius: 9999px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+/* 7. World State HUD Bar */
+.world-state-hud {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 9px 18px;
+  margin-bottom: 12px;
+  background: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1.5px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.hud-brand {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.hud-eyebrow {
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: var(--faint);
+}
+
+.hud-title {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.hud-badges-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.hud-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+
+.hud-badge.is-good {
+  background: #dcfce7;
+  border: 1px solid #86efac;
+  color: #15803d;
+  box-shadow: 0 2px 6px rgba(21, 128, 61, 0.1);
+}
+
+.hud-badge.is-bad {
+  background: #fee2e2;
+  border: 1px solid #fca5a5;
+  color: #b91c1c;
+  box-shadow: 0 2px 6px rgba(185, 28, 28, 0.1);
+}
+
+.hud-badge.is-idle {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  color: #64748b;
+}
+
+.hud-flag {
+  font-size: 13px;
+}
+
+.hud-location {
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.hud-status {
+  font-size: 11.5px;
+}
+
+/* 8. Phase 2: Persuasion Points Allocator (Mobile) & Live Board (Host) */
+.persuasion-panel,
+.point-allocator-card {
+  padding: 18px 20px;
+  border: 1.5px solid var(--line);
+  border-radius: 16px;
+  background: #ffffff;
+}
+
+.points-counter {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #e0f2fe;
+  border: 1.5px solid #7dd3fc;
+  border-radius: 12px;
+  padding: 10px 16px;
+  margin: 12px 0 16px;
+  color: #0369a1;
+  font-weight: 700;
+  font-size: 13.5px;
+}
+
+.points-counter .counter-number {
+  font-size: 18px;
+  font-family: "SF Mono", ui-monospace, monospace;
+  color: #0284c7;
+}
+
+.alloc-group-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  margin-bottom: 8px;
+  background: #ffffff;
+  transition: border-color 0.15s ease;
+}
+
+.alloc-group-row:hover {
+  border-color: #38bdf8;
+}
+
+.alloc-group-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.alloc-group-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--ink);
+}
+
+.alloc-group-choice {
+  font-size: 11px;
+  color: var(--muted);
+}
+
+.alloc-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.alloc-btn {
+  min-width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1.5px solid var(--line);
+  background: #f8fafc;
+  font-size: 18px;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+  color: var(--ink);
+  transition: all 0.15s ease;
+}
+
+.alloc-btn:active {
+  transform: scale(0.92);
+}
+
+.alloc-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.alloc-btn.plus {
+  background: #e0f2fe;
+  border-color: #38bdf8;
+  color: #0284c7;
+}
+
+.alloc-btn.minus {
+  background: #fef2f2;
+  border-color: #fca5a5;
+  color: #b91c1c;
+}
+
+.alloc-value {
+  font-size: 17px;
+  font-weight: 800;
+  font-family: "SF Mono", ui-monospace, monospace;
+  min-width: 24px;
+  text-align: center;
+}
+
+.submit-persuasion-btn {
+  width: 100%;
+  min-height: 48px;
+  font-size: 14.5px;
+  font-weight: 700;
+  margin-top: 14px;
+  border-radius: 12px;
+}
+
+/* Big Screen Persuasion Live Board */
+.persuasion-live-board {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.persuasion-row {
+  background: #ffffff;
+  border: 1.5px solid var(--line);
+  border-radius: 12px;
+  padding: 10px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: all 0.25s ease;
+}
+
+.persuasion-row.is-leading {
+  border-color: #facc15;
+  background: linear-gradient(135deg, #fefce8 0%, #ffffff 100%);
+  box-shadow: 0 4px 14px rgba(234, 179, 8, 0.15);
+}
+
+.persuasion-row-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.mana-progress-track {
+  height: 10px;
+  border-radius: 6px;
+  background: #e0f2fe;
+  overflow: hidden;
+  position: relative;
+}
+
+.mana-progress-fill {
+  height: 100%;
+  border-radius: 6px;
+  background: linear-gradient(90deg, #0284c7 0%, #38bdf8 100%);
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.lead-crown {
+  color: #ca8a04;
+  font-size: 14px;
+  margin-right: 4px;
+}
+
+/* 9. Phase 3: Chief Navigator Classified Intel & Decision Panel */
+.navigator-intel-card,
+.navigator-final-panel {
+  padding: 18px;
+  border-radius: 18px;
+  margin: 12px 0;
+}
+
+.classified-intel-box {
+  background: #fefce8;
+  border: 2px solid #eab308;
+  border-radius: 16px;
+  padding: 22px 24px;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 6px 20px rgba(234, 179, 8, 0.16);
+}
+
+.classified-stamp {
+  position: absolute;
+  right: 20px;
+  top: 16px;
+  border: 2.5px solid #dc2626;
+  color: #dc2626;
+  font-size: 11px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  padding: 4px 10px;
+  border-radius: 4px;
+  transform: rotate(-7deg);
+  opacity: 0.88;
+  pointer-events: none;
+  text-transform: uppercase;
+  font-family: "SF Mono", ui-monospace, monospace;
+}
+
+.classified-header {
+  margin-bottom: 12px;
+}
+
+.classified-title {
+  font-size: 18px;
+  font-weight: 800;
+  color: #78350f;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 6px;
+}
+
+.classified-subtitle {
+  font-size: 12.5px;
+  color: #92400e;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.classified-body {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(234, 179, 8, 0.4);
+  border-radius: 10px;
+  padding: 14px 16px;
+  font-size: 14px;
+  line-height: 1.75;
+  color: #451a03;
+  margin: 14px 0 18px;
+}
+
+.navigator-decision-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.navigator-choice-btn {
+  min-height: 52px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  border: 2px solid #e2e8f0;
+  background: #ffffff;
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  transition: all 0.15s ease;
+}
+
+.navigator-choice-btn:hover {
+  border-color: #facc15;
+  background: #fefce8;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(234, 179, 8, 0.2);
+}
+
+.navigator-choice-btn .choice-letter {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: #0f172a;
+  color: #ffffff;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+/* 10. Phase 4: Zero-Whitespace Results Bento Grid & 5-Group Score Breakdown */
+.score-breakdown-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 1.5px solid var(--line);
+  margin-bottom: 0;
+  min-height: 0;
+  transition: all 0.2s ease;
+}
+
+.score-breakdown-card.is-winner {
+  border-color: #facc15;
+  background: linear-gradient(135deg, #fefce8 0%, #ffffff 100%);
+  box-shadow: 0 4px 12px rgba(234, 179, 8, 0.12);
+}
+
+.breakdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-size: 13px;
+  font-weight: 800;
+}
+
+.breakdown-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
+.score-pill {
+  font-size: 11px;
+  padding: 2px 7px;
+  border-radius: 6px;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.score-pill.initial {
+  background: #f1f5f9;
+  color: #475569;
+  border: 1px solid #cbd5e1;
+}
+
+.score-pill.rescue {
+  background: #fef3c7;
+  color: #b45309;
+  border: 1px solid #fcd34d;
+  font-weight: 700;
+}
+
+.score-pill.synergy {
+  background: #dcfce7;
+  color: #15803d;
+  border: 1px solid #86efac;
+  font-weight: 700;
+}
+
+.breakdown-net {
+  font-size: 12px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-top: 4px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Mobile Responsiveness for JRPG Elements */
+@media (max-width: 760px) {
+  .rpg-stage-top {
+    height: 220px;
+  }
+  .galv-bust-wrap {
+    right: 4px;
+    bottom: -10px;
+  }
+  .bust-svg {
+    width: 170px;
+    max-height: 220px;
+  }
+  .yep-mini-label {
+    font-size: 10px;
+    padding: 3px 7px;
+  }
+  .rpg-dialogue-wrap {
+    margin-top: -20px;
+    padding: 0 10px 12px;
+  }
+  .yep-name-box,
+  .rpg-name-box {
+    padding: 5px 14px;
+    margin-left: 10px;
+  }
+  .name-box-text {
+    font-size: 13px;
+  }
+  .rpg-message-box {
+    padding: 14px 16px 18px;
+    min-height: 95px;
+  }
+  .rpg-dialogue-text {
+    font-size: 14px;
+    line-height: 1.65;
+  }
+  .navigator-decision-grid {
+    grid-template-columns: 1fr;
+  }
+  .world-state-hud {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+}
+
+
 
 
 

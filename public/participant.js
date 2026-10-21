@@ -1,608 +1,556 @@
-import { $,esc,api,toast,status,scene,roundNav,tensionCard,dialogue,startClock,broadcastSync,listenSync } from './common.js';
-let state=null,lastSignature='',selection=null,consensus=[null,null,null],juryRankings={},juryOrders={},roundKey='',busy=false,online=false,participantBoardSort='cq',currentJuryStage=1,juryPitchSkipped=false;
-const gate=$('#onboarding');
-gate.addEventListener('cancel',e=>{ if(!state?.member) e.preventDefault(); });
+import { $, esc, api, toast, status, scene, roundNav, tensionCard, dialogue, startClock, broadcastSync, listenSync } from './common.js';
+import { renderRpgDialogueBox, renderWorldStateHud } from './rpg-assets.js';
 
-function updateChoiceUI(){
-  if(state?.member?.isJury) {
-    const juryLocked = Boolean(state.jurySubmitted);
-    const canInteract = !juryLocked && currentJuryStage === 3;
-    const vals = Object.values(juryRankings);
-    const empUsed = vals.filter(v => v === 'empathy').length;
-    const vetoUsed = vals.filter(v => v === 'veto').length;
-    const empEl = $('#quota-empathy');
-    if (empEl) empEl.textContent = `${Math.max(0, 2 - empUsed)} / 2 張`;
-    const vetoEl = $('#quota-veto');
-    if (vetoEl) vetoEl.textContent = `${Math.max(0, 1 - vetoUsed)} / 1 張`;
+let state = null, lastSignature = '', selection = null, consensus = [null, null, null], roundKey = '', busy = false, online = false;
+let pointsAllocated = {};
 
-    document.querySelectorAll('[data-jury-team]').forEach(btn=>{
-      const tid=Number(btn.dataset.juryTeam);const rank=btn.dataset.rank;
-      btn.setAttribute('aria-pressed',String(juryRankings[tid]===rank||juryRankings[tid]===Number(rank)));
-      if(!canInteract) btn.disabled=true;
-    });
-    document.querySelectorAll('[data-jury-order-team]').forEach(btn=>{
-      const tid=Number(btn.dataset.juryOrderTeam);const ord=Number(btn.dataset.order);
-      const isAct = juryOrders[tid]===ord;
-      btn.setAttribute('aria-pressed',String(isAct));
-      btn.classList.toggle('active', isAct);
-      if(!canInteract) btn.disabled=true;
-    });
-    const submit=$('#submit-jury');
-    if(submit) submit.disabled=!canInteract||busy||!online||Object.keys(juryRankings).length===0;
-    return;
-  }
-  const hasVoted = Boolean(state?.vote?.choice);
-  document.querySelectorAll('[data-choice]').forEach(el=>{
-    el.setAttribute('aria-checked',String(el.dataset.choice===selection));
-    if(hasVoted) {
-      el.classList.add('locked');
-      el.disabled=true;
-    }
-  });
-  document.querySelectorAll('[data-consensus]').forEach(el=>{
-    el.setAttribute('aria-pressed',String(consensus[Number(el.dataset.consensus)]===(el.dataset.value==='true')));
-    if(hasVoted) el.disabled=true;
-  });
-  const submit=$('#submit-vote');if(submit)submit.disabled=hasVoted||busy||!online||!selection||(state?.roundIndex===3&&consensus.some(x=>x===null));
+const gate = $('#onboarding');
+gate.addEventListener('cancel', e => { if (!state?.member) e.preventDefault(); });
+
+function getRemainingPoints() {
+  if (!state?.member) return 5;
+  const myGroup = state.member.group;
+  const used = Object.entries(pointsAllocated)
+    .filter(([k]) => Number(k) !== myGroup)
+    .reduce((sum, [, pts]) => sum + (Number(pts) || 0), 0);
+  return Math.max(0, 5 - used);
 }
 
-function render(){
-  const r=state.round;const member=state.member;const revealed=['revealed','finished'].includes(state.phase);const key=state.epoch+':'+state.roundIndex;
-  if(key!==roundKey){
-    selection=state.vote?.proposal || null;
-    consensus=state.vote?.consensus || [null,null,null];
-    juryRankings={...(state.juryRankings||{})};
-    juryOrders={...(state.juryOrders||{})};
-    juryPitchSkipped=false;
-    roundKey=key;
-  } else if(!selection && state.vote?.proposal){
-    selection=state.vote.proposal;
-    consensus=state.vote.consensus || [null,null,null];
-  }
-  if (state.juryOrders && Object.keys(juryOrders).length === 0 && Object.keys(state.juryOrders).length > 0) {
-    juryOrders = { ...state.juryOrders };
-  }
-  document.documentElement.style.setProperty('--accent',r.color);
+function updateChoiceUI() {
+  const hasVoted = Boolean(state?.vote?.choice);
+  document.querySelectorAll('[data-choice]').forEach(el => {
+    el.setAttribute('aria-checked', String(el.dataset.choice === selection));
+    if (hasVoted) {
+      el.classList.add('locked');
+      el.disabled = true;
+    }
+  });
 
-  const completedCount = state.decisionGroups ? state.decisionGroups.filter(g => g.submitted).length : 0;
-  const allFourSubmitted = completedCount >= 4;
-  const now = Date.now() + (state.clockOffset || 0);
-  const isPitchRunning = Boolean(state.pitch?.deadline && state.pitch.deadline > now && !juryPitchSkipped);
-  const isPitchFinished = Boolean(
-    juryPitchSkipped ||
-    (state.pitch?.deadline && state.pitch.deadline <= now) ||
-    (allFourSubmitted && !state.pitch)
-  );
+  document.querySelectorAll('[data-consensus]').forEach(el => {
+    el.setAttribute('aria-pressed', String(consensus[Number(el.dataset.consensus)] === (el.dataset.value === 'true')));
+    if (hasVoted) el.disabled = true;
+  });
 
-  currentJuryStage = (allFourSubmitted && isPitchFinished)
-    ? 3
-    : (isPitchRunning || (allFourSubmitted && Boolean(state.pitch)))
-      ? 2
-      : 1;
+  const submit = $('#submit-vote');
+  if (submit) {
+    submit.disabled = hasVoted || busy || !online || !selection || (state?.roundIndex === 3 && consensus.some(x => x === null));
+  }
+
+  // Update persuasion points allocation UI
+  const remaining = getRemainingPoints();
+  const counterEl = $('#remaining-pts-count');
+  if (counterEl) counterEl.textContent = `${remaining} / 5 點`;
+
+  document.querySelectorAll('[data-alloc-group]').forEach(row => {
+    const gid = Number(row.dataset.allocGroup);
+    const pts = Number(pointsAllocated[gid]) || 0;
+    const valEl = row.querySelector('.alloc-value');
+    if (valEl) valEl.textContent = String(pts);
+    const plusBtn = row.querySelector('.alloc-btn.plus');
+    if (plusBtn) plusBtn.disabled = busy || remaining <= 0 || pts >= 3;
+    const minusBtn = row.querySelector('.alloc-btn.minus');
+    if (minusBtn) minusBtn.disabled = busy || pts <= 0;
+  });
+
+  const submitPersuasion = $('#submit-persuasion');
+  if (submitPersuasion) {
+    const totalUsed = 5 - remaining;
+    submitPersuasion.disabled = busy || !online || totalUsed < 1 || totalUsed > 5;
+  }
+}
+
+function render() {
+  const r = state.round;
+  const member = state.member;
+  const revealed = ['revealed', 'finished'].includes(state.phase);
+  const key = `${state.epoch}:${state.roundIndex}`;
+
+  if (key !== roundKey) {
+    selection = state.vote?.proposal || null;
+    consensus = state.vote?.consensus || [null, null, null];
+    pointsAllocated = { ...(state.myPersuasion || {}) };
+    roundKey = key;
+  } else if (!selection && state.vote?.proposal) {
+    selection = state.vote.proposal;
+    consensus = state.vote.consensus || [null, null, null];
+  }
+
+  if (state.myPersuasion && Object.keys(pointsAllocated).length === 0) {
+    pointsAllocated = { ...state.myPersuasion };
+  }
+
+  document.documentElement.style.setProperty('--accent', r.color);
 
   const cq = state.group.cq ?? 100;
   const cqClass = cq < 50 ? 'critical' : cq < 75 ? 'low' : '';
-  const identityBar = member.isJury
-    ? `<div class="mobile-identity"><div class="identity-bar"><div class="identity-pill"><span class="identity-name">${esc(member.name)}</span> <span aria-hidden="true">｜</span> 第 5 組 · ${esc(r.juryRole?.short || '角色席')}</div><button type="button" class="switch-group-btn" id="open-switch-group" aria-label="更換組別">換組</button><span class="rep-tag jury-tag">${esc(r.juryRole?.title || '跨文化角色席')}</span></div><div class="mobile-health"><span class="health-label">角色席</span><div class="health-track"><div class="health-fill" style="width:100%; background:var(--accent,#7c3aed);"></div></div><span class="cq-value">JURY<small> 角色對手席</small></span></div></div>`
-    : `<div class="mobile-identity"><div class="identity-bar"><div class="identity-pill"><span class="identity-name">${esc(member.name)}</span> <span aria-hidden="true">｜</span> 第 ${member.group} 組 (${esc(r.juryRole?.counterpart || '決策組')})</div><button type="button" class="switch-group-btn" id="open-switch-group" aria-label="更換組別">換組</button><span class="rep-tag">${member.isRepresentative?'本組決策代表':'與夥伴一起思考'}</span></div><div class="mobile-health"><span class="health-label">團隊 CQ 韌性值</span><div class="health-track" role="progressbar" aria-label="本組 CQ 韌性值" aria-valuenow="${cq}" aria-valuemin="0" aria-valuemax="100"><div class="health-fill ${cqClass}" style="width:${cq}%"></div></div><span class="cq-value">${cq}<small>/ 100 CQ</small></span></div></div>`;
+  const isNav = state.chiefNavigator === member.group;
+  const navBadge = isNav ? '<span class="navigator-crown-pill" style="margin-left:6px;">👑 首席領航者</span>' : '';
 
-  $('#app').innerHTML=`${identityBar}${roundNav(state.roundIndex)}${state.phase==='finished'?'<div class="finished-banner">四回合探索完成！</div>':''}<section class="mobile-scenario"><div class="topic-row"><span class="topic-badge">ROUND ${String(state.roundIndex+1).padStart(2,'0')} · ${r.dimension}</span><span class="topic-location">${esc(r.location)}</span></div><p class="scenario-context">${esc(r.context)}</p></section>${revealed?tensionCard(state.result||state.results?.[1],true):''}${dialogue(r)}<div class="question-prompt"><span class="prompt-badge">決策焦點</span><div class="prompt-title">${esc(r.prompt)}</div></div>
-  ${revealed ? (member.isJury?juryResultMarkup():resultMarkup()) : (member.isJury?juryVotingMarkup():votingMarkup())}`;
+  const hudHtml = renderWorldStateHud(state.worldState || {});
+
+  const identityBar = `
+    <div class="mobile-identity">
+      <div class="identity-bar">
+        <div class="identity-pill">
+          <span class="identity-name">${esc(member.name)}</span>
+          <span aria-hidden="true">｜</span>
+          第 ${member.group} 組 · 決策組 ${navBadge}
+        </div>
+        <button type="button" class="switch-group-btn" id="open-switch-group" aria-label="更換組別">換組</button>
+        <span class="rep-tag">${member.isRepresentative ? '本組代表' : '共同決策員'}</span>
+      </div>
+      <div class="mobile-health">
+        <span class="health-label">團隊 CQ 韌性值</span>
+        <div class="health-track" role="progressbar" aria-label="本組 CQ 韌性值" aria-valuenow="${cq}" aria-valuemin="0" aria-valuemax="150">
+          <div class="health-fill ${cqClass}" style="width:${Math.min(100, Math.round((cq / 150) * 100))}%"></div>
+        </div>
+        <span class="cq-value">${cq}<small>/ 150 CQ</small></span>
+      </div>
+    </div>
+  `;
+
+  const prevWorld = state.worldState ? (state.roundIndex === 1 ? state.worldState.r1 : state.roundIndex === 2 ? state.worldState.r2 : state.roundIndex === 3 ? state.worldState.r3 : 'idle') : 'idle';
+  const mood = prevWorld === 'good' ? 'ally' : prevWorld === 'bad' ? 'angry' : 'normal';
+
+  const dialogueBoxHtml = renderRpgDialogueBox({
+    roundIndex: state.roundIndex,
+    speaker: r.speaker,
+    text: r.dialogue?.[1]?.text || r.context,
+    prompt: r.prompt,
+    mood,
+    worldState: state.worldState,
+    groups: [],
+    chiefNavId: state.chiefNavigator
+  });
+
+  $('#app').innerHTML = `
+    ${hudHtml}
+    ${identityBar}
+    ${roundNav(state.roundIndex)}
+    ${state.phase === 'finished' ? '<div class="finished-banner">四回合探索完成！感謝參與！</div>' : ''}
+    
+    <!-- JRPG Dialogue Stage -->
+    <div style="margin-bottom: 12px;">
+      ${dialogueBoxHtml}
+    </div>
+
+    ${revealed ? resultMarkup() : votingMarkup()}
+  `;
 
   document.querySelector('.mobile-action')?.remove();
-  const footer=document.createElement('footer');footer.className='mobile-action';
+  const footer = document.createElement('footer');
+  footer.className = 'mobile-action';
 
-  if(member.isJury) {
-    const juryLocked = Boolean(state.jurySubmitted);
-    let juryButtonHtml = '';
-    if (state.phase === 'voting') {
-      if (juryLocked) {
-        juryButtonHtml = `<button id="submit-jury" class="button secondary wide locked-btn" type="button" disabled>✓ 裁判評定裁決已送出（已鎖定）</button>`;
-      } else if (currentJuryStage !== 3) {
-        juryButtonHtml = `<button id="submit-jury" class="button secondary wide" type="button" disabled>${currentJuryStage === 2 ? '⏳ 30 秒申辯進行中 · 倒數結束後開放送出' : '⏳ 等待各組提交完成與 30 秒論述'}</button>`;
-      } else {
-        juryButtonHtml = `<button id="submit-jury" class="button primary" type="button">送出裁決回饋 <span aria-hidden="true">↗</span></button>`;
-      }
-    } else {
-      juryButtonHtml = `<div class="button secondary wide revealed-status-pill" id="revealed-status-pill">${state.phase==='finished'?'本次課堂已完成 · 感謝參與':revealed?'回饋已揭曉 · 等待大螢幕進入下一題':'等待講師開放研討'}</div>`;
-    }
-    footer.innerHTML=`<div class="mobile-action-inner">${juryButtonHtml}</div>`;
+  const isWaiting = ['waiting', 'ready'].includes(state.phase);
+  const hasVoted = Boolean(state.vote?.choice);
+  let buttonHtml = '';
+
+  if (revealed) {
+    buttonHtml = `<div class="button secondary wide revealed-status-pill" id="revealed-status-pill">${state.phase === 'finished' ? '本次課堂已完成 · 感謝參與' : '本回合已揭曉 · 請看大螢幕'}</div>`;
+  } else if (hasVoted) {
+    const choiceLabel = state.vote.choice === 'X' ? '未達成協議' : `方案 ${state.vote.choice}`;
+    buttonHtml = `<button id="submit-vote" class="button secondary wide locked-btn" type="button" disabled>✓ 本組初投已鎖定${choiceLabel}</button>`;
   } else {
-    const isWaiting = ['waiting','ready'].includes(state.phase);
-    const hasVoted = Boolean(state.vote?.choice);
-    let buttonHtml = '';
-    if (revealed) {
-      buttonHtml = `<div class="button secondary wide revealed-status-pill" id="revealed-status-pill">${state.phase==='finished'?'本次課堂已完成 · 感謝參與':'本回合已揭曉 · 等待大螢幕進入下一題'}</div>`;
-    } else if (hasVoted) {
-      const choiceLabel = state.vote.choice === 'X' ? '未達成協議' : `方案 ${state.vote.choice}`;
-      buttonHtml = `<button id="submit-vote" class="button secondary wide locked-btn" type="button" disabled>✓ 本組已提交${choiceLabel}（已鎖定）</button>`;
-    } else {
-      let buttonText = '提交本組決策 ↗';
-      if (isWaiting) {
-        buttonText = selection ? `已預選方案 ${selection}（可隨時送出 ↗）` : '預選方案（可隨時送出 ↗）';
-      } else if (selection) {
-        buttonText = `提交方案 ${selection} ↗`;
-      }
-      buttonHtml = `<button id="submit-vote" class="button primary" type="button" ${!selection?'disabled':''}>${buttonText}</button>`;
+    let buttonText = '鎖定本組初投 ↗';
+    if (isWaiting) {
+      buttonText = selection ? `已預選方案 ${selection}（可隨時送出 ↗）` : '預選初投方案（可隨時送出 ↗）';
+    } else if (selection) {
+      buttonText = `鎖定初投方案 ${selection} ↗`;
     }
-    footer.innerHTML=`<div class="mobile-action-inner">${buttonHtml}</div>`;
+    buttonHtml = `<button id="submit-vote" class="button primary" type="button" ${!selection ? 'disabled' : ''}>${buttonText}</button>`;
   }
 
+  footer.innerHTML = `<div class="mobile-action-inner">${buttonHtml}</div>`;
   document.body.append(footer);
 
-  if(member.isJury) {
-    const juryLocked = Boolean(state.jurySubmitted);
-    document.querySelectorAll('[data-jury-team]').forEach(btn=>btn.addEventListener('click',()=>{
-      if(juryLocked || currentJuryStage !== 3) return;
-      const tid=Number(btn.dataset.juryTeam);const rank=btn.dataset.rank;
-      if(juryRankings[tid]===rank) {
-        delete juryRankings[tid];
-        updateChoiceUI();
-        return;
-      }
-      const otherVals = Object.entries(juryRankings).filter(([k])=>Number(k)!==tid).map(([,v])=>v);
-      if(rank==='empathy' && otherVals.filter(v=>v==='empathy').length >= 2) {
-        toast('「同理心加成卡 (+10 CQ)」每回合最多發放 2 張！');
-        return;
-      }
-      if(rank==='veto' && otherVals.filter(v=>v==='veto').length >= 1) {
-        toast('「文化踩雷否決卡 (-15 CQ)」每回合限用 1 張！');
-        return;
-      }
-      juryRankings[tid]=rank;
+  // Setup choice selection listeners
+  if (!hasVoted) {
+    document.querySelectorAll('[data-choice]').forEach(el => el.addEventListener('click', () => {
+      selection = el.dataset.choice;
       updateChoiceUI();
     }));
-    document.querySelectorAll('[data-jury-order-team]').forEach(btn=>btn.addEventListener('click',()=>{
-      if(juryLocked || currentJuryStage !== 3) return;
-      const tid=Number(btn.dataset.juryOrderTeam);const ord=Number(btn.dataset.order);
-      if(juryOrders[tid]===ord) {
-        delete juryOrders[tid];
-      } else {
-        const oldOwner = Object.keys(juryOrders).find(k=>Number(juryOrders[k])===ord);
-        if(oldOwner && Number(oldOwner)!==tid) {
-          if(juryOrders[tid]) {
-            juryOrders[oldOwner] = juryOrders[tid];
-          } else {
-            delete juryOrders[oldOwner];
-          }
-        }
-        juryOrders[tid]=ord;
-      }
+    document.querySelectorAll('[data-consensus]').forEach(el => el.addEventListener('click', () => {
+      consensus[Number(el.dataset.consensus)] = el.dataset.value === 'true';
       updateChoiceUI();
     }));
-    $('#submit-jury')?.addEventListener('click',submitJuryVerdict);
-  } else {
-    const hasVoted = Boolean(state.vote?.choice);
-    document.querySelectorAll('[data-choice]').forEach(el=>el.addEventListener('click',()=>{
-      if(hasVoted) return;
-      selection=el.dataset.choice;updateChoiceUI();
-    }));
-    document.querySelectorAll('[data-consensus]').forEach(el=>el.addEventListener('click',()=>{
-      if(hasVoted) return;
-      consensus[Number(el.dataset.consensus)]=el.dataset.value==='true';updateChoiceUI();
-    }));
-    $('#submit-vote')?.addEventListener('click',submitVote);
+    $('#submit-vote')?.addEventListener('click', submitVote);
   }
+
+  // Persuasion points allocation buttons
+  document.querySelectorAll('[data-alloc-btn]').forEach(btn => btn.addEventListener('click', () => {
+    const action = btn.dataset.allocBtn; // 'plus' or 'minus'
+    const gid = Number(btn.dataset.group);
+    const cur = Number(pointsAllocated[gid]) || 0;
+    const remaining = getRemainingPoints();
+
+    if (action === 'plus') {
+      if (remaining > 0 && cur < 3) {
+        pointsAllocated[gid] = cur + 1;
+        updateChoiceUI();
+      }
+    } else if (action === 'minus') {
+      if (cur > 0) {
+        pointsAllocated[gid] = cur - 1;
+        if (pointsAllocated[gid] === 0) delete pointsAllocated[gid];
+        updateChoiceUI();
+      }
+    }
+  }));
+
+  $('#submit-persuasion')?.addEventListener('click', submitPersuasion);
+
+  // Navigator choice buttons
+  document.querySelectorAll('[data-nav-choice]').forEach(btn => btn.addEventListener('click', () => {
+    const choice = btn.dataset.navChoice;
+    submitFinalDecision(choice);
+  }));
+
   updateChoiceUI();
 }
 
-function votingMarkup(){
+function votingMarkup() {
   const hasVoted = Boolean(state.vote?.choice);
   const c = state.cascade;
-  const juryAlert = state.jurySubmitted ? `<div class="jury-status-banner">
-    <div class="jury-status-banner-head">
-      <span class="jury-status-tag">角色席動態</span>
-      <strong>第 5 組【角色席】已完成全班道具配發</strong>
+  const myGroup = state.member.group;
+  const isNav = state.chiefNavigator === myGroup;
+  const remaining = getRemainingPoints();
+
+  // Other 4 groups for persuasion
+  const otherGroups = [1, 2, 3, 4, 5].filter(g => g !== myGroup);
+
+  return `
+    <div class="mobile-timer">
+      <span class="timer-label" data-debate>${state.roundIndex === 3 ? '三方終極協商' : '小組研討時間'}</span>
+      <span class="clock" data-clock>--:--</span>
     </div>
-    <p>發出 ${state.jurySummary?.empathyCount||0} 張同理心加成卡、${state.jurySummary?.vetoCount||0} 張文化踩雷否決卡，揭曉時公開對象！</p>
-  </div>` : '';
 
-  const pitch = state.pitch;
-  const now = Date.now() + (state.clockOffset || 0);
-  const isPitchActive = Boolean(pitch && pitch.deadline && pitch.deadline > now);
-  const isPitchExpired = Boolean(pitch && pitch.deadline && pitch.deadline <= now);
-
-  let pitchBanner = '';
-  if (isPitchActive) {
-    const isMyTurn = pitch.group === 'all' || pitch.group === state.member?.group;
-    pitchBanner = `<div class="pitch-notice-banner ${isMyTurn ? 'is-my-turn' : ''}">
-      <div class="pitch-notice-head">
-        <span class="pitch-tag">${pitch.group === 'all' ? '全班已提交！30 秒申辯論述' : `第 ${pitch.group} 組 30 秒申辯`}</span>
-        <strong class="pitch-clock-text">申辯倒數 <span class="pitch-clock-number mono" data-pitch-clock>00:30</span></strong>
+    ${c ? `
+      <div class="cascade-banner ${c.type === 'buff' ? 'is-buff' : 'is-penalty'}">
+        <div class="cascade-head">
+          <span class="cascade-badge">${esc(c.badge)}</span>
+          <strong>${esc(c.title)}</strong>
+        </div>
+        <p class="cascade-effect">${esc(c.effectText)}</p>
+        ${c.hint ? `<div class="cascade-intel-box">${esc(c.hint)}</div>` : ''}
       </div>
-      <p>${pitch.group === 'all' ? '全班各組皆已提交！請各組代表把握 30 秒向第 5 組角色席精準說明決策初衷。' : isMyTurn ? '輪到本組申辯！請派代表起立，以 30 秒向第 5 組角色席精準陳述跨文化考量！' : `第 ${pitch.group} 組正在進行 30 秒申辯論述中…`}</p>
-    </div>`;
-  } else if (hasVoted) {
-    if (isPitchExpired) {
-      pitchBanner = `<div class="pitch-ready-hint is-done">
-        <span class="pitch-ready-tag" style="background:#16a34a;">申辯結束</span>
-        <p>30 秒申辯論述已結束，第 5 組角色席正在進行最終名次排序與道具裁決！</p>
-      </div>`;
-    } else {
-      pitchBanner = `<div class="pitch-ready-hint">
-        <span class="pitch-ready-tag">決策已鎖定</span>
-        <p>本組方案已鎖定，等待其他組別提交後開始 30 秒申辯論述。</p>
-      </div>`;
-    }
-  }
+    ` : ''}
 
-  return `<div class="mobile-timer"><span class="timer-label" data-debate>${state.roundIndex===3?'三方協商辯論':'小組研討時間'}</span><span class="clock" data-clock>--:--</span></div>
+    <!-- Section 1: Initial Vote Options -->
+    <section class="card" style="margin-bottom: 14px;">
+      <div class="eyebrow">STEP 1 · INITIAL ANCHORING VOTE</div>
+      <h2 style="font-size:16px; margin:2px 0 8px;">階段一：各組即時初投（定錨立場）</h2>
+      <p style="font-size:12.5px; color:var(--muted); margin-bottom:12px;">
+        ${hasVoted ? '✓ 本組已完成初投定錨！請繼續進行階段二「說服點數分配」。' : '請與同組夥伴研討，選出本組初投方案。'}
+      </p>
 
-  ${pitchBanner}
-  ${juryAlert}
-
-  ${c?`<div class="cascade-banner ${c.type==='buff'?'is-buff':'is-penalty'}">
-    <div class="cascade-head"><span class="cascade-badge">${esc(c.badge)}</span><strong>${esc(c.title)}</strong></div>
-    <p class="cascade-effect">${esc(c.effectText)}</p>
-    ${c.hint?`<div class="cascade-intel-box">${esc(c.hint)}</div>`:''}
-  </div>`:''}
-
-  ${hasVoted?`<div class="submitted-banner is-locked">
-    <strong>✓ 本組已提交${state.vote.choice==='X'?'未達成協議':`方案 ${state.vote.choice}`} · 決策已鎖定</strong>
-    <p>${isPitchActive ? `正在進行 30 秒申辯論述 · 請派代表向【${esc(state.round.juryRole?.short || '第 5 組')}】說明` : '本組方案已鎖定，等待其他組別提交後開始 30 秒申辯論述'}</p>
-  </div>`:''}
-
-  <div class="options-list" role="radiogroup" aria-label="本組決策方案">${state.round.options.map(o=>`<button type="button" class="option-card ${hasVoted?'locked':''}" role="radio" aria-checked="${selection===o.id}" data-choice="${o.id}" ${hasVoted?'disabled':''}><span class="letter">${o.id}</span><span><strong>${esc(o.title)}</strong><p>${esc(o.text)}</p></span></button>`).join('')}</div>
-
-  ${state.roundIndex===3?`<section class="card debate-card"><div class="eyebrow">三方協商</div><h2>三方表態確認</h2><p class="muted">${hasVoted?'本組三方協商表態已確認鎖定。':'任一方拒絕即為未達成協議。'}</p>${['總部代表','東京代表','客戶代表'].map((name,i)=>`<div class="consensus-row"><span>${name}</span><div class="consensus-options"><button type="button" data-consensus="${i}" data-value="true" aria-pressed="${consensus[i]===true}" ${hasVoted?'disabled':''}>同意</button><button type="button" class="refuse" data-consensus="${i}" data-value="false" aria-pressed="${consensus[i]===false}" ${hasVoted?'disabled':''}>拒絕</button></div></div>`).join('')}</section>`:''}`;
-}
-
-function juryVotingMarkup(){
-  const juryLocked = Boolean(state.jurySubmitted);
-  const vals = Object.values(juryRankings);
-  const empUsed = vals.filter(v => v === 'empathy').length;
-  const vetoUsed = vals.filter(v => v === 'veto').length;
-  const completedCount = state.decisionGroups ? state.decisionGroups.filter(g => g.submitted).length : 0;
-
-  let stageBannerHtml = '';
-  if (juryLocked) {
-    stageBannerHtml = `<div class="submitted-banner is-locked">
-      <strong>✓ 裁判評定裁決已送出 · 評定已鎖定</strong>
-      <p>大螢幕即時同步中 · 等待講師宣布揭曉</p>
-    </div>`;
-  } else if (currentJuryStage === 1) {
-    stageBannerHtml = `<div class="jury-stage-banner stage-waiting">
-      <div class="stage-banner-head">
-        <span class="stage-tag">階段一 · 等待各組提交</span>
-        <span class="stage-progress-tag">${completedCount} / 4 組已提交</span>
+      <div class="options-list" role="radiogroup" aria-label="本組初投方案">
+        ${state.round.options.map(o => `
+          <button type="button" class="option-card ${hasVoted ? 'locked' : ''}" role="radio" aria-checked="${selection === o.id}" data-choice="${o.id}" ${hasVoted ? 'disabled' : ''}>
+            <span class="letter">${o.id}</span>
+            <span>
+              <strong>${esc(o.title)}</strong>
+              <p>${esc(o.text)}</p>
+            </span>
+          </button>
+        `).join('')}
       </div>
-      <strong>等待第 1～4 組全數提交並完成 30 秒論述後，開放最終排序與道具裁決</strong>
-      <p>您可先點閱下方各方案文化情報，掌握各決策可能代價與盲點。</p>
-    </div>`;
-  } else if (currentJuryStage === 2) {
-    stageBannerHtml = `<div class="jury-stage-banner stage-pitching">
-      <div class="stage-banner-head">
-        <span class="stage-tag active">階段二 · 30 秒申辯進行中</span>
-        <strong class="pitch-clock-text mono" data-pitch-clock>00:30</strong>
-      </div>
-      <strong>30 秒申辯論述進行中 — 請聆聽各組代表論述，倒數結束後立即開放排序！</strong>
-      <div>
-        <button type="button" class="skip-pitch-btn" id="skip-jury-pitch">提前結束論述，開始排序 ↗</button>
-      </div>
-    </div>`;
-  } else {
-    stageBannerHtml = `<div class="jury-stage-banner stage-unlocked">
-      <div class="stage-banner-head">
-        <span class="stage-tag done">階段三 · 裁決與排序</span>
-        <span class="stage-unlocked-status">已解鎖</span>
-      </div>
-      <strong>論述結束！請為第 1～4 組進行最終名次排序（第 1～4 名）與道具卡配發</strong>
-      <p>審視各組 30 秒申辯表現，指定 1～4 名說服名次並發放同理心加成卡或文化踩雷否決卡。</p>
-    </div>`;
-  }
 
-  return `<div class="mobile-timer"><span class="timer-label">第 5 組角色席</span><span class="clock" data-clock>--:--</span></div>
-
-  ${stageBannerHtml}
-
-  <section class="card jury-mission-card">
-    <div class="eyebrow">跨文化角色席</div>
-    <h2>角色：${esc(state.round.juryRole?.title || '角色席')}</h2>
-    <p class="jury-mission-text">
-      <strong>【立場與顧慮】：</strong>${esc(state.round.juryRole?.stance || '聆聽各組申辯，從本方文化審視。')}
-    </p>
-  </section>
-
-  <section class="card jury-monitor-summary">
-    <div class="eyebrow">各組進度</div>
-    <div class="jury-progress-chips">
-      ${state.decisionGroups.map(g=>`<span class="jury-chip ${g.submitted?'done':'wait'}">第 ${g.id} 組：${g.submitted?'已選 '+g.choice:'討論中…'}${g.cascade?` (${esc(g.cascade.badge)})`:''}</span>`).join('')}
-    </div>
-  </section>
-
-  <section class="card jury-intel-card">
-    <div class="eyebrow">情報解密</div>
-    <h2>方案暗藏文化代價</h2>
-    <div class="jury-options-intel">
-      ${state.optionsWithIntel.map(o=>`<div class="intel-item"><div class="intel-head"><span class="letter">${o.id}</span><strong>${esc(o.title)}</strong></div><p class="intel-text">${esc(o.text)}</p><div class="intel-blindspot"><strong>【代價】：</strong>${esc(o.blindspot)}</div></div>`).join('')}
-    </div>
-  </section>
-
-  <section class="jury-eval-section ${currentJuryStage !== 3 ? 'is-locked-stage' : ''}">
-    <div class="section-title">
-      <h3>實質籌碼賦權 · 申辯裁決卡 ＆ 說服名次</h3>
-      <p class="muted" style="margin:4px 0 10px; font-size:13px;">${currentJuryStage === 3 ? '聆聽第 1～4 組 30 秒申辯後，分派道具卡與評定說服名次（第 1～4 名）：' : '（論述倒數結束後開放點選）'}</p>
-      <div class="jury-quota-bar">
-        <span class="quota-pill empathy-pill">同理心加成 (+10 CQ)：剩餘 <strong id="quota-empathy">${Math.max(0, 2 - empUsed)} / 2 張</strong></span>
-        <span class="quota-pill veto-pill">文化踩雷否決 (-15 CQ)：剩餘 <strong id="quota-veto">${Math.max(0, 1 - vetoUsed)} / 1 張</strong></span>
-      </div>
-    </div>
-    <div class="jury-cards-list">
-      ${state.decisionGroups.map(g=>{
-        const opt = g.choice ? state.optionsWithIntel.find(o=>o.id===g.choice) : null;
-        const currentRank = juryRankings[g.id];
-        const currentOrder = juryOrders[g.id];
-        return `<div class="card jury-group-eval-card ${currentJuryStage !== 3 ? 'card-locked' : ''}">
-          <div class="eval-head"><strong>第 ${g.id} 組</strong><span class="pill ${g.submitted?'positive':'muted'}">${g.submitted?'方案 '+g.choice:'等待提交'}</span></div>
-          ${opt?`<div class="eval-body"><strong>${esc(opt.title)}</strong><p>${esc(opt.text)}</p></div>`:''}
-          <div class="eval-controls">
-            <div class="chip-buttons-group">
-              <button type="button" class="chip-btn empathy-btn" data-jury-team="${g.id}" data-rank="empathy" aria-pressed="${currentRank==='empathy'}" ${juryLocked||currentJuryStage!==3?'disabled':''}>同理心加成 (+10 CQ)</button>
-              <button type="button" class="chip-btn neutral-btn" data-jury-team="${g.id}" data-rank="neutral" aria-pressed="${currentRank==='neutral'}" ${juryLocked||currentJuryStage!==3?'disabled':''}>中立觀察 (0 CQ)</button>
-              <button type="button" class="chip-btn veto-btn" data-jury-team="${g.id}" data-rank="veto" aria-pressed="${currentRank==='veto'}" ${juryLocked||currentJuryStage!==3?'disabled':''}>文化踩雷否決 (-15 CQ)</button>
-            </div>
-            <div class="order-controls">
-              <span class="order-label">說服名次：</span>
-              <div class="order-buttons-group">
-                ${[1, 2, 3, 4].map(ord => {
-                  const isAct = currentOrder === ord;
-                  return `<button type="button" class="order-btn ${isAct ? 'active' : ''}" data-jury-order-team="${g.id}" data-order="${ord}" aria-pressed="${isAct}" ${juryLocked||currentJuryStage!==3?'disabled':''}>第 ${ord} 名</button>`;
-                }).join('')}
+      ${state.roundIndex === 3 ? `
+        <div class="debate-card" style="margin-top:12px; padding:12px; background:#f8fafc; border-radius:10px;">
+          <div class="eyebrow">三方協商表態</div>
+          <p class="muted" style="font-size:12px; margin-bottom:8px;">${hasVoted ? '本組三方協商表態已確認鎖定。' : '任一方拒絕即為未達成協議（破局）。'}</p>
+          ${['總部代表', '東京代表', '客戶代表'].map((name, i) => `
+            <div class="consensus-row">
+              <span>${name}</span>
+              <div class="consensus-options">
+                <button type="button" data-consensus="${i}" data-value="true" aria-pressed="${consensus[i] === true}" ${hasVoted ? 'disabled' : ''}>同意</button>
+                <button type="button" class="refuse" data-consensus="${i}" data-value="false" aria-pressed="${consensus[i] === false}" ${hasVoted ? 'disabled' : ''}>拒絕</button>
               </div>
             </div>
-          </div>
-        </div>`;
-      }).join('')}
-    </div>
-  </section>`;
-}
+          `).join('')}
+        </div>
+      ` : ''}
+    </section>
 
-function renderPublicBoard() {
-  if (!state.publicBoard) return '';
-  let sortedBoard = [...state.publicBoard];
-  sortedBoard.sort((a,b) => {
-    const orderA = a.juryOrder ?? 99;
-    const orderB = b.juryOrder ?? 99;
-    return (orderA - orderB) || ((b.juryBonus ?? 0) - (a.juryBonus ?? 0)) || (a.id - b.id);
-  });
+    <!-- Section 2: 5 Persuasion Points Allocator Card -->
+    <section class="point-allocator-card card" style="margin-bottom: 14px;">
+      <div class="eyebrow">STEP 2 · 5-POINT PERSUASION DISTRIBUTION</div>
+      <h2 style="font-size:16px; margin:2px 0 4px;">階段二：5 點說服點數分配</h2>
+      <p style="font-size:12.5px; color:var(--muted); margin-bottom:10px;">
+        聆聽辯論交鋒，將 5 點分配給最令人信服的其他組別（禁投本組，單組上限 3 點）。
+      </p>
 
-  return `<section class="card public-jury-board">
-    <div class="eyebrow">JURY RANKINGS & CHIP CARDS</div>
-    <h2>第 5 組【角色席】裁決與名次榜</h2>
-    <div class="public-board-list">
-      ${sortedBoard.map((g, idx) => {
-        const isMe = g.id === state.member?.group;
-        const bonus = g.juryBonus ?? 0;
-        let verdictTag = '';
-        if (g.juryRank === 'empathy' || bonus > 0) verdictTag = '<span class="jury-tag-pill is-buff">同理心加成 (+10 CQ)</span>';
-        else if (g.juryRank === 'veto' || bonus < 0) verdictTag = '<span class="jury-tag-pill is-veto">文化踩雷否決 (-15 CQ)</span>';
-        else if (g.juryRank === 'neutral') verdictTag = '<span class="jury-tag-pill is-neutral">中立觀察 (0 CQ)</span>';
-        else if (g.juryVerdict) verdictTag = `<span class="jury-tag-pill">${esc(g.juryVerdict)}</span>`;
-        const displayRank = g.juryOrder && g.juryOrder <= 4 ? g.juryOrder : (idx + 1);
-        const rankBadge = `<span class="board-rank-badge rank-${displayRank}">第 ${displayRank} 名</span>`;
-        return `<div class="public-board-item ${isMe ? 'is-me' : ''}">
-          <div class="board-item-header">
-            <div class="board-group-title">
-              ${rankBadge}<strong>第 ${g.id} 組</strong>${isMe ? ' <span class="me-pill">本組</span>' : ''}
+      <div class="points-counter">
+        <span>剩餘待配發點數</span>
+        <span class="counter-number" id="remaining-pts-count">${remaining} / 5 點</span>
+      </div>
+
+      <div class="alloc-groups-list">
+        ${otherGroups.map(gid => {
+          const pts = Number(pointsAllocated[gid]) || 0;
+          return `
+            <div class="alloc-group-row" data-alloc-group="${gid}">
+              <div class="alloc-group-label">
+                <span class="alloc-group-name">第 ${gid} 組</span>
+                <span class="alloc-group-choice">戰略決策組</span>
+              </div>
+              <div class="alloc-controls">
+                <button type="button" class="alloc-btn minus" data-alloc-btn="minus" data-group="${gid}" aria-label="減少第 ${gid} 組點數" ${pts <= 0 ? 'disabled' : ''}>−</button>
+                <span class="alloc-value">${pts}</span>
+                <button type="button" class="alloc-btn plus" data-alloc-btn="plus" data-group="${gid}" aria-label="增加第 ${gid} 組點數" ${remaining <= 0 || pts >= 3 ? 'disabled' : ''}>+</button>
+              </div>
             </div>
-            <div class="board-cq-stats">
-              <span class="board-cq-delta ${g.actualDelta > 0 ? 'positive-text' : g.actualDelta < 0 ? 'negative-text' : ''}">
-                ${g.actualDelta > 0 ? '+' : ''}${g.actualDelta} CQ
-              </span>
-              <span class="board-cq-total">總計 ${g.cq ?? 100} CQ</span>
+          `;
+        }).join('')}
+      </div>
+
+      <button type="button" id="submit-persuasion" class="button primary submit-persuasion-btn" ${5 - remaining < 1 || 5 - remaining > 5 ? 'disabled' : ''}>
+        送出說服點數分配 ↗
+      </button>
+    </section>
+
+    <!-- Section 3: Chief Navigator Classified Intel & Final Decision -->
+    <section class="navigator-intel-card card" style="margin-bottom: 24px;">
+      <div class="eyebrow">STEP 3 · CHIEF NAVIGATOR & CLASSIFIED INTEL</div>
+      <h2 style="font-size:16px; margin:2px 0 8px;">階段三：首席領航者 ＆ 極密內幕情報</h2>
+
+      ${isNav ? `
+        <div class="classified-intel-box">
+          <div class="classified-stamp">TOP SECRET 極密檔案</div>
+          <div class="classified-header">
+            <h3 class="classified-title">
+              <span>👑 首席領航專屬情報</span>
+            </h3>
+            <p class="classified-subtitle">
+              貴組榮獲最高說服點數！這是未向全班公開的深層內幕，請向全班口頭分享你的推理，並拍板代表全班的「最終策略」！
+            </p>
+          </div>
+          <div class="classified-body">
+            <strong>${esc(state.hiddenIntel?.title || '《極密情報檔案》')}</strong>
+            <p style="margin:6px 0 0; line-height:1.7;">${esc(state.hiddenIntel?.text || '正在加載極密檔案…')}</p>
+          </div>
+
+          <div style="margin-top: 14px;">
+            <strong style="color:#78350f; font-size:13.5px;">👑 請首席領航者代表全班拍板最終方案：</strong>
+            ${state.hasFinalDecision ? `
+              <div style="margin-top:8px; background:#dcfce7; border:1.5px solid #86efac; border-radius:10px; padding:12px; color:#15803d; font-weight:700; text-align:center;">
+                ✓ 貴組已拍板全班最終策略：方案 ${state.finalDecision}
+              </div>
+            ` : `
+              <div class="navigator-decision-grid">
+                ${['A', 'B', 'C', 'D'].map(choice => `
+                  <button type="button" class="navigator-choice-btn" data-nav-choice="${choice}">
+                    <span class="choice-letter">${choice}</span>
+                    <span>拍板方案 ${choice}</span>
+                  </button>
+                `).join('')}
+              </div>
+            `}
+          </div>
+        </div>
+      ` : `
+        <div style="background:#f8fafc; border:1.5px dashed var(--line); border-radius:14px; padding:16px; text-align:center;">
+          <strong style="color:var(--ink); font-size:14.5px;">
+            ${state.chiefNavigator ? `👑 本輪首席領航者：第 ${state.chiefNavigator} 組` : '等待說服點數統計出【首席領航者】…'}
+          </strong>
+          <p style="font-size:12.5px; color:var(--muted); margin:6px 0 0; line-height:1.6;">
+            ${state.chiefNavigator
+              ? `第 ${state.chiefNavigator} 組已獨家解鎖《極密內幕情報》，請聆聽其分析並等待其代表全班拍板最終答案！`
+              : '請在階段二積極分配說服點數，助最信服的組別榮登首席領航者！'
+            }
+          </p>
+        </div>
+      `}
+    </section>
+  `;
+}
+
+function resultMarkup() {
+  const res = state.result || {};
+  const isGood = state.worldState?.['r' + (state.roundIndex + 1)] === 'good';
+  const myGroup = state.member.group;
+  const isNav = myGroup === state.chiefNavigator;
+
+  return `
+    <!-- Result Banner -->
+    <div class="card" style="border:2px solid ${isGood ? '#16a34a' : '#dc2626'}; background:${isGood ? '#f0fdf4' : '#fef2f2'}; margin-bottom:14px; padding:14px 16px;">
+      <strong style="color:${isGood ? '#15803d' : '#b91c1c'}; font-size:15px;">
+        ${isGood
+          ? `🎉 首席領航者拍板成功！全員協同大共贏（本組 +15 CQ）`
+          : `⚠️ 首席領航者拍板踩雷！全班共業警報啟動`
+        }
+      </strong>
+      <p style="margin:4px 0 0; font-size:12.5px; color:${isGood ? '#166534' : '#991b1b'}; line-height:1.5;">
+        ${isGood
+          ? '初投失誤組別負面扣分減免 60%，全班同享共贏加成，下回合解鎖正面盟友支援！'
+          : '初投失誤組別承受全額扣分，下回合全班 5 組共同承受負面組織困境！'
+        }
+      </p>
+    </div>
+
+    <!-- Personal Group Breakdown Card -->
+    <section class="card" style="margin-bottom:14px; border:1.5px solid var(--line);">
+      <div class="eyebrow">YOUR GROUP RESULT</div>
+      <h2 style="font-size:16px; margin:2px 0 10px;">
+        第 ${myGroup} 組本輪結算明細 ${isNav ? '<span class="navigator-crown-pill">👑 領航組</span>' : ''}
+      </h2>
+
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        <div style="display:flex; justify-content:space-between; font-size:13.5px; padding:6px 0; border-bottom:1px solid var(--line);">
+          <span>初投方案 ${res.id || '—'} 基礎分</span>
+          <strong class="${res.baseDelta > 0 ? 'positive-text' : res.baseDelta < 0 ? 'negative-text' : ''}">
+            ${res.baseDelta >= 0 ? '+' : ''}${res.baseDelta ?? 0} CQ
+          </strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:13.5px; padding:6px 0; border-bottom:1px solid var(--line);">
+          <span>領航救援減免（初投失誤減免 60%）</span>
+          <strong class="${res.rescueBonus > 0 ? 'positive-text' : ''}">
+            ${res.rescueBonus > 0 ? `+${res.rescueBonus} CQ` : '0 CQ'}
+          </strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:13.5px; padding:6px 0; border-bottom:1px solid var(--line);">
+          <span>全員協同共贏加成 ${isNav ? '(含領航榮譽 +5)' : ''}</span>
+          <strong class="${res.synergyBonus > 0 ? 'positive-text' : ''}">
+            ${res.synergyBonus > 0 ? `+${res.synergyBonus} CQ` : '0 CQ'}
+          </strong>
+        </div>
+        <div style="display:flex; justify-content:space-between; font-size:14.5px; font-weight:800; padding:8px 0 0;">
+          <span>本輪淨變動 / 總 CQ</span>
+          <span style="color:#0f172a;">
+            ${res.actualDelta >= 0 ? '+' : ''}${res.actualDelta ?? 0} CQ ｜ <strong style="color:var(--accent);">${state.group.cq} CQ</strong>
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- Public Leaderboard -->
+    <section class="card" style="margin-bottom:20px;">
+      <div class="eyebrow">CLASS LEADERBOARD</div>
+      <h2 style="font-size:16px; margin:2px 0 10px;">全班 5 組排行榜</h2>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        ${(state.publicBoard || []).map(g => `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:#f8fafc; border-radius:10px; border:1px solid var(--line);">
+            <div>
+              <strong>第 ${g.id} 組</strong>
+              ${g.isNavigator ? '<span class="navigator-crown-pill" style="margin-left:4px;">👑 領航</span>' : ''}
+              <small style="color:var(--muted); margin-left:6px;">初投 ${g.optionId || '—'}</small>
+            </div>
+            <div>
+              <strong style="color:#0f172a;">${g.cq} CQ</strong>
+              <small class="${g.actualDelta >= 0 ? 'positive-text' : 'negative-text'}" style="margin-left:6px;">
+                (${g.actualDelta >= 0 ? '+' : ''}${g.actualDelta})
+              </small>
             </div>
           </div>
-          <div class="board-item-details">
-            <span class="board-option">方案 ${g.optionId === 'X' ? '破局' : g.optionId || '—'} · ${esc(g.optionTitle || '未提交')}</span>
-            <span class="board-score-calc">(基礎 ${g.baseDelta > 0 ? '+' : ''}${g.baseDelta} / 道具 ${g.juryBonus > 0 ? '+' : ''}${g.juryBonus})</span>
-          </div>
-          ${verdictTag ? `<div class="board-verdict-row">${verdictTag}</div>` : ''}
-        </div>`;
-      }).join('')}
-    </div>
-  </section>`;
+        `).join('')}
+      </div>
+    </section>
+
+    <!-- Unlocked Classified Intel -->
+    ${state.hiddenIntel ? `
+      <div class="classified-intel-box" style="margin-bottom:24px;">
+        <div class="classified-stamp">公開解密</div>
+        <div class="classified-header">
+          <h3 class="classified-title">${esc(state.hiddenIntel.title)}</h3>
+          <p class="classified-subtitle">全班覆盤內幕檔案</p>
+        </div>
+        <div class="classified-body">${esc(state.hiddenIntel.text)}</div>
+      </div>
+    ` : ''}
+  `;
 }
 
-function resultMarkup(){
-  const result=state.result;
-  if(!result)return '<section class="card waiting-card"><h2>本組本回合未提交決策</h2><p>團隊 CQ 韌性值維持原值，請跟隨簡報者一起覆盤。</p></section>';
-  const cqBefore = result.cqBefore ?? 100;
-  const cqAfter = result.cqAfter ?? 100;
-  const baseDelta = result.baseDelta ?? result.cq ?? 0;
-  const juryBonus = result.juryBonus ?? 0;
-  const delta = result.actualDelta ?? 0;
-  return `<section class="card mobile-review">
-    <div class="eyebrow">GROUP ${state.member.group} · YOUR DECISION & CQ IMPACT</div>
-    <h2>${result.id==='X'?'三方未達成協議':`方案 ${result.id} · ${esc(result.title)}`}</h2>
-    ${result.juryVerdict?`<div class="jury-verdict-pill ${juryBonus>0?'is-buff':juryBonus<0?'is-veto':''}">${esc(result.juryVerdict)}</div>`:''}
-    <div class="score-breakdown-row">
-      <span>方案基礎：<strong>${baseDelta>0?'+':''}${baseDelta} CQ</strong></span>
-      <span>｜</span>
-      <span>裁判籌碼：<strong class="${juryBonus>0?'positive-text':juryBonus<0?'negative-text':''}">${juryBonus>0?'+':''}${juryBonus} CQ</strong></span>
-    </div>
-    <div class="cq-summary"><span>團隊 CQ 韌性值 ${cqBefore} → ${cqAfter}<br><small>${delta>0?'決策與說服展現高度文化同理心，有效守護跨國信任！':delta===0?'CQ 韌性維持持平。':'決策觸碰深層文化盲點，團隊信任受損。'}</small></span><strong class="${delta>=0?'positive-text':'negative-text'}">${delta>0?'+':''}${delta} CQ</strong></div>
-    <div class="review-insight"><div class="eyebrow">文化盲點 · 重新看見</div><p>${esc(result.blindspot)}</p></div>
-  </section>
-
-  ${renderPublicBoard()}`;
-}
-
-function juryResultMarkup(){
-  return `<section class="card mobile-review">
-    <div class="eyebrow">ROLEPLAY DEBRIEF · 【${esc(state.round.juryRole?.short || '角色席')}】對話總結</div>
-    <h2>全班跨文化決策與 CQ 韌性總結</h2>
-    <div class="jury-results-summary">
-      ${state.decisionGroups.map(g=>{
-        const res=state.results?.[g.id];
-        const rk=state.juryRankings?.[g.id];
-        const jOrd=state.juryOrders?.[g.id];
-        const delta=res?.actualDelta;
-        const baseDelta=res?.baseDelta ?? res?.cq;
-        const juryBonus=res?.juryBonus ?? 0;
-        let rkLabel = res?.juryVerdict || (rk==='empathy'?'同理心加成 (+10 CQ)':rk==='veto'?'文化踩雷否決 (-15 CQ)':rk==='neutral'?'中立觀察 (0 CQ)':rk?`說服回饋：第 ${rk} 名`:'未評定');
-        if (jOrd) rkLabel += ` ｜ 說服名次 #${jOrd}`;
-        return `<div class="jury-summary-row">
-          <div>
-            <strong>第 ${g.id} 組</strong> · 方案 ${res?.id||'—'} ${baseDelta!==undefined?`<small class="muted">(方案 ${baseDelta>0?'+':''}${baseDelta}${juryBonus?` / 裁判 ${juryBonus>0?'+':''}${juryBonus}`:''})</small>`:''}
-            <div style="font-size:12px; color:var(--muted); margin-top:3px;">${esc(rkLabel)}</div>
-          </div>
-          <span class="pill ${delta>=0?'positive':'negative'}">${delta!==undefined?(delta>0?'+':'')+delta+' CQ':'—'}</span>
-        </div>`;
-      }).join('')}
-    </div>
-  </section>
-  ${renderPublicBoard()}`;
-}
-
-async function submitVote(){
-  if(!selection) return;
-  busy=true;updateChoiceUI();
-  if(!state.vote) state.vote={};
-  state.vote.choice=selection;
-  state.vote.proposal=selection;
-  state.vote.consensus=[...consensus];
-  render();
-
-  broadcastSync('group_vote',{
-    group: state.member.group,
-    choice: selection,
-    proposal: selection,
-    consensus,
-    roundIndex: state.roundIndex,
-    name: state.member.name
-  });
-
-  try{
-    if(!state.member.isRepresentative) {
-      try { await api('claim-rep',{},'member'); } catch(e){}
-    }
-    await api('vote',{choice:selection,consensus,roundIndex:state.roundIndex,epoch:state.epoch});
-    toast('本組代表決策已提交 ✓');
-  }catch(e){
-    if(e.status===401){
-      const last=JSON.parse(localStorage.getItem('cq_last_join')||'{}');
-      if(last.name && last.group){
-        try{
-          const joinRes=await api('join',{name:last.name,group:last.group,allowSwitch:true});
-          if(joinRes.token) localStorage.setItem('cq_member_token',joinRes.token);
-          const next=await api();
-          next.clockOffset=next.serverTime-Date.now();
-          state=next;
-          try { await api('claim-rep',{},'member'); } catch(err){}
-          await api('vote',{choice:selection,consensus,roundIndex:state.roundIndex,epoch:state.epoch});
-          toast('本組代表決策已提交 ✓');
-          render();
-          busy=false;updateChoiceUI();
-          return;
-        }catch(retryErr){
-          toast(retryErr.message || '課堂已更新，請重新整理');
-          busy=false;updateChoiceUI();
-          return;
-        }
-      }
-    }
-    toast(e.message || '已送出');
-  }finally{
-    busy=false;updateChoiceUI();
+async function submitVote() {
+  if (!selection || busy) return;
+  busy = true;
+  $('#submit-vote').disabled = true;
+  try {
+    await api('vote', {
+      choice: selection,
+      roundIndex: state.roundIndex,
+      ...(state.roundIndex === 3 ? { consensus } : {})
+    });
+    toast(`第 ${state.member.group} 組初投已鎖定：方案 ${selection} ✓`);
+    broadcastSync('group_vote', {
+      group: state.member.group,
+      choice: selection,
+      proposal: selection,
+      roundIndex: state.roundIndex
+    });
+    await refresh();
+  } catch (e) {
+    toast(e.message);
+  } finally {
+    busy = false;
+    $('#submit-vote').disabled = false;
   }
 }
 
-async function submitJuryVerdict(){
-  busy=true;updateChoiceUI();
-  state.jurySubmitted=true;
-  state.juryRankings={...juryRankings};
-  state.juryOrders={...juryOrders};
-  render();
-
-  broadcastSync('jury_verdict',{
-    rankings: juryRankings,
-    orders: juryOrders,
-    roundIndex: state.roundIndex
-  });
-
-  try{
-    await api('jury-rank',{rankings:juryRankings,orders:juryOrders,roundIndex:state.roundIndex,epoch:state.epoch});
-    toast('裁判評定裁決已送出！大螢幕即時同步 ✓');
-  }catch(e){
-    if(e.status===401){
-      const last=JSON.parse(localStorage.getItem('cq_last_join')||'{}');
-      if(last.name && last.group){
-        try{
-          const joinRes=await api('join',{name:last.name,group:last.group,allowSwitch:true});
-          if(joinRes.token) localStorage.setItem('cq_member_token',joinRes.token);
-          const next=await api();
-          next.clockOffset=next.serverTime-Date.now();
-          state=next;
-          await api('jury-rank',{rankings:juryRankings,orders:juryOrders,roundIndex:state.roundIndex,epoch:state.epoch});
-          toast('裁判評定裁決已送出！大螢幕即時同步 ✓');
-          render();
-          busy=false;updateChoiceUI();
-          return;
-        }catch(retryErr){}
-      }
-    }
-    toast(e.message || '裁決已送出');
-  }finally{
-    busy=false;updateChoiceUI();
-  }
-}
-
-let consecutive401=0;
-let isRejoining=false;
-async function refresh(){
-  try{
-    const next=await api();
-    next.clockOffset=next.serverTime-Date.now();
-    const signature=JSON.stringify({...next,serverTime:0,clockOffset:0});
-    state=next;online=true;status(true);consecutive401=0;
-    if(gate.open)gate.close();
-    if(signature!==lastSignature){lastSignature=signature;render();}
-    updateChoiceUI();
-  }catch(e){
-    if(e.status===401){
-      consecutive401++;
-      const last=JSON.parse(localStorage.getItem('cq_last_join')||'{}');
-      if(last.name && last.group && !isRejoining){
-        isRejoining=true;
-        try{
-          const res=await api('join',{name:last.name,group:last.group,allowSwitch:true});
-          if(res.token) localStorage.setItem('cq_member_token',res.token);
-          consecutive401=0;
-          isRejoining=false;
-          return refresh();
-        }catch(err){
-          isRejoining=false;
-        }
-      }
-      if(consecutive401>=4 && !last.name){
-        state=null;lastSignature='';roundKey='';
-        document.querySelector('.mobile-action')?.remove();
-        $('#app').innerHTML='<div class="loading">歡迎加入今天的對話。</div>';
-        if(!gate.open)gate.showModal();
-        status(true);
-      }
-    }else{
-      online=false;status(false);updateChoiceUI();
-    }
-  }
-}
-
-try{
-  const last=JSON.parse(localStorage.getItem('cq_last_join')||'{}');
-  if(last.name) $('#name').value=last.name;
-  if(last.group){
-    const r=document.querySelector(`input[name="group"][value="${last.group}"]`);
-    if(r) r.checked=true;
-  }
-}catch{}
-
-$('#app').addEventListener('click', e => {
-  if (e.target.closest('#skip-jury-pitch')) {
-    juryPitchSkipped = true;
-    currentJuryStage = 3;
-    render();
+async function submitPersuasion() {
+  if (busy) return;
+  const remaining = getRemainingPoints();
+  const used = 5 - remaining;
+  if (used < 1 || used > 5) {
+    toast('說服點數總和必須在 1 至 5 點之間！');
     return;
   }
+  busy = true;
+  $('#submit-persuasion').disabled = true;
+  try {
+    const cleanPoints = {};
+    for (const [gid, pts] of Object.entries(pointsAllocated)) {
+      if (Number(pts) > 0) cleanPoints[gid] = Number(pts);
+    }
+    await api('persuade', {
+      points: cleanPoints,
+      roundIndex: state.roundIndex
+    });
+    toast(`已送出說服點數分配（共分配 ${used} 點）✓`);
+    await refresh();
+  } catch (e) {
+    toast(e.message);
+  } finally {
+    busy = false;
+    $('#submit-persuasion').disabled = false;
+  }
+}
+
+async function submitFinalDecision(choice) {
+  if (!choice || busy) return;
+  busy = true;
+  try {
+    await api('final-decision', {
+      choice,
+      roundIndex: state.roundIndex
+    });
+    toast(`首席領航者已拍板全班方案：方案 ${choice} ✓`);
+    await refresh();
+  } catch (e) {
+    toast(e.message);
+  } finally {
+    busy = false;
+  }
+}
+
+async function refresh() {
+  try {
+    const next = await api('state');
+    next.clockOffset = next.serverTime - Date.now();
+    const signature = JSON.stringify({ ...next, serverTime: 0, clockOffset: 0 });
+    state = next;
+    online = true;
+    status(true);
+    if (signature !== lastSignature) {
+      lastSignature = signature;
+      render();
+    }
+  } catch (e) {
+    online = false;
+    status(false);
+  }
+}
+
+document.body.addEventListener('click', e => {
   if (e.target.closest('#open-switch-group')) {
     if (!state?.member) return;
     $('#join-title').innerHTML = '更換組別 / 姓名';
@@ -615,59 +563,54 @@ $('#app').addEventListener('click', e => {
     if (subBtn) subBtn.innerHTML = '確認更換組別 <span aria-hidden="true">↗</span>';
     gate.showModal();
   }
-});
-
-$('#close-onboarding')?.addEventListener('click', () => {
-  gate.close();
-});
-
-document.body.addEventListener('click', e => {
+  if (e.target.closest('#close-onboarding')) {
+    gate.close();
+  }
   if (e.target.closest('#revealed-status-pill')) {
     toast(state?.phase === 'finished' ? '四個回合已全部完成！' : '本回合已揭曉！請看大螢幕，由講師進入下一回合。');
   }
 });
 
-$('#join-form').addEventListener('submit',async e=>{
+$('#join-form').addEventListener('submit', async e => {
   e.preventDefault();
-  const button=e.currentTarget.querySelector('button[type="submit"]') || e.currentTarget.querySelector('button');
-  button.disabled=true;$('#join-error').textContent='';
-  const form=new FormData(e.currentTarget);
-  const name=form.get('name');
-  const group=Number(form.get('group'));
-  try{
+  const button = e.currentTarget.querySelector('button[type="submit"]') || e.currentTarget.querySelector('button');
+  button.disabled = true;
+  $('#join-error').textContent = '';
+  const form = new FormData(e.currentTarget);
+  const name = form.get('name');
+  const group = Number(form.get('group'));
+  try {
     let res;
-    if(state?.member) {
-      res=await api('switch-group',{name,group});
+    if (state?.member) {
+      res = await api('switch-group', { name, group });
       toast(`已更換至第 ${group} 組 ✓`);
     } else {
-      res=await api('join',{name,group,allowSwitch:true});
+      res = await api('join', { name, group, allowSwitch: true });
     }
-    if(res.token){
-      try{
-        localStorage.setItem('cq_member_token',res.token);
-        localStorage.setItem('cq_last_join',JSON.stringify({name,group}));
-      }catch{}
+    if (res.token) {
+      try {
+        localStorage.setItem('cq_member_token', res.token);
+        localStorage.setItem('cq_last_join', JSON.stringify({ name, group }));
+      } catch {}
     }
-    consecutive401=0;
     gate.close();
     await refresh();
-  }catch(error){
+  } catch (error) {
     try {
-      const res=await api('join',{name,group,allowSwitch:true});
-      if(res.token){
-        localStorage.setItem('cq_member_token',res.token);
-        localStorage.setItem('cq_last_join',JSON.stringify({name,group}));
+      const res = await api('join', { name, group, allowSwitch: true });
+      if (res.token) {
+        localStorage.setItem('cq_member_token', res.token);
+        localStorage.setItem('cq_last_join', JSON.stringify({ name, group }));
       }
-      consecutive401=0;
       toast(`已更換至第 ${group} 組 ✓`);
       gate.close();
       await refresh();
-      return;
-    } catch(err2) {
-      $('#join-error').textContent=err2.message || error.message;
+    } catch (err2) {
+      $('#join-error').textContent = err2.message || error.message;
     }
+  } finally {
+    button.disabled = false;
   }
-  finally{button.disabled=false;}
 });
 
 listenSync(packet => {
@@ -675,41 +618,23 @@ listenSync(packet => {
   if (packet.type === 'host_action') {
     refresh();
   } else if (packet.type === 'group_vote') {
-    if (state.member?.isJury) {
-      if (packet.roundIndex === state.roundIndex && state.decisionGroups) {
-        const target = state.decisionGroups.find(g => g.id === packet.group);
-        if (target) {
-          target.submitted = true;
-          target.choice = packet.choice;
-          target.proposal = packet.proposal;
-          render();
-        }
-      }
-    } else if (packet.group === state.member?.group) {
-      if (packet.roundIndex === state.roundIndex) {
-        if (!state.vote) state.vote = {};
-        state.vote.choice = packet.choice;
-        state.vote.proposal = packet.proposal;
-        state.vote.consensus = packet.consensus;
-        selection = packet.proposal;
-        consensus = packet.consensus || [null,null,null];
-        render();
-      }
-    }
-  } else if (packet.type === 'jury_verdict') {
-    if (state.member?.isJury && packet.roundIndex === state.roundIndex) {
-      state.jurySubmitted = true;
-      state.juryRankings = packet.rankings;
-      juryRankings = { ...packet.rankings };
-      if (packet.orders) {
-        state.juryOrders = packet.orders;
-        juryOrders = { ...packet.orders };
-      }
+    if (packet.group === state.member?.group && packet.roundIndex === state.roundIndex) {
+      if (!state.vote) state.vote = {};
+      state.vote.choice = packet.choice;
+      state.vote.proposal = packet.proposal;
+      state.vote.consensus = packet.consensus;
+      selection = packet.proposal;
+      consensus = packet.consensus || [null, null, null];
       render();
     }
   }
 });
 
-async function poll(){await refresh();setTimeout(poll,document.hidden?5000:1500);}
+async function poll() {
+  await refresh();
+  setTimeout(poll, document.hidden ? 5000 : 1500);
+}
+
 window.addEventListener('pitch-ended', () => { render(); });
-startClock(()=>state);poll();
+startClock(() => state);
+poll();
