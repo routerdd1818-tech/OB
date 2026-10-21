@@ -141,6 +141,26 @@ function render() {
 
   if (revealed) renderReview();
   paintQr(document.getElementById('stage-qr-code'), resolveJoinUrl());
+
+  const qrDock = document.querySelector('.qr-join-dock');
+  if (qrDock) {
+    qrDock.style.cursor = 'pointer';
+    qrDock.setAttribute('title', '點擊放大投影 QR Code');
+    qrDock.onclick = () => $('#qr-open')?.click();
+  }
+  const qrUrlEl = document.querySelector('.qr-dock-url');
+  if (qrUrlEl) {
+    qrUrlEl.style.cursor = 'pointer';
+    qrUrlEl.onclick = async (e) => {
+      e.stopPropagation();
+      try {
+        await navigator.clipboard.writeText(resolveJoinUrl());
+        toast('參與網址已複製到剪貼簿 ✓');
+      } catch {
+        $('#qr-open')?.click();
+      }
+    };
+  }
 }
 
 function scenarioMarkup() {

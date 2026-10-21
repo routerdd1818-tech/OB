@@ -3250,6 +3250,13 @@ body.clean-stage .host-main {
   padding: 2px 8px;
   border-radius: 6px;
   border: 1px solid rgba(147, 197, 253, 0.2);
+  transition: all 0.2s ease;
+}
+
+.qr-dock-url:hover {
+  background: rgba(56, 189, 248, 0.25);
+  border-color: rgba(56, 189, 248, 0.6);
+  color: #ffffff;
 }
 
 .qr-dock-stats {
