@@ -122,91 +122,263 @@ function renderSceneAct1Tokyo(worldState = {}, groups = []) {
     <div class="rpg-scene-canvas act-tokyo">
       <svg class="scene-bg-svg" viewBox="0 0 960 420" preserveAspectRatio="xMidYMid slice" xmlns="http://www.w3.org/2000/svg">
         <defs>
-          <linearGradient id="tokyo-sky" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#0f172a"/>
-            <stop offset="60%" stop-color="#1e293b"/>
-            <stop offset="100%" stop-color="#334155"/>
+          <!-- Twilight Skyline Sunset Gradient (Deep Night Sky -> Dusk Amber Horizon) -->
+          <linearGradient id="tokyo-sunset-sky" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#0a0e1a"/>
+            <stop offset="28%" stop-color="#1e1b4b"/>
+            <stop offset="52%" stop-color="#431407"/>
+            <stop offset="74%" stop-color="#9a3412"/>
+            <stop offset="88%" stop-color="#d97706"/>
+            <stop offset="100%" stop-color="#f59e0b"/>
           </linearGradient>
+
+          <!-- Modern Executive Boardroom Dark Charcoal Floor -->
           <linearGradient id="tokyo-floor" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#1f2937"/>
-            <stop offset="100%" stop-color="#111827"/>
+            <stop offset="0%" stop-color="#1a1d24"/>
+            <stop offset="50%" stop-color="#13161c"/>
+            <stop offset="100%" stop-color="#0c0e12"/>
           </linearGradient>
-          <linearGradient id="table-glass" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.35"/>
-            <stop offset="100%" stop-color="#0284c7" stop-opacity="0.15"/>
+
+          <!-- Executive Sleek Walnut Surface (#452c24 ~ #1e110c) -->
+          <linearGradient id="walnut-surface" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#4a3026"/>
+            <stop offset="30%" stop-color="#3d251d"/>
+            <stop offset="70%" stop-color="#2c1912"/>
+            <stop offset="100%" stop-color="#1c0f0a"/>
           </linearGradient>
-          <pattern id="tatami-grid" width="40" height="24" patternUnits="userSpaceOnUse">
-            <rect width="40" height="24" fill="#1b2432" stroke="#253245" stroke-width="1"/>
-            <line x1="0" y1="12" x2="40" y2="12" stroke="#2a394f" stroke-width="0.7"/>
+
+          <!-- Aluminum Chamfer Bevel Edge -->
+          <linearGradient id="table-bevel" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#94a3b8"/>
+            <stop offset="45%" stop-color="#cbd5e1"/>
+            <stop offset="100%" stop-color="#475569"/>
+          </linearGradient>
+
+          <!-- Frosted Acoustic Cleanroom Glass -->
+          <linearGradient id="cleanroom-frosted-glass" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#38bdf8" stop-opacity="0.22"/>
+            <stop offset="50%" stop-color="#0284c7" stop-opacity="0.10"/>
+            <stop offset="100%" stop-color="#0f172a" stop-opacity="0.30"/>
+          </linearGradient>
+
+          <!-- Executive Architectural Carpet Pattern -->
+          <pattern id="executive-carpet-grid" width="32" height="32" patternUnits="userSpaceOnUse">
+            <rect width="32" height="32" fill="#13161c" stroke="#1c222e" stroke-width="0.8"/>
+            <line x1="0" y1="16" x2="32" y2="16" stroke="#181e28" stroke-width="0.5"/>
           </pattern>
         </defs>
-        <!-- Floor -->
+
+        <!-- Floor Background -->
         <rect x="0" y="0" width="960" height="420" fill="url(#tokyo-floor)"/>
-        <rect x="0" y="80" width="960" height="340" fill="url(#tatami-grid)"/>
-        
-        <!-- Panoramic Window Wall (Top) -->
-        <rect x="30" y="15" width="900" height="75" rx="6" fill="url(#tokyo-sky)" stroke="#475569" stroke-width="2"/>
-        <!-- Window Grids & Skyline -->
-        <path d="M80,90 L90,40 L100,90 M140,90 L140,55 L165,55 L165,90 M230,90 L245,25 L260,90 M520,90 L530,35 L545,90" stroke="#64748b" stroke-width="1.5" fill="none" opacity="0.6"/>
-        <circle cx="245" cy="22" r="3" fill="#ef4444" opacity="0.9"/>
-        <!-- Glass divisions -->
-        <line x1="260" y1="15" x2="260" y2="90" stroke="#334155" stroke-width="3"/>
-        <line x1="500" y1="15" x2="500" y2="90" stroke="#334155" stroke-width="3"/>
-        <line x1="720" y1="15" x2="720" y2="90" stroke="#334155" stroke-width="3"/>
+        <rect x="0" y="150" width="960" height="270" fill="url(#executive-carpet-grid)"/>
 
-        <!-- Left Wing: Cleanroom & Thermal Test Lab -->
-        <rect x="40" y="120" width="260" height="260" rx="10" fill="#0f172a" stroke="#38bdf8" stroke-width="2" stroke-opacity="0.4"/>
-        <!-- Cleanroom Window -->
-        <rect x="55" y="135" width="230" height="110" rx="6" fill="#0369a1" fill-opacity="0.25" stroke="#38bdf8" stroke-width="1.2"/>
-        <!-- Robotic Arm & Chamber -->
-        <circle cx="120" cy="190" r="28" fill="#1e293b" stroke="#0ea5e9" stroke-width="2"/>
-        <rect x="180" y="160" width="80" height="60" rx="4" fill="#334155" stroke="#94a3b8" stroke-width="1.5"/>
-        <circle cx="220" cy="190" r="14" fill="#f59e0b" fill-opacity="0.6"/>
-        <line x1="120" y1="190" x2="190" y2="190" stroke="#38bdf8" stroke-width="4" stroke-linecap="round"/>
+        <!-- ====================================================================== -->
+        <!-- 1. Floor-to-Ceiling Skyline Windows (Y: 10 to 152)                     -->
+        <!-- ====================================================================== -->
+        <g id="skyline-window-wall">
+          <!-- Sky Backdrop Inside Window Aperture -->
+          <rect x="20" y="10" width="920" height="142" rx="4" fill="url(#tokyo-sunset-sky)"/>
 
-        <!-- Center: Cross-Pacific Boardroom Table -->
-        <g transform="translate(340, 140)">
-          <!-- Large oval boardroom desk -->
-          <ellipse cx="170" cy="120" rx="150" ry="85" fill="#1e293b" stroke="#475569" stroke-width="4"/>
-          <ellipse cx="170" cy="120" rx="130" ry="70" fill="url(#table-glass)" stroke="#38bdf8" stroke-width="1.5"/>
-          <!-- Central Telepresence Hologram Projector -->
-          <circle cx="170" cy="120" rx="28" fill="#0284c7" fill-opacity="0.4" stroke="#38bdf8" stroke-width="2"/>
-          <circle cx="170" cy="120" rx="14" fill="#38bdf8" class="pulse-aura"/>
-          <!-- Video conference monitors -->
-          <rect x="60" y="70" width="30" height="18" rx="2" fill="#0284c7" stroke="#e2e8f0" stroke-width="1"/>
-          <rect x="110" y="45" width="30" height="18" rx="2" fill="#0284c7" stroke="#e2e8f0" stroke-width="1"/>
-          <rect x="200" y="45" width="30" height="18" rx="2" fill="#0284c7" stroke="#e2e8f0" stroke-width="1"/>
-          <rect x="250" y="70" width="30" height="18" rx="2" fill="#0284c7" stroke="#e2e8f0" stroke-width="1"/>
-          <rect x="70" y="160" width="30" height="18" rx="2" fill="#0284c7" stroke="#e2e8f0" stroke-width="1"/>
-          <rect x="240" y="160" width="30" height="18" rx="2" fill="#0284c7" stroke="#e2e8f0" stroke-width="1"/>
-          <!-- Chairs -->
-          <circle cx="45" cy="120" r="10" fill="#334155" stroke="#64748b" stroke-width="1.5"/>
-          <circle cx="295" cy="120" r="10" fill="#334155" stroke="#64748b" stroke-width="1.5"/>
-          <circle cx="170" cy="225" r="10" fill="#334155" stroke="#64748b" stroke-width="1.5"/>
-          <circle cx="170" cy="15" r="10" fill="#334155" stroke="#64748b" stroke-width="1.5"/>
+          <!-- Distant Mt. Fuji Silhouette -->
+          <polygon points="175,138 215,82 230,82 270,138" fill="#1e1b4b" opacity="0.6"/>
+          <polygon points="212,82 222,74 233,82" fill="#fed7aa" opacity="0.4"/>
+
+          <!-- Tokyo Skyscraper Cluster Silhouettes (Layer 1 - Dark Indigo) -->
+          <rect x="40" y="85" width="35" height="65" fill="#151b2e" opacity="0.9"/>
+          <rect x="85" y="65" width="45" height="85" fill="#121829" opacity="0.95"/>
+          <rect x="140" y="90" width="30" height="60" fill="#1e2238" opacity="0.85"/>
+          <rect x="275" y="70" width="38" height="80" fill="#121829" opacity="0.95"/>
+          <rect x="365" y="80" width="48" height="70" fill="#171d33" opacity="0.9"/>
+          <rect x="425" y="55" width="55" height="95" fill="#111624" opacity="0.95"/>
+          <rect x="490" y="95" width="40" height="55" fill="#1a2035" opacity="0.85"/>
+          <rect x="540" y="75" width="50" height="75" fill="#141a2c" opacity="0.92"/>
+          <rect x="600" y="60" width="60" height="90" fill="#0f1422" opacity="0.95"/>
+          <rect x="670" y="88" width="42" height="62" fill="#181f36" opacity="0.88"/>
+          <rect x="725" y="68" width="52" height="82" fill="#121829" opacity="0.95"/>
+          <rect x="790" y="82" width="40" height="68" fill="#151b2e" opacity="0.9"/>
+          <rect x="840" y="58" width="48" height="92" fill="#0e1320" opacity="0.95"/>
+          <rect x="898" y="92" width="35" height="58" fill="#1a2035" opacity="0.85"/>
+
+          <!-- High-rise Illuminated Window Lights -->
+          <g fill="#fef08a" opacity="0.75">
+            <rect x="92" y="75" width="3" height="3"/><rect x="100" y="75" width="3" height="3"/><rect x="116" y="88" width="3" height="3"/>
+            <rect x="435" y="68" width="3" height="3"/><rect x="445" y="68" width="3" height="3"/><rect x="455" y="80" width="3" height="3"/><rect x="465" y="92" width="3" height="3"/>
+            <rect x="612" y="72" width="3.5" height="3.5"/><rect x="625" y="72" width="3.5" height="3.5"/><rect x="640" y="85" width="3.5" height="3.5"/><rect x="612" y="100" width="3.5" height="3.5"/>
+            <rect x="735" y="78" width="3" height="3"/><rect x="748" y="78" width="3" height="3"/><rect x="758" y="95" width="3" height="3"/>
+            <rect x="850" y="70" width="3.5" height="3.5"/><rect x="865" y="70" width="3.5" height="3.5"/><rect x="850" y="85" width="3.5" height="3.5"/><rect x="872" y="98" width="3.5" height="3.5"/>
+          </g>
+
+          <!-- Tokyo Tower Silhouette with Nocturnal Red/White Lattice Lighting -->
+          <g id="tokyo-tower-silhouette" transform="translate(322, 28)">
+            <!-- Tower Base Struts -->
+            <path d="M4,122 L11,55 L17,55 L24,122 M11,55 L14,14 L17,55" fill="none" stroke="#ef4444" stroke-width="1.8"/>
+            <path d="M7,100 L21,100 M9,80 L19,80 M12,62 L16,62" stroke="#ffffff" stroke-width="1.4"/>
+            <!-- Main Observatory Deck (White Lit) -->
+            <rect x="8" y="70" width="12" height="7" rx="1.5" fill="#ffffff" filter="drop-shadow(0 0 4px #ffffff)"/>
+            <!-- Special Observatory Deck -->
+            <rect x="11" y="44" width="6" height="4" rx="1" fill="#ffffff"/>
+            <!-- Top Antenna Spire & Red Aviation Warning Beacon -->
+            <line x1="14" y1="14" x2="14" y2="0" stroke="#ffffff" stroke-width="1.5"/>
+            <circle cx="14" cy="0" r="2.5" fill="#ef4444" class="pulse-aura"/>
+          </g>
+
+          <!-- Architectural Heavy Charcoal Aluminum Window Mullions & Framing -->
+          <line x1="20" y1="152" x2="940" y2="152" stroke="#334155" stroke-width="4"/>
+          <line x1="20" y1="10" x2="940" y2="10" stroke="#1e293b" stroke-width="3"/>
+          <rect x="20" y="10" width="12" height="142" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+          <rect x="248" y="10" width="12" height="142" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+          <rect x="478" y="10" width="12" height="142" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+          <rect x="708" y="10" width="12" height="142" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+          <rect x="928" y="10" width="12" height="142" fill="#1e293b" stroke="#334155" stroke-width="1"/>
+
+          <!-- Glass Sheen Glare Lines -->
+          <line x1="60" y1="20" x2="180" y2="140" stroke="#ffffff" stroke-width="1" stroke-opacity="0.12"/>
+          <line x1="300" y1="20" x2="420" y2="140" stroke="#ffffff" stroke-width="1" stroke-opacity="0.08"/>
+          <line x1="530" y1="20" x2="650" y2="140" stroke="#ffffff" stroke-width="1" stroke-opacity="0.10"/>
         </g>
 
-        <!-- Right Side: Presentation & R&D Display Wall -->
-        <rect x="710" y="120" width="210" height="250" rx="8" fill="#182234" stroke="#475569" stroke-width="1.5"/>
-        <rect x="725" y="135" width="180" height="100" rx="4" fill="#0369a1" fill-opacity="0.3" stroke="#0284c7" stroke-width="1"/>
-        <line x1="740" y1="185" x2="880" y2="185" stroke="#38bdf8" stroke-width="2" stroke-dasharray="6 3"/>
-        <text x="740" y="160" font-family="'SF Mono',monospace" font-size="10" fill="#38bdf8">CHRONOS DIE-01</text>
-        <text x="740" y="215" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">TEMP: +85C | YIELD: ?</text>
+        <!-- ====================================================================== -->
+        <!-- 2. Left Wing: Thermal Packaging Cleanroom Lab (X: 30 to 220)          -->
+        <!-- ====================================================================== -->
+        <g id="cleanroom-bay" transform="translate(35, 145)">
+          <!-- Lab Enclosure Wall -->
+          <rect x="0" y="0" width="195" height="245" rx="8" fill="#0b111e" stroke="#1e293b" stroke-width="2"/>
+          <!-- Soundproof Double-Glazed Observation Window -->
+          <rect x="12" y="15" width="171" height="130" rx="6" fill="url(#cleanroom-frosted-glass)" stroke="#38bdf8" stroke-width="1.5" stroke-opacity="0.7"/>
+          
+          <!-- Inside Cleanroom: Robotic Arm & Wafer Thermal Chamber -->
+          <circle cx="65" cy="75" r="26" fill="#111827" stroke="#0ea5e9" stroke-width="2"/>
+          <circle cx="65" cy="75" r="14" fill="#0284c7" fill-opacity="0.4"/>
+          <!-- Articulated Precision Arm -->
+          <line x1="65" y1="75" x2="115" y2="70" stroke="#38bdf8" stroke-width="4.5" stroke-linecap="round"/>
+          <circle cx="115" cy="70" r="5" fill="#facc15"/>
+          <line x1="115" y1="70" x2="140" y2="90" stroke="#38bdf8" stroke-width="3.5" stroke-linecap="round"/>
+          <!-- Heating / Cold Test Chamber -->
+          <rect x="125" y="80" width="42" height="48" rx="4" fill="#1e293b" stroke="#f59e0b" stroke-width="1.8"/>
+          <circle cx="146" cy="104" r="8" fill="#f59e0b" fill-opacity="0.8" class="pulse-aura"/>
+          <!-- Status Telemetry on Observation Glass -->
+          <rect x="18" y="158" width="159" height="68" rx="4" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+          <text x="26" y="177" font-family="'SF Mono',monospace" font-size="9.5" fill="#38bdf8" font-weight="700">CHAMBER BAY-01</text>
+          <text x="26" y="196" font-family="'SF Mono',monospace" font-size="9" fill="#94a3b8">TEMP: +85°C STABLE</text>
+          <text x="26" y="214" font-family="'SF Mono',monospace" font-size="8.5" fill="#10b981">VACUUM: 99.98% OK</text>
+        </g>
+
+        <!-- ====================================================================== -->
+        <!-- 3. Center: Executive Sleek Walnut Boardroom Table & 5 Mesh Chairs       -->
+        <!-- ====================================================================== -->
+        <g id="boardroom-table-center" transform="translate(240, 165)">
+          <!-- Top Row: 3 Executive Ergonomic Mesh Chairs (North side of table) -->
+          <!-- Chair 1 (Left North) -->
+          <g transform="translate(60, 0)">
+            <ellipse cx="20" cy="14" rx="16" ry="11" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+            <path d="M8,14 Q20,3 32,14" fill="none" stroke="#64748b" stroke-width="2"/>
+            <line x1="20" y1="14" x2="20" y2="24" stroke="#94a3b8" stroke-width="3"/>
+          </g>
+          <!-- Chair 2 (Center North) -->
+          <g transform="translate(195, -4)">
+            <ellipse cx="20" cy="14" rx="16" ry="11" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+            <path d="M8,14 Q20,3 32,14" fill="none" stroke="#64748b" stroke-width="2"/>
+            <line x1="20" y1="14" x2="20" y2="24" stroke="#94a3b8" stroke-width="3"/>
+          </g>
+          <!-- Chair 3 (Right North) -->
+          <g transform="translate(330, 0)">
+            <ellipse cx="20" cy="14" rx="16" ry="11" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+            <path d="M8,14 Q20,3 32,14" fill="none" stroke="#64748b" stroke-width="2"/>
+            <line x1="20" y1="14" x2="20" y2="24" stroke="#94a3b8" stroke-width="3"/>
+          </g>
+
+          <!-- Boardroom Table Aluminum Chamfer Edge (Base Outline) -->
+          <rect x="10" y="22" width="410" height="136" rx="34" fill="url(#table-bevel)" filter="drop-shadow(0 12px 28px rgba(0,0,0,0.65))"/>
+          <!-- Rich Walnut Tabletop Surface -->
+          <rect x="14" y="25" width="402" height="130" rx="31" fill="url(#walnut-surface)"/>
+
+          <!-- Polished Wood Grain Surface Sheen Reflection -->
+          <path d="M30,32 Q215,22 400,32 L390,70 Q215,55 40,70 Z" fill="#ffffff" opacity="0.04"/>
+
+          <!-- Central Recessed Telepresence Connectivity Well -->
+          <rect x="90" y="78" width="250" height="22" rx="5" fill="#171e29" stroke="#334155" stroke-width="1.2"/>
+          <line x1="95" y1="89" x2="335" y2="89" stroke="#0ea5e9" stroke-width="1.5" stroke-opacity="0.4"/>
+
+          <!-- Embedded Omni-Directional Boundary Microphones (Dual Pods) -->
+          <circle cx="140" cy="89" r="6" fill="#1f2937" stroke="#38bdf8" stroke-width="1.5"/>
+          <circle cx="140" cy="89" r="2.5" fill="#38bdf8" class="pulse-aura"/>
+          <circle cx="290" cy="89" r="6" fill="#1f2937" stroke="#38bdf8" stroke-width="1.5"/>
+          <circle cx="290" cy="89" r="2.5" fill="#38bdf8" class="pulse-aura"/>
+
+          <!-- Executive Tabletop Props -->
+          <!-- Modern Ultra-Slim Laptop 1 (Left) -->
+          <g transform="translate(45, 52)">
+            <polygon points="0,26 28,26 26,10 2,10" fill="#0f172a" stroke="#64748b" stroke-width="1"/>
+            <polygon points="3,11 25,11 27,24 1,24" fill="#0284c7" opacity="0.45"/>
+            <line x1="5" y1="16" x2="23" y2="16" stroke="#93c5fd" stroke-width="1"/>
+          </g>
+          <!-- Modern Ultra-Slim Tablet Stand 2 (Right) -->
+          <g transform="translate(355, 52)">
+            <polygon points="0,26 28,26 26,10 2,10" fill="#0f172a" stroke="#64748b" stroke-width="1"/>
+            <polygon points="3,11 25,11 27,24 1,24" fill="#10b981" opacity="0.45"/>
+            <line x1="5" y1="16" x2="23" y2="16" stroke="#a7f3d0" stroke-width="1"/>
+          </g>
+
+          <!-- Leather Meeting Portfolios with Brass Corners -->
+          <rect x="180" y="44" width="26" height="18" rx="2" fill="#2d1e18" stroke="#ca8a04" stroke-width="0.8"/>
+          <rect x="224" y="44" width="26" height="18" rx="2" fill="#1e293b" stroke="#94a3b8" stroke-width="0.8"/>
+
+          <!-- Crystal Clear Water Tumblers -->
+          <circle cx="85" cy="118" r="4.5" fill="#bae6fd" fill-opacity="0.3" stroke="#e0f2fe" stroke-width="1"/>
+          <circle cx="345" cy="118" r="4.5" fill="#bae6fd" fill-opacity="0.3" stroke="#e0f2fe" stroke-width="1"/>
+
+          <!-- Bottom Row: 2 Executive Ergonomic Mesh Chairs (South/Flank) -->
+          <!-- Chair 4 (South Left) -->
+          <g transform="translate(75, 142)">
+            <ellipse cx="20" cy="14" rx="16" ry="11" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+            <path d="M8,14 Q20,23 32,14" fill="none" stroke="#64748b" stroke-width="2"/>
+          </g>
+          <!-- Chair 5 (South Right) -->
+          <g transform="translate(315, 142)">
+            <ellipse cx="20" cy="14" rx="16" ry="11" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+            <path d="M8,14 Q20,23 32,14" fill="none" stroke="#64748b" stroke-width="2"/>
+          </g>
+        </g>
+
+        <!-- ====================================================================== -->
+        <!-- 4. Right Wing: 85" Telepresence Screen Wall (X: 685 to 925)            -->
+        <!-- ====================================================================== -->
+        <g id="telepresence-wall" transform="translate(685, 145)">
+          <rect x="0" y="0" width="240" height="245" rx="8" fill="#111827" stroke="#1f2937" stroke-width="2"/>
+          <!-- 85" Ultra-Thin Bezel Conference Monitor -->
+          <rect x="14" y="15" width="212" height="120" rx="5" fill="#080d16" stroke="#475569" stroke-width="2"/>
+          <rect x="20" y="21" width="200" height="108" rx="3" fill="#0c1929"/>
+          
+          <!-- Screen Telemetry & Microchip Graphic -->
+          <text x="30" y="42" font-family="'SF Pro Display',sans-serif" font-size="10.5" fill="#38bdf8" font-weight="800" letter-spacing="1">PROJECT CHRONOS</text>
+          <text x="30" y="58" font-family="'SF Mono',monospace" font-size="8" fill="#94a3b8">CROSS-PACIFIC R&amp;D LINK</text>
+          <!-- Live Telemetry Waveform -->
+          <path d="M30,95 L65,95 L75,75 L85,110 L95,85 L105,95 L145,95 L155,80 L165,95 L200,95" fill="none" stroke="#38bdf8" stroke-width="2"/>
+          <circle cx="105" cy="95" r="3" fill="#38bdf8" class="pulse-aura"/>
+          <text x="30" y="118" font-family="'SF Mono',monospace" font-size="8.5" fill="#10b981">LATENCY: 12ms | SYNERGY: ACTIVE</text>
+
+          <!-- Modern Executive Credenza / Audio-Bar Under Display -->
+          <rect x="14" y="150" width="212" height="75" rx="4" fill="#1a120c" stroke="#3d251d" stroke-width="1.5"/>
+          <rect x="24" y="160" width="192" height="12" rx="3" fill="#0f172a" stroke="#334155" stroke-width="1"/>
+          <!-- Brass Handles -->
+          <line x1="60" y1="195" x2="90" y2="195" stroke="#ca8a04" stroke-width="2"/>
+          <line x1="140" y1="195" x2="170" y2="195" stroke="#ca8a04" stroke-width="2"/>
+        </g>
       </svg>
 
       <!-- YEP_Event Mini Labels (Positioned on top of scene elements) -->
-      <div class="mini-label-anchor" style="top: 24px; left: 140px;">
-        ${renderMiniLabelHtml('🏢 東京精密研發本部 · 14F', '🏢')}
+      <div class="mini-label-anchor" style="top: 24px; left: 160px;">
+        ${renderMiniLabelHtml('🏢 東京精密研發本部 · 38F 董事會議廳', '🏢')}
       </div>
-      <div class="mini-label-anchor" style="top: 110px; left: 110px;">
-        ${renderMiniLabelHtml('🔬 封裝熱測實驗室', '🔬')}
+      <div class="mini-label-anchor" style="top: 135px; left: 130px;">
+        ${renderMiniLabelHtml('🔬 封裝熱測潔淨實驗室', '🔬')}
       </div>
-      <div class="mini-label-anchor" style="top: 125px; left: 450px;">
-        ${renderMiniLabelHtml('📡 跨洋視訊主控桌', '📡')}
+      <div class="mini-label-anchor" style="top: 165px; left: 450px;">
+        ${renderMiniLabelHtml('💼 跨國併購核心談判長桌', '💼')}
       </div>
 
-      <!-- Chibi Party (Standing on the carpet pathway near conference table) -->
-      <div class="scene-party-dock" style="left: 360px; bottom: 25px;">
+      <!-- Chibi Party: G1~G5 seated neatly in front of table, mid-left placed to fully clear the bust -->
+      <div class="scene-party-dock" style="left: 285px; bottom: 35px;">
         ${renderChibiPartyHtml(groups, worldState.chiefNavigator)}
       </div>
     </div>
@@ -290,8 +462,8 @@ function renderSceneAct2Hangzhou(worldState = {}, groups = []) {
         }
       </div>
 
-      <!-- Chibi Party (Standing on the safety green/yellow walkway) -->
-      <div class="scene-party-dock" style="left: 450px; bottom: 35px;">
+      <!-- Chibi Party: G1~G5 placed safely mid-left along the green safety walkway -->
+      <div class="scene-party-dock" style="left: 320px; bottom: 35px;">
         ${renderChibiPartyHtml(groups, worldState.chiefNavigator)}
       </div>
     </div>
@@ -374,8 +546,8 @@ function renderSceneAct3Munich(worldState = {}, groups = []) {
         }
       </div>
 
-      <!-- Chibi Party (Standing near the integration terminal consoles) -->
-      <div class="scene-party-dock" style="left: 450px; bottom: 35px;">
+      <!-- Chibi Party: G1~G5 placed safely mid-left, fully avoiding Hans bust -->
+      <div class="scene-party-dock" style="left: 330px; bottom: 35px;">
         ${renderChibiPartyHtml(groups, worldState.chiefNavigator)}
       </div>
     </div>
@@ -447,8 +619,8 @@ function renderSceneAct4Brussels(worldState = {}, groups = []) {
         ${renderMiniLabelHtml('⚖️ 歐盟合規審查席', '⚖️')}
       </div>
 
-      <!-- Chibi Party (Standing on the backstage central runway) -->
-      <div class="scene-party-dock" style="left: 450px; bottom: 35px;">
+      <!-- Chibi Party: G1~G5 placed safely mid-left runway, fully avoiding Vanderberg bust -->
+      <div class="scene-party-dock" style="left: 330px; bottom: 35px;">
         ${renderChibiPartyHtml(groups, worldState.chiefNavigator)}
       </div>
     </div>
@@ -1064,6 +1236,36 @@ export function renderRpgDialogueBox({
             </div>
             <div class="rpg-next-caret" title="繼續下一段" aria-hidden="true">▼</div>
           </div>
+        </div>
+      </div>
+    </div>
+  `;
+}
+
+// ----------------------------------------------------------------------------
+// 6. Big Screen Persistent QR Code Join Dock (Stage Component)
+// ----------------------------------------------------------------------------
+
+export function renderQrJoinDock(joinUrl = '', studentCount = 0, onlineGroups = 0) {
+  const displayUrl = joinUrl
+    ? joinUrl.replace(/^https?:\/\//i, '').replace(/\/$/, '')
+    : 'my00-rt-bf0f.vercel.app';
+  const groupCount = Math.max(0, Math.min(5, Number(onlineGroups) || 0));
+
+  return `
+    <div class="qr-join-dock" role="region" aria-label="手機掃碼秒入席">
+      <div class="qr-dock-preview">
+        <div id="stage-qr-code" class="qr-dock-canvas" aria-label="加入 QR Code"></div>
+      </div>
+      <div class="qr-dock-meta">
+        <div class="qr-dock-badge">
+          <span class="qr-pulse-dot" aria-hidden="true"></span>
+          <span class="qr-dock-title">📱 手機掃碼秒入席</span>
+        </div>
+        <div class="qr-dock-url" title="${esc(joinUrl || ('https://' + displayUrl))}">${esc(displayUrl)}</div>
+        <div class="qr-dock-stats">
+          <span class="qr-stat-pill">在線 <strong>${groupCount} / 5</strong> 組</span>
+          <span class="qr-stat-pill"><strong>${Number(studentCount) || 0}</strong> 人參與</span>
         </div>
       </div>
     </div>

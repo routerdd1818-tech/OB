@@ -1,5 +1,28 @@
 import { $, esc, api, toast, status, scene, roundNav, tensionCard, dialogue, startClock, broadcastSync, listenSync, playRevealDrum, toggleSound, isSoundEnabled } from './common.js';
-import { renderRpgScene, renderCharacterBust, renderRpgDialogueBox, renderWorldStateHud } from './rpg-assets.js';
+import { renderRpgScene, renderCharacterBust, renderRpgDialogueBox, renderWorldStateHud, renderQrJoinDock } from './rpg-assets.js';
+
+const PRODUCTION_JOIN_URL = 'https://my00-rt-bf0f.vercel.app/';
+
+// 手機無法連到 localhost / 127.0.0.1，本機預覽時改用正式線上網址產生 QR Code
+function resolveJoinUrl() {
+  const url = state?.joinUrl || '';
+  return !url || /localhost|127\.0\.0\.1/.test(url) ? PRODUCTION_JOIN_URL : url;
+}
+
+function paintQr(target, url, cellSize = 4, margin = 8) {
+  if (!target) return;
+  try {
+    const qr = window.qrcode(0, 'M');
+    qr.addData(url);
+    qr.make();
+    target.innerHTML = qr.createSvgTag({ cellSize, margin, scalable: true });
+    const svg = target.querySelector('svg');
+    svg?.setAttribute('aria-label', '學員加入 QR Code');
+    svg?.setAttribute('role', 'img');
+  } catch {
+    target.textContent = 'QR Code 無法產生，請使用網址加入';
+  }
+}
 
 let state = null, lastSignature = '', selectedReview = 'B', busy = false, previousReveal = '', confirmResolve;
 
@@ -117,6 +140,7 @@ function render() {
   }));
 
   if (revealed) renderReview();
+  paintQr(document.getElementById('stage-qr-code'), resolveJoinUrl());
 }
 
 function scenarioMarkup() {
@@ -164,6 +188,7 @@ function scenarioMarkup() {
 
       <!-- Right Column: Interactive 3-Act Control Panel -->
       <div class="voting-right-col">
+        ${renderQrJoinDock(resolveJoinUrl(), state.groups.reduce((n, g) => n + (g.count || 0), 0), state.groups.filter(g => g.count).length)}
         <!-- 1. Real-time Initial Vote Progress -->
         <section class="progress-card card" aria-label="全班初投進度">
           <div class="progress-intro">
@@ -502,27 +527,19 @@ async function refresh() {
 document.querySelectorAll('[data-close]').forEach(el => el.addEventListener('click', () => document.getElementById(el.dataset.close).close()));
 $('#qr-open').addEventListener('click', () => {
   if (!state) return;
-  $('#qr-url').textContent = state.joinUrl;
+  const joinUrl = resolveJoinUrl();
+  $('#qr-url').textContent = joinUrl;
   $('#qr-code').innerHTML = '';
-  try {
-    const qr = window.qrcode(0, 'M');
-    qr.addData(state.joinUrl);
-    qr.make();
-    $('#qr-code').innerHTML = qr.createSvgTag({ cellSize: 6, margin: 24, scalable: true });
-    $('#qr-code svg').setAttribute('aria-label', '學員加入 QR Code');
-    $('#qr-code svg').setAttribute('role', 'img');
-  } catch {
-    $('#qr-code').textContent = 'QR Code 無法產生，請使用下方網址';
-  }
-  $('#qr-note').textContent = /localhost|127\.0\.0\.1/.test(state.joinUrl)
-    ? '目前為本機預覽。手機加入請使用同一 Wi-Fi 的電腦區網網址，或部署後的正式網址。'
+  paintQr($('#qr-code'), joinUrl, 6, 24);
+  $('#qr-note').textContent = joinUrl !== state.joinUrl
+    ? '目前為本機預覽，QR Code 已改指向正式線上網址。'
     : '第 1～5 組皆為決策組。掃碼後填寫姓名加入。';
   $('#qr-dialog').showModal();
 });
 
 $('#copy-url').addEventListener('click', async () => {
   try {
-    await navigator.clipboard.writeText(state.joinUrl);
+    await navigator.clipboard.writeText(resolveJoinUrl());
     toast('參與網址已複製');
   } catch {
     toast('請長按或選取網址複製');

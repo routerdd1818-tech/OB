@@ -363,64 +363,78 @@
 /* ==========================================================================
    Question Prompt & Options Enhancement (Enlarged & De-cluttered)
    ========================================================================== */
-.question-prompt {
+.question-prompt,
+.dilemma-prompt {
   display: block !important;
-  background: #fdfbf7 !important;
-  border: 1.5px solid rgba(60, 50, 40, 0.22) !important;
-  border-left: 5px solid var(--accent, #0071e3) !important;
+  background: rgba(15, 23, 42, 0.95) !important;
+  border: 1.5px solid #f59e0b !important;
+  border-left: 5px solid #f59e0b !important;
   border-radius: 14px !important;
   padding: 16px 20px !important;
   margin: 16px 0 20px !important;
-  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.03) !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35), inset 0 0 15px rgba(245, 158, 11, 0.08) !important;
+  color: #f8fafc !important;
 }
 
-.prompt-badge {
-  display: inline-block;
-  background: var(--accent, #0071e3);
-  color: #ffffff;
-  font-size: 12px;
-  font-weight: 700;
-  padding: 3px 10px;
-  border-radius: 20px;
-  margin-bottom: 8px;
-  letter-spacing: 0.5px;
-}
-
-.prompt-title, .prompt-text {
-  font-size: 21px !important;
+.prompt-badge,
+.dilemma-badge {
+  display: inline-block !important;
+  background: #f59e0b !important;
+  color: #1e1b4b !important;
+  font-size: 13px !important;
   font-weight: 800 !important;
-  line-height: 1.45 !important;
-  color: var(--ink) !important;
+  padding: 4px 10px !important;
+  border-radius: 6px !important;
+  margin-bottom: 8px !important;
+  letter-spacing: 0.5px !important;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35) !important;
+}
+
+.prompt-title,
+.prompt-text,
+.dilemma-text {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  line-height: 1.6 !important;
+  color: #f8fafc !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.6) !important;
   display: block !important;
 }
 
-.mobile-main .question-prompt {
-  padding: 16px 18px !important;
+.mobile-main .question-prompt,
+.mobile-main .dilemma-prompt {
+  padding: 14px 16px !important;
+  margin: 12px 0 16px !important;
+}
+
+.mobile-main .prompt-title,
+.mobile-main .prompt-text {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  line-height: 1.55 !important;
+  color: #f8fafc !important;
+}
+
+.host-main .question-prompt,
+.host-main .dilemma-prompt {
+  padding: 16px 22px !important;
+  border-radius: 16px !important;
   margin: 14px 0 18px !important;
 }
 
-.mobile-main .prompt-title {
-  font-size: 19px !important;
-  font-weight: 800 !important;
-  line-height: 1.45 !important;
-}
-
-.host-main .question-prompt {
-  padding: 20px 26px !important;
-  border-radius: 16px !important;
-  margin: 18px 0 22px !important;
-}
-
 .host-main .prompt-badge {
-  font-size: 14px !important;
+  font-size: 13.5px !important;
   padding: 4px 12px !important;
-  margin-bottom: 10px !important;
+  margin-bottom: 8px !important;
+  background: #f59e0b !important;
+  color: #1e1b4b !important;
 }
 
 .host-main .prompt-text {
-  font-size: 26px !important;
-  font-weight: 800 !important;
-  line-height: 1.4 !important;
+  font-size: clamp(17px, 1.5vw, 22px) !important;
+  font-weight: 750 !important;
+  line-height: 1.5 !important;
+  color: #f8fafc !important;
 }
 
 /* Option Cards - Enlarged, clean & interactive */
@@ -1497,7 +1511,7 @@ body.clean-stage .host-main {
 
   .voting-stage-grid {
     display: grid;
-    grid-template-columns: 52fr 48fr;
+    grid-template-columns: minmax(0, 1.62fr) minmax(360px, 1fr);
     gap: 16px;
     flex: 1;
     min-height: 0;
@@ -1505,15 +1519,28 @@ body.clean-stage .host-main {
     overflow: hidden;
   }
 
-  .voting-left-col,
+  .voting-left-col {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    height: 100%;
+    overflow: hidden;
+  }
+
   .voting-right-col {
     display: flex;
     flex-direction: column;
-    gap: 14px;
+    gap: 10px;
     min-height: 0;
     height: 100%;
-    justify-content: space-between;
-    overflow: hidden;
+    justify-content: flex-start;
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-right: 2px;
+  }
+
+  .voting-left-col .rpg-stage-top {
+    height: clamp(380px, 50vh, 500px);
   }
 
   .scenario-copy.card {
@@ -1535,13 +1562,18 @@ body.clean-stage .host-main {
     margin-bottom: 12px;
   }
 
-  .question-prompt {
+  .question-prompt,
+  .dilemma-prompt {
     flex: 0 0 auto;
     padding: 16px 22px !important;
     margin: 0 !important;
+    background: rgba(15, 23, 42, 0.95) !important;
+    border: 1.5px solid #f59e0b !important;
+    border-left: 5px solid #f59e0b !important;
   }
 
-  .host-main .question-prompt {
+  .host-main .question-prompt,
+  .host-main .dilemma-prompt {
     padding: 16px 22px !important;
     margin: 0 !important;
   }
@@ -1550,12 +1582,16 @@ body.clean-stage .host-main {
     font-size: 13px !important;
     padding: 3px 10px !important;
     margin-bottom: 8px !important;
+    background: #f59e0b !important;
+    color: #1e1b4b !important;
+    font-weight: 800 !important;
   }
 
   .host-main .prompt-text {
-    font-size: clamp(18px, 1.8vw, 22px) !important;
-    font-weight: 800 !important;
-    line-height: 1.4 !important;
+    font-size: clamp(17px, 1.5vw, 21px) !important;
+    font-weight: 700 !important;
+    line-height: 1.5 !important;
+    color: #f8fafc !important;
   }
 
   .dialogue-card.card {
@@ -2493,7 +2529,7 @@ body.clean-stage .host-main {
 .rpg-stage-top {
   position: relative;
   width: 100%;
-  height: clamp(240px, 32vh, 320px);
+  height: clamp(360px, 46vh, 480px);
   overflow: hidden;
   background: #0f172a;
 }
@@ -2772,38 +2808,46 @@ body.clean-stage .host-main {
 }
 
 .rpg-dialogue-text {
-  font-size: clamp(15px, 1.4vw, 17.5px);
+  font-size: clamp(16px, 1.45vw, 19px);
   line-height: 1.75;
-  font-weight: 500;
-  color: #f8fafc;
+  font-weight: 550;
+  color: #ffffff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.85);
   margin: 0;
 }
 
 .rpg-dialogue-prompt {
   margin-top: 10px;
-  padding-top: 10px;
-  border-top: 1px dashed rgba(226, 232, 240, 0.22);
+  padding: 8px 12px;
+  background: rgba(15, 23, 42, 0.95);
+  border: 1.5px solid #f59e0b;
+  border-left: 4px solid #f59e0b;
+  border-radius: 8px;
   display: flex;
-  align-items: baseline;
-  gap: 8px;
+  align-items: center;
+  gap: 10px;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35), inset 0 0 10px rgba(245, 158, 11, 0.08);
 }
 
 .rpg-dialogue-prompt .prompt-badge {
-  font-size: 11px;
-  font-weight: 700;
-  color: #facc15;
-  background: rgba(234, 179, 8, 0.18);
-  border: 1px solid rgba(234, 179, 8, 0.35);
-  padding: 2px 7px;
+  font-size: 11.5px;
+  font-weight: 800;
+  color: #1e1b4b;
+  background: #f59e0b;
+  border: none;
+  padding: 3px 8px;
   border-radius: 4px;
   white-space: nowrap;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.35);
 }
 
 .rpg-dialogue-prompt .prompt-text {
-  font-size: 13.5px;
-  color: #fef08a;
+  font-size: 15.5px;
+  color: #f8fafc;
   font-weight: 600;
-  line-height: 1.5;
+  line-height: 1.6;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.8);
 }
 
 .rpg-next-caret {
@@ -3056,51 +3100,54 @@ body.clean-stage .host-main {
   border-radius: 12px;
 }
 
-/* Big Screen Persuasion Live Board */
+/* Big Screen Persuasion Live Board & Combat Meter */
 .persuasion-live-board {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  margin-top: 10px;
+  gap: 6px;
+  margin-top: 8px;
 }
 
 .persuasion-row {
   background: #ffffff;
   border: 1.5px solid var(--line);
-  border-radius: 12px;
-  padding: 10px 14px;
+  border-radius: 10px;
+  padding: 8px 12px;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 5px;
   transition: all 0.25s ease;
 }
 
 .persuasion-row.is-leading {
   border-color: #facc15;
   background: linear-gradient(135deg, #fefce8 0%, #ffffff 100%);
-  box-shadow: 0 4px 14px rgba(234, 179, 8, 0.15);
+  box-shadow: 0 3px 12px rgba(234, 179, 8, 0.16);
 }
 
 .persuasion-row-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  font-size: 13px;
-  font-weight: 700;
+  font-size: 12.5px;
+  font-weight: 750;
+  color: var(--ink);
 }
 
 .mana-progress-track {
-  height: 10px;
-  border-radius: 6px;
+  height: 8px;
+  border-radius: 4px;
   background: #e0f2fe;
   overflow: hidden;
   position: relative;
+  box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
 .mana-progress-fill {
   height: 100%;
-  border-radius: 6px;
+  border-radius: 4px;
   background: linear-gradient(90deg, #0284c7 0%, #38bdf8 100%);
+  box-shadow: 0 0 8px rgba(56, 189, 248, 0.55);
   transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
@@ -3108,6 +3155,122 @@ body.clean-stage .host-main {
   color: #ca8a04;
   font-size: 14px;
   margin-right: 4px;
+  filter: drop-shadow(0 1px 2px rgba(202, 138, 4, 0.4));
+}
+
+/* Big Screen Persistent QR Code Join Dock (.qr-join-dock) */
+.qr-join-dock {
+  background: linear-gradient(135deg, rgba(15, 23, 42, 0.96) 0%, rgba(30, 41, 59, 0.98) 100%);
+  border: 1.5px solid rgba(56, 189, 248, 0.4);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.45), inset 0 0 15px rgba(56, 189, 248, 0.08);
+  border-radius: 14px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #f8fafc;
+  transition: all 0.25s ease;
+  margin-bottom: 8px;
+}
+
+.qr-join-dock:hover {
+  border-color: rgba(56, 189, 248, 0.7);
+  box-shadow: 0 10px 28px rgba(14, 165, 233, 0.3);
+}
+
+.qr-dock-preview {
+  flex-shrink: 0;
+  background: #ffffff;
+  padding: 4px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.qr-dock-canvas {
+  width: 68px;
+  height: 68px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+}
+
+.qr-dock-canvas svg,
+.qr-dock-canvas img {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+.qr-dock-meta {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.qr-dock-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: 0.5px;
+}
+
+.qr-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 8px #10b981;
+  animation: pulse-aura 1.5s infinite ease-in-out;
+}
+
+.qr-dock-title {
+  font-weight: 800;
+  color: #ffffff;
+  font-size: 12.5px;
+}
+
+.qr-dock-url {
+  font-family: "SF Mono", ui-monospace, Menlo, monospace;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #93c5fd;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  background: rgba(15, 23, 42, 0.6);
+  padding: 2px 8px;
+  border-radius: 6px;
+  border: 1px solid rgba(147, 197, 253, 0.2);
+}
+
+.qr-dock-stats {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 1px;
+}
+
+.qr-stat-pill {
+  font-size: 10.5px;
+  color: #cbd5e1;
+  background: rgba(255, 255, 255, 0.08);
+  padding: 1.5px 7px;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.qr-stat-pill strong {
+  color: #38bdf8;
+  font-weight: 800;
 }
 
 /* 9. Phase 3: Chief Navigator Classified Intel & Decision Panel */
