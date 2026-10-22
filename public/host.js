@@ -141,9 +141,16 @@ function render() {
   document.querySelectorAll('[data-pitch-group]').forEach(btn => btn.addEventListener('click', async () => {
     const group = btn.dataset.pitchGroup;
     try {
+      const pitchObj = group === 'stop' ? null : {
+        group,
+        deadline: Date.now() + 60 * 1000,
+        seconds: 60,
+        startedAt: Date.now()
+      };
+      state.pitch = pitchObj;
+      render();
       await api('pitch', { group, seconds: 60 }, 'host');
-      broadcastSync('host_action', { action: 'pitch', group, roundIndex: state.roundIndex });
-      await refresh();
+      broadcastSync('pitch_update', { pitch: pitchObj });
       toast(group === 'stop' ? '已停止辯論倒數' : group === 'all' ? '已啟動全班 60 秒跨立場辯論！' : `已啟動第 ${group} 組 60 秒申辯！`);
     } catch (e) {
       toast(e.message);
@@ -512,17 +519,35 @@ async function hostAction(action, extra = {}) {
   }
   if (action === 'next') {
     busy = true;
-    document.querySelectorAll('[data-host-action]').forEach(el => el.disabled = true);
+    document.querySelectorAll('[data-host-action]').forEach(el => {
+      el.disabled = true;
+      if (el.dataset.hostAction === 'next') el.textContent = '正在切換下一回合…';
+    });
     try {
-      await api('next', { force: true, ...extra }, 'host');
-      const latest = await api('state', undefined, 'host');
-      if (latest.roundIndex <= 3 && latest.phase !== 'finished') {
-        try { await api('start', {}, 'host'); } catch (err) {}
+      let latest = await api('next', { force: true, ...extra }, 'host');
+      if (latest && latest.roundIndex !== undefined) {
+        if (latest.roundIndex <= 3 && latest.phase !== 'finished') {
+          try {
+            const started = await api('start', {}, 'host');
+            if (started && started.roundIndex !== undefined) latest = started;
+          } catch (err) {}
+        }
+        latest.clockOffset = (latest.serverTime || Date.now()) - Date.now();
+        state = latest;
+        lastSignature = JSON.stringify({ ...latest, serverTime: 0, clockOffset: 0 });
+        render();
+        broadcastSync('host_action', { action: 'next', roundIndex: latest.roundIndex });
+        toast(latest.phase === 'finished' ? '四回合已全部完成！' : `已進入第 ${latest.roundIndex + 1} 回合研討 ✓`);
+      } else {
+        const polled = await api('state', undefined, 'host');
+        if (polled.roundIndex <= 3 && polled.phase !== 'finished') {
+          try { await api('start', {}, 'host'); } catch (err) {}
+        }
+        broadcastSync('host_action', { action: 'next', roundIndex: polled.roundIndex });
+        lastSignature = '';
+        await refresh();
+        toast(polled.phase === 'finished' ? '四回合已全部完成！' : `已進入第 ${polled.roundIndex + 1} 回合研討 ✓`);
       }
-      broadcastSync('host_action', { action: 'next', roundIndex: latest.roundIndex });
-      lastSignature = '';
-      await refresh();
-      toast(latest.phase === 'finished' ? '四回合已全部完成！' : `已進入第 ${latest.roundIndex + 1} 回合研討 ✓`);
     } catch (e) {
       toast(e.message);
       await refresh();
@@ -551,10 +576,17 @@ async function hostAction(action, extra = {}) {
   busy = true;
   document.querySelectorAll('[data-host-action]').forEach(el => el.disabled = true);
   try {
-    await api(action, extra, 'host');
+    const res = await api(action, extra, 'host');
     broadcastSync('host_action', { action, roundIndex: state?.roundIndex });
-    lastSignature = '';
-    await refresh();
+    if (res && res.roundIndex !== undefined) {
+      res.clockOffset = (res.serverTime || Date.now()) - Date.now();
+      state = res;
+      lastSignature = JSON.stringify({ ...res, serverTime: 0, clockOffset: 0 });
+      render();
+    } else {
+      lastSignature = '';
+      await refresh();
+    }
   } catch (e) {
     toast(e.message);
     await refresh();
@@ -666,6 +698,8 @@ listenSync(packet => {
         }
       }
     }
+  } else if (packet.type === 'pitch_update') {
+    state.pitch = packet.pitch;
   } else if (packet.type === 'host_action') {
     refresh();
   }

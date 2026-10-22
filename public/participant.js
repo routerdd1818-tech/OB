@@ -543,31 +543,107 @@ async function submitFinalDecision(choice) {
   }
 }
 
+let recoveringSession = false;
+
 async function refresh() {
   try {
     const next = await api('state');
     next.clockOffset = next.serverTime - Date.now();
-    const signature = JSON.stringify({ ...next, serverTime: 0, clockOffset: 0 });
+
+    // 【關鍵修復 1】防跳出保護：若伺服器因瞬斷或併發沒回傳 member，但本機已有登入紀錄，絕不跳回選組別畫面！
+    if (!next.member) {
+      let savedJoin = null;
+      try {
+        savedJoin = JSON.parse(localStorage.getItem('cq_last_join') || 'null');
+      } catch {}
+
+      // 若先前已有 state.member，先無縫保留當下身份，避免畫面崩潰或跳窗
+      if (state?.member) {
+        next.member = state.member;
+        next.group = next.group || state.group;
+        next.vote = next.vote || state.vote;
+      }
+
+      // 若本機有存過姓名與組別，在背景靜默自動重連，不打斷學員操作
+      if (savedJoin?.name && savedJoin?.group && !recoveringSession) {
+        recoveringSession = true;
+        api('join', { name: savedJoin.name, group: Number(savedJoin.group), allowSwitch: true })
+          .then(res => {
+            if (res?.token) localStorage.setItem('cq_member_token', res.token);
+            recoveringSession = false;
+            refresh();
+          })
+          .catch(() => { recoveringSession = false; });
+        if (state?.member) return; // 保持原畫面不閃爍
+      }
+
+      // 只有真正從未登入過的新學員，才打開選組別視窗
+      if (!savedJoin) {
+        state = next;
+        online = true;
+        status(true);
+        if (!gate.open) gate.showModal();
+        $('#app').innerHTML = '<div class="loading">請先填寫姓名與組別入席…</div>';
+        return;
+      }
+    } else {
+      // 確保已登入時，選組別視窗不會誤開（除非學員主動點「換組」）
+      if (gate.open && !gate.dataset.manualSwitch) {
+        gate.close();
+      }
+    }
+
+    // 【關鍵修復 2】忽略單純因為 pitch（辯論計時）改變而觸發的整頁重繪，避免學員配點按到一半畫面被重置
+    const signatureObj = {
+      ...next,
+      serverTime: 0,
+      clockOffset: 0,
+      remaining: 0,
+      deadline: next.deadline ? 1 : 0,
+      pitch: null // 把 pitch 從整頁重繪簽名中排除，交由 startClock 自動更新時間
+    };
+    const signature = JSON.stringify(signatureObj);
+
     state = next;
     online = true;
     status(true);
-    if (!state.member) {
-      if (!gate.open) gate.showModal();
-      $('#app').innerHTML = '<div class="loading">請先填寫姓名與組別入席…</div>';
-      return;
-    }
+
     if (signature !== lastSignature) {
       lastSignature = signature;
       render();
+    } else {
+      // 若不需整頁重繪，僅輕量同步按鈕狀態
+      updateChoiceUI();
     }
   } catch (e) {
     if (e.status === 401) {
+      let savedJoin = null;
+      try {
+        savedJoin = JSON.parse(localStorage.getItem('cq_last_join') || 'null');
+      } catch {}
+      if (savedJoin?.name && savedJoin?.group && !recoveringSession) {
+        recoveringSession = true;
+        api('join', { name: savedJoin.name, group: Number(savedJoin.group), allowSwitch: true })
+          .then(res => {
+            if (res?.token) localStorage.setItem('cq_member_token', res.token);
+            recoveringSession = false;
+            refresh();
+          })
+          .catch(() => {
+            recoveringSession = false;
+            online = true;
+            status(true);
+            state = null;
+            try { localStorage.removeItem('cq_member_token'); localStorage.removeItem('cq_last_join'); } catch {}
+            if (!gate.open) gate.showModal();
+            $('#app').innerHTML = '<div class="loading">請先填寫姓名與組別入席…</div>';
+          });
+        return;
+      }
       online = true;
       status(true);
       state = null;
-      try {
-        localStorage.removeItem('cq_member_token');
-      } catch {}
+      try { localStorage.removeItem('cq_member_token'); } catch {}
       if (!gate.open) gate.showModal();
       $('#app').innerHTML = '<div class="loading">請先填寫姓名與組別入席…</div>';
       return;
@@ -591,6 +667,7 @@ document.body.addEventListener('click', async e => {
   }
   if (e.target.closest('#open-switch-group')) {
     if (!state?.member) return;
+    gate.dataset.manualSwitch = 'true';
     $('#join-title').innerHTML = '更換組別 / 姓名';
     $('#name').value = state.member.name;
     const r = document.querySelector(`input[name="group"][value="${state.member.group}"]`);
@@ -602,6 +679,7 @@ document.body.addEventListener('click', async e => {
     gate.showModal();
   }
   if (e.target.closest('#close-onboarding')) {
+    delete gate.dataset.manualSwitch;
     gate.close();
   }
   if (e.target.closest('#revealed-status-pill')) {
@@ -631,6 +709,7 @@ $('#join-form').addEventListener('submit', async e => {
         localStorage.setItem('cq_last_join', JSON.stringify({ name, group }));
       } catch {}
     }
+    delete gate.dataset.manualSwitch;
     gate.close();
     await refresh();
   } catch (error) {
@@ -641,6 +720,7 @@ $('#join-form').addEventListener('submit', async e => {
         localStorage.setItem('cq_last_join', JSON.stringify({ name, group }));
       }
       toast(`已更換至第 ${group} 組 ✓`);
+      delete gate.dataset.manualSwitch;
       gate.close();
       await refresh();
     } catch (err2) {
@@ -655,6 +735,8 @@ listenSync(packet => {
   if (!packet || !state) return;
   if (packet.type === 'host_action') {
     refresh();
+  } else if (packet.type === 'pitch_update') {
+    state.pitch = packet.pitch;
   } else if (packet.type === 'group_vote') {
     if (packet.group === state.member?.group && packet.roundIndex === state.roundIndex) {
       if (!state.vote) state.vote = {};

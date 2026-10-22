@@ -368,7 +368,9 @@ export default async function handler(req, res) {
       return;
     }
 
+    let finalState = null;
     await mutate(state => {
+      finalState = state;
       const user = session(req, state, role);
       if (role === 'member') {
         if (action === 'claim-rep') {
@@ -594,7 +596,7 @@ export default async function handler(req, res) {
         Object.assign(state, fresh);
       } else fail('未知操作', 404);
     });
-    res.end(JSON.stringify({ ok: true }));
+    res.end(JSON.stringify({ ok: true, ...(role === 'host' && finalState ? hostView(finalState, req) : {}) }));
   } catch (error) {
     res.statusCode = error.status || 503;
     res.end(
