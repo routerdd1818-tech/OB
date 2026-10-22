@@ -157,7 +157,7 @@ test('persuasion points allocation validation, chief navigator computation, and 
   assert.equal(g2State.chiefNavigator, 2);
   assert.equal(g2State.member.isNavigator, true);
   assert.ok(g2State.hiddenIntel, 'Group 2 must unlock hidden intel');
-  assert.equal(g2State.hiddenIntel.title, '《東京實驗室內部未公開日誌》');
+  assert.equal(g2State.hiddenIntel.title, '《第一回合極密情報：根回機制》');
 
   // Other groups should NOT see hidden intel before reveal
   const g1State = (await request('state', undefined, memberCookies[0])).data;
@@ -182,37 +182,37 @@ test('reveal settlement: optimal final decision triggers rescue 60%, synergy bon
   const afterReveal = (await host()).data;
 
   // Round 1 initial votes:
-  // G1: A (-25 CQ base). Final was B (Best). Rescue = round(25 * 0.6) = 15. Synergy = 15. Delta = -25 + 15 + 15 = +5 CQ.
-  // G1 CQ: 100 + 5 = 105.
-  assert.equal(afterReveal.results[1].baseDelta, -25);
-  assert.equal(afterReveal.results[1].rescueBonus, 15);
+  // G1: A (-20 CQ base). Final was B (Best). Rescue = round(20 * 0.6) = 12. Synergy = 15. Delta = -20 + 12 + 15 = +7 CQ.
+  // G1 CQ: 100 + 7 = 107.
+  assert.equal(afterReveal.results[1].baseDelta, -20);
+  assert.equal(afterReveal.results[1].rescueBonus, 12);
   assert.equal(afterReveal.results[1].synergyBonus, 15);
-  assert.equal(afterReveal.results[1].actualDelta, 5);
-  assert.equal(afterReveal.groups[0].cq, 105);
+  assert.equal(afterReveal.results[1].actualDelta, 7);
+  assert.equal(afterReveal.groups[0].cq, 107);
 
-  // G2: B (+20 CQ base). Chief Navigator! Rescue = 0. Synergy = 20 (+5 navigator honor). Delta = +20 + 20 = +40 CQ.
-  // G2 CQ: 100 + 40 = 140.
-  assert.equal(afterReveal.results[2].baseDelta, 20);
+  // G2: B (+25 CQ base). Chief Navigator! Rescue = 0. Synergy = 20 (+5 navigator honor). Delta = +25 + 20 = +45 CQ.
+  // G2 CQ: 100 + 45 = 145.
+  assert.equal(afterReveal.results[2].baseDelta, 25);
   assert.equal(afterReveal.results[2].rescueBonus, 0);
   assert.equal(afterReveal.results[2].synergyBonus, 20);
-  assert.equal(afterReveal.results[2].actualDelta, 40);
-  assert.equal(afterReveal.groups[1].cq, 140);
+  assert.equal(afterReveal.results[2].actualDelta, 45);
+  assert.equal(afterReveal.groups[1].cq, 145);
 
-  // G3: C (-15 CQ base). Rescue = round(15 * 0.6) = 9. Synergy = 15. Delta = -15 + 9 + 15 = +9 CQ.
-  // G3 CQ: 100 + 9 = 109.
-  assert.equal(afterReveal.results[3].baseDelta, -15);
-  assert.equal(afterReveal.results[3].rescueBonus, 9);
+  // G3: C (-10 CQ base). Rescue = round(10 * 0.6) = 6. Synergy = 15. Delta = -10 + 6 + 15 = +11 CQ.
+  // G3 CQ: 100 + 11 = 111.
+  assert.equal(afterReveal.results[3].baseDelta, -10);
+  assert.equal(afterReveal.results[3].rescueBonus, 6);
   assert.equal(afterReveal.results[3].synergyBonus, 15);
-  assert.equal(afterReveal.results[3].actualDelta, 9);
-  assert.equal(afterReveal.groups[2].cq, 109);
+  assert.equal(afterReveal.results[3].actualDelta, 11);
+  assert.equal(afterReveal.groups[2].cq, 111);
 
-  // G4: D (-30 CQ base). Rescue = round(30 * 0.6) = 18. Synergy = 15. Delta = -30 + 18 + 15 = +3 CQ.
-  // G4 CQ: 100 + 3 = 103.
-  assert.equal(afterReveal.results[4].baseDelta, -30);
-  assert.equal(afterReveal.results[4].rescueBonus, 18);
+  // G4: D (-15 CQ base). Rescue = round(15 * 0.6) = 9. Synergy = 15. Delta = -15 + 9 + 15 = +9 CQ.
+  // G4 CQ: 100 + 9 = 109.
+  assert.equal(afterReveal.results[4].baseDelta, -15);
+  assert.equal(afterReveal.results[4].rescueBonus, 9);
   assert.equal(afterReveal.results[4].synergyBonus, 15);
-  assert.equal(afterReveal.results[4].actualDelta, 3);
-  assert.equal(afterReveal.groups[3].cq, 103);
+  assert.equal(afterReveal.results[4].actualDelta, 9);
+  assert.equal(afterReveal.groups[3].cq, 109);
 
   // World state after R1 optimal outcome
   assert.equal(afterReveal.worldState.r1, 'good');
@@ -220,7 +220,7 @@ test('reveal settlement: optimal final decision triggers rescue 60%, synergy bon
   // Member views in revealed state should now see hiddenIntel unlocked for classroom debrief
   const g1Revealed = (await request('state', undefined, memberCookies[0])).data;
   assert.ok(g1Revealed.hiddenIntel, 'Hidden intel revealed to all after reveal');
-  assert.equal(g1Revealed.hiddenIntel.title, '《東京實驗室內部未公開日誌》');
+  assert.equal(g1Revealed.hiddenIntel.title, '《第一回合極密情報：根回機制》');
 });
 
 test('pause/resume uses shared server deadlines and incomplete reveal needs explicit confirmation', async () => {
@@ -250,15 +250,14 @@ test('bad outcome in round 2 causes full penalty, no rescue, and shared conseque
   let state = (await host()).data;
   assert.equal(state.roundIndex, 2); // Round 3 (0-indexed 2)
 
-  // Groups vote in Round 3 (optimal is A)
-  // G1 votes B (-25), G2 votes B (-25), G3 votes B (-25), G4 votes B (-25), G5 votes B (-25)
+  // Groups vote in Round 3 (optimal is B, bad is A: -25 CQ)
   for (let i = 0; i < 5; i++) {
-    await request('vote', { choice: 'B', epoch: state.epoch, roundIndex: 2 }, memberCookies[i]);
+    await request('vote', { choice: 'A', epoch: state.epoch, roundIndex: 2 }, memberCookies[i]);
   }
   // Allocate points to G1 as navigator
   await request('persuade', { points: { 1: 3, 2: 2 }, roundIndex: 2 }, memberCookies[4]);
-  // G1 picks B (bad choice)
-  await request('final-decision', { choice: 'B', roundIndex: 2 }, memberCookies[0]);
+  // G1 picks A (bad choice)
+  await request('final-decision', { choice: 'A', roundIndex: 2 }, memberCookies[0]);
 
   // Reveal
   await host('reveal', {});
@@ -290,8 +289,8 @@ test('fourth round requires three actual decisions for consensus', async () => {
   const result = (await host()).data;
   assert.equal(result.results[1].id, 'X');
   assert.equal(result.results[1].tension, 100);
-  assert.equal(result.results[2].tension, 33);
-  assert.equal(result.results[2].reduction, 65);
+  assert.equal(result.results[2].tension, 32);
+  assert.equal(result.results[2].reduction, 30);
 
   await host('next', {});
   assert.equal((await host()).data.phase, 'finished');
@@ -311,8 +310,17 @@ test('representative transfer and reset preserve only host access', async () => 
 });
 
 test('all tension values match the requested matrix; answers are not in static client code', async () => {
-  // Tension matrix: Round 1 (B:35), Round 2 (C:30), Round 3 (A:40), Round 4 (B:33)
-  const expected = [[90, 35, 75, 92], [95, 75, 30, 100], [40, 95, 85, 98], [78, 33, 73, 83]];
+  // Tension matrix for 《全球綠能快遞》:
+  // Round 1: baseline 78, [83, 60, 76, 80]
+  // Round 2: baseline 72, [75, 50, 80, 87]
+  // Round 3: baseline 68, [78, 43, 73, 86]
+  // Round 4: baseline 62, [67, 32, 77, 82]
+  const expected = [
+    [83, 60, 76, 80],
+    [75, 50, 80, 87],
+    [78, 43, 73, 86],
+    [67, 32, 77, 82]
+  ];
   rounds.forEach((round, i) =>
     round.options.forEach((option, j) => {
       assert.equal(outcome(i, { choice: option.id }).tension, expected[i][j]);
