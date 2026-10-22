@@ -1,11 +1,54 @@
 import { $, esc, api, toast, status, startClock, broadcastSync, listenSync } from './common.js';
 
-let state = null, lastSignature = '', selection = null, consensus = [null, null, null], roundKey = '', busy = false, online = false;
+let state = null;
+let lastSignature = '';
+let selection = null;
+let consensus = [null, null, null];
+let roundKey = '';
+let busy = false;
+let online = false;
 let pointsAllocated = {};
 let recoveringSession = false;
+let pendingNavChoice = null;
+let pendingNavTimer = null;
+
+// 防回合倒退鎖：記錄當前 epoch、最高 revision 與最高 roundIndex，徹底杜絕「第二回合閃退回第一回合」
+let highestEpoch = '';
+let highestRevision = -1;
+let highestRoundIndex = -1;
+
+// 針對四回合主題（「權威與共識」、「賦權與指導」、「大D與小d」、「四象限調適」）設計的極簡情境導讀
+const ROUND_SCENARIOS = [
+  {
+    tag: 'ROUND 01 · 權威與共識',
+    sceneTitle: '📍 情境背景：跨國啟動會議的「沉默共識」陷阱',
+    brief: '歐美總部主管習慣在會議上直接拍板（個人權威決策），但東京團隊卻在會議上微笑不語，會後表示「還需要內部達成共識（稟議制）」而遲遲未動工，雙方對「何時才算真正決定」產生嚴重摩擦。',
+    guide: '💡 思考焦點：當「由上而下的快速拍板」遇上「由下而上的集體共識」，如何建立雙方都能接受的決策節奏？'
+  },
+  {
+    tag: 'ROUND 02 · 賦權與指導',
+    sceneTitle: '📍 情境背景：「充分授權」變成「放生不管」？',
+    brief: '跨國專案進入執行期，西方主管給予只定大方向的「高度賦權（Empowerment）」，期待團隊自主發揮；但習慣「明確指導與標準作業程序（Directive）」的在地團隊卻感到無所適從，不敢擅自行動導致進度卡關。',
+    guide: '💡 思考焦點：團隊不主動是因為能力不足，還是對「授權邊界與容錯空間」缺乏安全感？該如何調適領導風格？'
+  },
+  {
+    tag: 'ROUND 03 · 大D與小d（文化框架 vs 個人差異）',
+    sceneTitle: '📍 情境背景：是「文化刻板印象」還是「個人工作風格」？',
+    brief: '團隊中一位東京資深工程師在會議上公開反駁了總部的架構設計。有人認為「日本人不是都很委婉嗎？他一定對我們有敵意」，也有人只用國籍標籤（大D：國家文化）去解釋一切，卻忽略了他的專業背景與個人特質（小d）。',
+    guide: '💡 思考焦點：如何跳脫單一的「國籍刻板印象（大D）」，同時看見制度脈絡與眼前這個人真實的專業動機（小d）？'
+  },
+  {
+    tag: 'ROUND 04 · 四象限調適（三方終極危機協商）',
+    sceneTitle: '📍 情境背景：總部 × 東京 × 客戶的三方紅線攤牌',
+    brief: '上線死線逼近！總部要求守住全球標準與效率、東京堅持零瑕疵與合規流程、客戶則要求準時交付。本回為終極整合關卡，你們不僅要選出最佳調適方案，還必須確保【總部、東京、客戶】三方皆能點頭同意（任一方拒絕即破局）！',
+    guide: '💡 思考焦點：運用跨文化四象限調適力，找出不踩任何一方紅線、又能推動專案落地的整合解方！'
+  }
+];
 
 const gate = $('#onboarding');
-gate.addEventListener('cancel', e => { if (!state?.member) e.preventDefault(); });
+gate.addEventListener('cancel', e => {
+  if (!state?.member) e.preventDefault();
+});
 
 function getRemainingPoints() {
   if (!state?.member) return 5;
@@ -25,12 +68,15 @@ function updateChoiceUI() {
     if (hasVoted) {
       el.classList.add('locked');
       el.disabled = true;
+    } else {
+      el.classList.remove('locked');
+      el.disabled = false;
     }
   });
 
   document.querySelectorAll('[data-consensus]').forEach(el => {
     el.setAttribute('aria-pressed', String(consensus[Number(el.dataset.consensus)] === (el.dataset.value === 'true')));
-    if (hasVoted) el.disabled = true;
+    el.disabled = hasVoted;
   });
 
   const submit = $('#submit-vote');
@@ -40,6 +86,7 @@ function updateChoiceUI() {
 
   // 更新階段二：說服點數分配 UI
   const remaining = getRemainingPoints();
+  const totalUsed = 5 - remaining;
   const counterEl = $('#remaining-pts-count');
   if (counterEl) counterEl.textContent = `${remaining} / 5 點`;
 
@@ -49,46 +96,52 @@ function updateChoiceUI() {
     const valEl = row.querySelector('.alloc-value');
     if (valEl) valEl.textContent = String(pts);
     const plusBtn = row.querySelector('.alloc-btn.plus');
-    if (plusBtn) plusBtn.disabled = busy || remaining <= 0 || pts >= 3;
+    if (plusBtn) plusBtn.disabled = busy || !isRep || remaining <= 0 || pts >= 3;
     const minusBtn = row.querySelector('.alloc-btn.minus');
-    if (minusBtn) minusBtn.disabled = busy || pts <= 0;
+    if (minusBtn) minusBtn.disabled = busy || !isRep || pts <= 0;
   });
 
   const submitPersuasion = $('#submit-persuasion');
   if (submitPersuasion) {
-    const totalUsed = 5 - remaining;
-    submitPersuasion.disabled = busy || !online || totalUsed < 1 || totalUsed > 5;
+    submitPersuasion.disabled = busy || !online || !isRep || totalUsed < 1 || totalUsed > 5;
   }
 }
 
 function render() {
-  const r = state.round;
-  const member = state.member;
+  const r = state?.round;
+  const member = state?.member;
   if (!r || !member) return;
 
   const revealed = ['revealed', 'finished'].includes(state.phase);
   const key = `${state.epoch}:${state.roundIndex}`;
 
+  // 當進入新回合時，徹底重置上一回合的選擇與配點狀態
   if (key !== roundKey) {
-    selection = state.vote?.proposal || null;
-    consensus = state.vote?.consensus || [null, null, null];
+    selection = state.vote?.proposal || state.vote?.choice || null;
+    consensus = Array.isArray(state.vote?.consensus) ? [...state.vote.consensus] : [null, null, null];
     pointsAllocated = { ...(state.myPersuasion || {}) };
+    pendingNavChoice = null;
     roundKey = key;
-  } else if (!selection && state.vote?.proposal) {
-    selection = state.vote.proposal;
-    consensus = state.vote.consensus || [null, null, null];
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else if (!selection && (state.vote?.proposal || state.vote?.choice)) {
+    selection = state.vote.proposal || state.vote.choice;
+    consensus = Array.isArray(state.vote?.consensus) ? [...state.vote.consensus] : [null, null, null];
   }
 
   if (state.myPersuasion && Object.keys(pointsAllocated).length === 0) {
     pointsAllocated = { ...state.myPersuasion };
   }
 
-  document.documentElement.style.setProperty('--accent', r.color);
+  document.documentElement.style.setProperty('--accent', r.color || '#d97706');
 
   const cq = state.group?.cq ?? 100;
   const cqClass = cq < 50 ? 'critical' : cq < 75 ? 'low' : '';
   const isNav = state.chiefNavigator === member.group;
   const navBadge = isNav ? '<span class="navigator-crown-pill" style="margin-left:6px;">👑 首席領航者</span>' : '';
+
+  const scenario = ROUND_SCENARIOS[state.roundIndex] || ROUND_SCENARIOS[0];
+  const contextBrief = r.context || r.story || r.situation || scenario.brief;
+  const hasDialogue = Array.isArray(r.dialogue) && r.dialogue.length > 0;
 
   // 頂部精簡組別與身份列
   const identityBar = `
@@ -114,15 +167,42 @@ function render() {
     </div>
   `;
 
-  // 單純顯示本回決策題目（已刪除情境背景與 JRPG 立繪舞台）
+  // 極簡情境與衝突對話卡（不畫 JRPG 圖片與地圖，但保留關鍵現場對話與情境導讀，幫助學員一秒理解題目）
   const cleanQuestionBox = `
-    <section class="card" style="padding:16px 18px; margin-bottom:12px; border:2px solid #f59e0b; border-left:6px solid #d97706; background:#fffbeb;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-        <span class="topic-badge" style="background:#d97706; color:#fff;">ROUND 0${state.roundIndex + 1} · 決策題目</span>
-        <span style="font-size:12px; color:#92400e; font-weight:600;">${esc(r.dimension || '')}</span>
+    <section class="card" style="padding:15px 16px; margin-bottom:12px; border:2px solid #f59e0b; border-left:6px solid #d97706; background:#fffbeb;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span class="topic-badge" style="background:#d97706; color:#fff; padding:2px 8px; border-radius:6px; font-size:12px; font-weight:700;">
+          ${esc(scenario.tag)}
+        </span>
+        <span style="font-size:12px; color:#92400e; font-weight:700;">${esc(r.dimension || r.subtitle || '')}</span>
       </div>
-      <h1 style="font-size:18px; line-height:1.55; font-weight:800; color:#1c1917; margin:0;">
-        ${esc(r.prompt || r.title || '')}
+
+      <!-- 輕量情境導讀 -->
+      <div style="background:#fef3c7; border:1px solid #fde68a; border-radius:8px; padding:10px 12px; margin-bottom:10px;">
+        <div style="font-size:13px; font-weight:800; color:#92400e; margin-bottom:4px;">
+          ${esc(r.title ? `📍 ${r.title}` : scenario.sceneTitle)}
+        </div>
+        <p style="font-size:12.5px; line-height:1.55; color:#451a03; margin:0;">
+          ${esc(contextBrief)}
+        </p>
+
+        ${hasDialogue ? `
+          <div style="margin-top:8px; padding-top:8px; border-top:1px dashed #fcd34d; display:flex; flex-direction:column; gap:6px;">
+            ${r.dialogue.map(line => `
+              <div style="font-size:12.5px; line-height:1.45; color:#1c1917; background:rgba(255,255,255,0.75); padding:6px 9px; border-radius:6px;">
+                <strong style="color:#b45309;">${esc(line.who)}：</strong>「${esc(line.text)}」
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+
+        <div style="font-size:12px; color:#b45309; margin-top:6px; padding-top:6px; border-top:1px dashed #fcd34d; font-weight:600;">
+          ${esc(scenario.guide)}
+        </div>
+      </div>
+
+      <h1 style="font-size:16.5px; line-height:1.5; font-weight:800; color:#1c1917; margin:0;">
+        ⚔️ 本回決策問題：${esc(r.prompt || r.question || r.title || '')}
       </h1>
     </section>
   `;
@@ -144,12 +224,12 @@ function render() {
   let buttonHtml = '';
 
   if (revealed) {
-    buttonHtml = `<div class="button secondary wide revealed-status-pill" id="revealed-status-pill">${state.phase === 'finished' ? '本次課堂已完成 · 感謝參與' : '本回合已揭曉 · 請看大螢幕'}</div>`;
+    buttonHtml = `<div class="button secondary wide revealed-status-pill" id="revealed-status-pill">${state.phase === 'finished' ? '本次課堂已完成 · 感謝參與' : '本回合已揭曉 · 請看大螢幕等待講師進入下一回'}</div>`;
   } else if (hasVoted) {
     const choiceLabel = state.vote.choice === 'X' ? '未達成協議' : `方案 ${state.vote.choice}`;
     buttonHtml = `<button id="submit-vote" class="button secondary wide locked-btn" type="button" disabled>✓ 本組初投已鎖定：${choiceLabel}</button>`;
   } else if (!isRep) {
-    buttonHtml = `<button id="submit-vote" class="button secondary wide" type="button" disabled>👑 由本組代表負責鎖定初投（你可點擊預覽方案）</button>`;
+    buttonHtml = `<button id="submit-vote" class="button secondary wide" type="button" disabled>👑 等待本組代表提交決策…（你可點擊預覽方案）</button>`;
   } else {
     const buttonText = selection ? `👑 代表本組鎖定：方案 ${selection} ↗` : '請選擇本組初投方案';
     buttonHtml = `<button id="submit-vote" class="button primary" type="button" ${!selection ? 'disabled' : ''}>${buttonText}</button>`;
@@ -163,7 +243,6 @@ function render() {
     document.querySelectorAll('[data-choice]').forEach(el => el.addEventListener('click', () => {
       selection = el.dataset.choice;
       updateChoiceUI();
-      // 更新底部按鈕文字
       const subBtn = $('#submit-vote');
       if (subBtn && isRep) subBtn.textContent = `👑 代表本組鎖定：方案 ${selection} ↗`;
     }));
@@ -176,6 +255,10 @@ function render() {
 
   // 綁定階段二：說服點數加減按鈕
   document.querySelectorAll('[data-alloc-btn]').forEach(btn => btn.addEventListener('click', () => {
+    if (!isRep) {
+      toast('👑 由本組代表統一操作配點！');
+      return;
+    }
     const action = btn.dataset.allocBtn;
     const gid = Number(btn.dataset.group);
     const cur = Number(pointsAllocated[gid]) || 0;
@@ -206,9 +289,12 @@ function votingMarkup() {
   const hasVoted = Boolean(state.vote?.choice);
   const c = state.cascade;
   const myGroup = state.member.group;
+  const isRep = Boolean(state.member.isRepresentative);
   const isNav = state.chiefNavigator === myGroup;
   const remaining = getRemainingPoints();
+  const totalUsed = 5 - remaining;
   const otherGroups = [1, 2, 3, 4, 5].filter(g => g !== myGroup);
+  const hasSubmittedPersuasion = state.myPersuasion && Object.keys(state.myPersuasion).length > 0;
 
   return `
     <div class="mobile-timer" style="margin: 10px 0 12px;">
@@ -222,7 +308,8 @@ function votingMarkup() {
           <span class="cascade-badge">${esc(c.badge)}</span>
           <strong>${esc(c.title)}</strong>
         </div>
-        <p class="cascade-effect">${esc(c.effectText)}</p>${c.hint ? `<div class="cascade-intel-box">${esc(c.hint)}</div>` : ''}
+        <p class="cascade-effect">${esc(c.effectText)}</p>
+        ${c.hint ? `<div class="cascade-intel-box">${esc(c.hint)}</div>` : ''}
       </div>
     ` : ''}
 
@@ -232,15 +319,15 @@ function votingMarkup() {
         <div class="eyebrow">STEP 1 · INITIAL VOTE</div>
         <h2 style="font-size:16px; margin:2px 0 6px;">階段一：選擇本組初投方案</h2>
         <p style="font-size:12.5px; color:var(--muted); margin-bottom:12px;">
-          ${state.member.isRepresentative
+          ${isRep
             ? '👑 你是本組代表，請與組員討論後點選方案並按下方按鈕鎖定。'
             : '請與同組夥伴討論，並由「本組代表」按下鎖定送出。'}
         </p>
 
         <div class="options-list" role="radiogroup" aria-label="本組初投方案">
-          ${state.round.options.map(o => `
+          ${(state.round.options || []).map(o => `
             <button type="button" class="option-card" role="radio" aria-checked="${selection === o.id}" data-choice="${o.id}">
-              <span class="letter">${o.id}</span>
+              <span class="letter">${esc(o.id)}</span>
               <span>
                 <strong>${esc(o.title)}</strong>
                 <p>${esc(o.text)}</p>
@@ -267,16 +354,21 @@ function votingMarkup() {
     ` : `
       <div class="card" style="padding:12px 16px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; background:#f0fdf4; border:1.5px solid #86efac;">
         <strong style="color:#166534; font-size:13.5px;">✓ 階段一：本組初投已定錨</strong>
-        <span class="pill positive">方案 ${state.vote.choice}</span>
+        <span class="pill positive">方案 ${esc(state.vote.choice)}</span>
       </div>
     `}
 
     <!-- 階段二：5 點說服點數分配 -->
-    <section class="point-allocator-card card" style="margin-bottom: 14px;">
+    <section class="point-allocator-card card" style="margin-bottom: 14px; ${!hasVoted ? 'opacity:0.65; pointer-events:none;' : ''}">
       <div class="eyebrow">STEP 2 · PERSUASION POINTS</div>
-      <h2 style="font-size:16px; margin:2px 0 4px;">階段二：分配 5 點說服點數</h2>
+      <div style="display:flex; justify-content:space-between; align-items:center;">
+        <h2 style="font-size:16px; margin:2px 0 4px;">階段二：分配 5 點說服點數</h2>
+        ${hasSubmittedPersuasion ? '<span class="pill positive" style="font-size:11px;">✓ 已送出配點</span>' : ''}
+      </div>
       <p style="font-size:12.5px; color:var(--muted); margin-bottom:10px;">
-        聆聽各組辯論，將 5 點分配給最令人信服的其他組別（禁投本組，單組上限 3 點）。
+        ${!hasVoted
+          ? '🔒 請先完成「階段一：本組初投」，即可解鎖說服點數分配。'
+          : '聆聽各組辯論，將 5 點分配給最令人信服的其他組別（禁投本組，單組上限 3 點）。'}
       </p>
 
       <div class="points-counter">
@@ -294,17 +386,21 @@ function votingMarkup() {
                 <span class="alloc-group-choice">戰略決策組</span>
               </div>
               <div class="alloc-controls">
-                <button type="button" class="alloc-btn minus" data-alloc-btn="minus" data-group="${gid}" ${pts <= 0 ? 'disabled' : ''}>−</button>
+                <button type="button" class="alloc-btn minus" data-alloc-btn="minus" data-group="${gid}" ${!isRep || pts <= 0 ? 'disabled' : ''}>−</button>
                 <span class="alloc-value">${pts}</span>
-                <button type="button" class="alloc-btn plus" data-alloc-btn="plus" data-group="${gid}" ${remaining <= 0 || pts >= 3 ? 'disabled' : ''}>+</button>
+                <button type="button" class="alloc-btn plus" data-alloc-btn="plus" data-group="${gid}" ${!isRep || remaining <= 0 || pts >= 3 ? 'disabled' : ''}>+</button>
               </div>
             </div>
           `;
         }).join('')}
       </div>
 
-      <button type="button" id="submit-persuasion" class="button primary submit-persuasion-btn" ${5 - remaining < 1 || 5 - remaining > 5 ? 'disabled' : ''}>
-        ${state.myPersuasion ? '更新本組說服點數 ↗' : '送出說服點數分配 ↗'}
+      <button type="button" id="submit-persuasion" class="button primary submit-persuasion-btn" ${!isRep || totalUsed < 1 || totalUsed > 5 ? 'disabled' : ''}>
+        ${!isRep
+          ? '👑 等待本組代表送出配點…'
+          : hasSubmittedPersuasion
+            ? '✓ 已送出（點此可更新本組配點 ↗）'
+            : '👑 代表本組送出說服點數分配 ↗'}
       </button>
     </section>
 
@@ -331,7 +427,11 @@ function votingMarkup() {
             <strong style="color:#78350f; font-size:13.5px;">👑 請選擇全班最終拍板方案：</strong>
             ${state.hasFinalDecision ? `
               <div style="margin-top:8px; background:#dcfce7; border:1.5px solid #86efac; border-radius:10px; padding:12px; color:#15803d; font-weight:700; text-align:center;">
-                ✓ 貴組已拍板全班最終策略：方案 ${state.finalDecision}
+                ✓ 貴組已拍板全班最終策略：方案 ${esc(state.finalDecision)}
+              </div>
+            ` : !isRep ? `
+              <div style="margin-top:8px; background:#fef3c7; border:1px solid #fde68a; border-radius:10px; padding:10px; color:#92400e; font-weight:600; text-align:center;">
+                👑 請與組員討論後，由貴組的「本組代表」按下最終拍板按鈕！
               </div>
             ` : `
               <div class="navigator-decision-grid">
@@ -371,8 +471,8 @@ function resultMarkup() {
     <div class="card" style="border:2px solid ${isGood ? '#16a34a' : '#dc2626'}; background:${isGood ? '#f0fdf4' : '#fef2f2'}; margin-bottom:14px; padding:14px 16px;">
       <strong style="color:${isGood ? '#15803d' : '#b91c1c'}; font-size:15px;">
         ${isGood
-          ? `🎉 首席領航者拍板成功！全員共贏（本組 +15 CQ）`
-          : `⚠️ 首席領航者拍板踩雷！全班共業警報啟動`
+          ? '🎉 首席領航者拍板成功！全員共贏（本組 +15 CQ）'
+          : '⚠️ 首席領航者拍板踩雷！全班共業警報啟動'
         }
       </strong>
       <p style="margin:4px 0 0; font-size:12.5px; color:${isGood ? '#166534' : '#991b1b'}; line-height:1.5;">
@@ -390,7 +490,7 @@ function resultMarkup() {
       </h2>
       <div style="display:flex; flex-direction:column; gap:8px;">
         <div style="display:flex; justify-content:space-between; font-size:13.5px; padding:6px 0; border-bottom:1px solid var(--line);">
-          <span>初投方案 ${res.id || '—'} 基礎分</span>
+          <span>初投方案 ${esc(res.id || '—')} 基礎分</span>
           <strong class="${res.baseDelta > 0 ? 'positive-text' : res.baseDelta < 0 ? 'negative-text' : ''}">
             ${res.baseDelta >= 0 ? '+' : ''}${res.baseDelta ?? 0} CQ
           </strong>
@@ -410,7 +510,7 @@ function resultMarkup() {
         <div style="display:flex; justify-content:space-between; font-size:14.5px; font-weight:800; padding:8px 0 0;">
           <span>本輪淨變動 / 總 CQ</span>
           <span>
-            ${res.actualDelta >= 0 ? '+' : ''}${res.actualDelta ?? 0} CQ ｜ <strong style="color:var(--accent);">${state.group.cq} CQ</strong>
+            ${res.actualDelta >= 0 ? '+' : ''}${res.actualDelta ?? 0} CQ ｜ <strong style="color:var(--accent);">${state.group?.cq ?? 100} CQ</strong>
           </span>
         </div>
       </div>
@@ -425,7 +525,7 @@ function resultMarkup() {
             <div>
               <strong>第 ${g.id} 組</strong>
               ${g.isNavigator ? '<span class="navigator-crown-pill" style="margin-left:4px;">👑 領航</span>' : ''}
-              <small style="color:var(--muted); margin-left:6px;">初投 ${g.optionId || '—'}</small>
+              <small style="color:var(--muted); margin-left:6px;">初投 ${esc(g.optionId || '—')}</small>
             </div>
             <div>
               <strong>${g.cq} CQ</strong>
@@ -456,6 +556,7 @@ async function submitVote() {
       group: state.member.group,
       choice: selection,
       proposal: selection,
+      consensus,
       roundIndex: state.roundIndex
     });
     await refresh();
@@ -468,7 +569,7 @@ async function submitVote() {
 }
 
 async function submitPersuasion() {
-  if (busy) return;
+  if (busy || !state?.member?.isRepresentative) return;
   const remaining = getRemainingPoints();
   const used = 5 - remaining;
   if (used < 1 || used > 5) {
@@ -498,8 +599,35 @@ async function submitPersuasion() {
 }
 
 async function submitFinalDecision(choice) {
-  if (!choice || busy) return;
-  if (!window.confirm(`【首席領航者最終拍板】\n\n確定代表全班拍板「方案 ${choice}」嗎？\n此決定將影響全班 5 組的命運與 CQ 結算！`)) return;
+  if (!choice || busy || !state?.member?.isRepresentative) return;
+
+  // 兩段式點擊防呆（不依賴 window.confirm，完美支援 LINE 內建瀏覽器與嚴格 CSP）
+  if (pendingNavChoice !== choice) {
+    pendingNavChoice = choice;
+    if (pendingNavTimer) clearTimeout(pendingNavTimer);
+    document.querySelectorAll('[data-nav-choice]').forEach(btn => {
+      if (btn.dataset.navChoice === choice) {
+        btn.style.background = '#dc2626';
+        btn.style.color = '#ffffff';
+        btn.style.borderColor = '#b91c1c';
+        btn.innerHTML = `<span class="choice-letter">${choice}</span><span>⚠️ 再按一次確認拍板 ${choice}</span>`;
+      } else {
+        btn.style.background = '';
+        btn.style.color = '';
+        btn.style.borderColor = '';
+        btn.innerHTML = `<span class="choice-letter">${btn.dataset.navChoice}</span><span>拍板方案 ${btn.dataset.navChoice}</span>`;
+      }
+    });
+    toast(`請再點擊一次「方案 ${choice}」以確認代表全班拍板！`);
+    pendingNavTimer = setTimeout(() => {
+      pendingNavChoice = null;
+      render();
+    }, 4000);
+    return;
+  }
+
+  pendingNavChoice = null;
+  if (pendingNavTimer) clearTimeout(pendingNavTimer);
   busy = true;
   try {
     await api('final-decision', {
@@ -518,9 +646,33 @@ async function submitFinalDecision(choice) {
 async function refresh() {
   try {
     const next = await api('state');
-    next.clockOffset = next.serverTime - Date.now();
+    if (!next || typeof next !== 'object') return;
 
-    // 防跳回選組別保護機制：若瞬斷未回傳 member，自動從 localStorage 恢復身份
+    // 【核心防護】檢查 epoch（課堂世代）、revision 與 roundIndex：
+    // 只要不是主持人按了 RESET（產生新 epoch），任何因為 Serverless 節點冷啟動而落後的舊回合 / 舊 revision 一律丟棄！
+    if (next.epoch && next.epoch !== highestEpoch) {
+      highestEpoch = next.epoch;
+      highestRevision = typeof next.revision === 'number' ? next.revision : 0;
+      highestRoundIndex = typeof next.roundIndex === 'number' ? next.roundIndex : 0;
+    } else if (next.epoch === highestEpoch) {
+      if (typeof next.roundIndex === 'number' && next.roundIndex < highestRoundIndex) {
+        // 攔截到舊回合封包，直接忽略，絕不閃退回第一回合！
+        return;
+      }
+      if (typeof next.revision === 'number' && next.revision < highestRevision && next.roundIndex === highestRoundIndex) {
+        return;
+      }
+      if (typeof next.roundIndex === 'number' && next.roundIndex > highestRoundIndex) {
+        highestRoundIndex = next.roundIndex;
+      }
+      if (typeof next.revision === 'number' && next.revision > highestRevision) {
+        highestRevision = next.revision;
+      }
+    }
+
+    next.clockOffset = (next.serverTime || Date.now()) - Date.now();
+
+    // 防跳回選組別保護機制
     if (!next.member) {
       let savedJoin = null;
       try {
@@ -530,22 +682,31 @@ async function refresh() {
       if (state?.member) {
         next.member = state.member;
         next.group = next.group || state.group;
-        next.vote = next.vote || state.vote;
+        if (next.roundIndex === state.roundIndex) {
+          next.vote = next.vote || state.vote;
+          next.myPersuasion = next.myPersuasion || state.myPersuasion;
+        }
       }
 
-      if (savedJoin?.name && savedJoin?.group && !recoveringSession) {
+      // 只有在連 localStorage 的 token 都沒有或完全失效時，才發送 join（並帶上 clientRound 防止舊節點覆蓋）
+      if (savedJoin?.name && savedJoin?.group && !recoveringSession && !localStorage.getItem('cq_member_token')) {
         recoveringSession = true;
-        api('join', { name: savedJoin.name, group: Number(savedJoin.group), allowSwitch: true })
+        api('join', {
+          name: savedJoin.name,
+          group: Number(savedJoin.group),
+          allowSwitch: true,
+          clientRound: highestRoundIndex >= 0 ? highestRoundIndex : 0
+        })
           .then(res => {
             if (res?.token) localStorage.setItem('cq_member_token', res.token);
             recoveringSession = false;
-            refresh();
           })
-          .catch(() => { recoveringSession = false; });
-        if (state?.member) return;
+          .catch(() => {
+            recoveringSession = false;
+          });
       }
 
-      if (!savedJoin) {
+      if (!savedJoin && !state?.member) {
         state = next;
         online = true;
         status(true);
@@ -581,26 +742,15 @@ async function refresh() {
       updateChoiceUI();
     }
   } catch (e) {
+    // 若課堂已被主持人重設 (401)，清除過期 token 並引導重新入席
     if (e.status === 401) {
-      let savedJoin = null;
-      try {
-        savedJoin = JSON.parse(localStorage.getItem('cq_last_join') || 'null');
-      } catch {}
-      if (savedJoin?.name && savedJoin?.group && !recoveringSession) {
-        recoveringSession = true;
-        api('join', { name: savedJoin.name, group: Number(savedJoin.group), allowSwitch: true })
-          .then(res => {
-            if (res?.token) localStorage.setItem('cq_member_token', res.token);
-            recoveringSession = false;
-            refresh();
-          })
-          .catch(() => {
-            recoveringSession = false;
-            online = false;
-            status(false);
-          });
-        return;
-      }
+      localStorage.removeItem('cq_member_token');
+      highestEpoch = '';
+      highestRevision = -1;
+      highestRoundIndex = -1;
+      if (!gate.open) gate.showModal();
+      $('#app').innerHTML = '<div class="loading">請先填寫姓名與組別入席…</div>';
+      return;
     }
     online = false;
     status(false);
@@ -644,7 +794,12 @@ $('#join-form').addEventListener('submit', async e => {
       res = await api('switch-group', { name, group });
       toast(`已更換至第 ${group} 組 ✓`);
     } else {
-      res = await api('join', { name, group, allowSwitch: true });
+      res = await api('join', {
+        name,
+        group,
+        allowSwitch: true,
+        clientRound: highestRoundIndex >= 0 ? highestRoundIndex : 0
+      });
     }
     if (res.token) {
       try {
@@ -657,7 +812,12 @@ $('#join-form').addEventListener('submit', async e => {
     await refresh();
   } catch (error) {
     try {
-      const res = await api('join', { name, group, allowSwitch: true });
+      const res = await api('join', {
+        name,
+        group,
+        allowSwitch: true,
+        clientRound: highestRoundIndex >= 0 ? highestRoundIndex : 0
+      });
       if (res.token) {
         localStorage.setItem('cq_member_token', res.token);
         localStorage.setItem('cq_last_join', JSON.stringify({ name, group }));
@@ -677,6 +837,10 @@ $('#join-form').addEventListener('submit', async e => {
 listenSync(packet => {
   if (!packet || !state) return;
   if (packet.type === 'host_action') {
+    // 若主持人廣播了最新的 roundIndex，立即更新最高回合鎖
+    if (typeof packet.roundIndex === 'number' && packet.roundIndex > highestRoundIndex) {
+      highestRoundIndex = packet.roundIndex;
+    }
     refresh();
   } else if (packet.type === 'pitch_update') {
     state.pitch = packet.pitch;

@@ -1,4 +1,4 @@
-import { randomBytes, createHash, createHmac, timingSafeEqual } from 'node:crypto';
+import { randomBytes, createHash, createHmac } from 'node:crypto';
 import { readState, mutate, initialState } from '../lib/store.mjs';
 import { rounds, publicRound, outcome, computeCascade } from '../lib/rounds.mjs';
 
@@ -170,13 +170,17 @@ function memberView(state, member) {
     };
   }) : null;
 
+  // 若組內尚無有效代表，自動將當前第一位讀取的組員設為代表（不需前端重連）
+  const activeRep = Object.values(state.participants).find(p => p.id === group.representative && p.expires > Date.now());
+  const isRep = activeRep ? group.representative === member.id : true;
+
   return {
     ...shared(state, true),
     member: {
       name: member.name,
       id: member.id,
       group: member.group,
-      isRepresentative: group.representative === member.id,
+      isRepresentative: isRep,
       isJury: false,
       isNavigator: isChief
     },
@@ -184,7 +188,7 @@ function memberView(state, member) {
       id: group.id,
       cq: cqVal,
       isJury: false,
-      representativeName: Object.values(state.participants).find(p => p.id === group.representative)?.name || '尚未指定'
+      representativeName: activeRep?.name || member.name
     },
     vote: state.votes[state.round]?.[group.id] || null,
     cascade,
@@ -272,7 +276,7 @@ async function bodyOf(req) {
 
 export default async function handler(req, res) {
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
-  res.setHeader('Cache-Control', 'no-store');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0');
   try {
     if (!['GET', 'POST'].includes(req.method)) fail('不支援此操作', 405);
     if (req.method === 'POST') {
@@ -317,12 +321,17 @@ export default async function handler(req, res) {
       if (!name || name.length > 30 || !Number.isInteger(group) || group < 1 || group > 5) {
         fail('請填寫 1–30 字姓名並選擇組別');
       }
-      const memberId = randomBytes(12).toString('hex');
+      const old = extractToken(req);
+      const verifiedOld = old ? verifyMemberToken(old) : null;
+      const memberId = verifiedOld?.id || randomBytes(12).toString('hex');
       let member = { id: memberId, name, group, expires: Date.now() + 43200000 };
       let token = '';
       await mutate(state => {
-        const old = extractToken(req);
-        const prior = old && (verifyMemberToken(old) || state.participants[hash(old)]);
+        // 防回合倒退：若前端已知在更高回合，防止冷啟動節點的舊 round 覆蓋新回合
+        if (typeof body.clientRound === 'number' && body.clientRound > state.round && body.clientRound <= 3) {
+          state.round = body.clientRound;
+        }
+        const prior = old && (verifiedOld || state.participants[hash(old)]);
         if (prior && prior.expires > Date.now() && (prior.group !== group || prior.name !== name)) {
           if (!body.allowSwitch) fail('已加入課堂，不能切換至其他組別', 409);
         }
@@ -372,6 +381,13 @@ export default async function handler(req, res) {
     await mutate(state => {
       finalState = state;
       const user = session(req, state, role);
+
+      // 【關鍵防護】若此 Serverless 實例的 state.round 落後於前端傳來的 roundIndex，自動對齊最新回合，防止閃退回第一回合
+      if (typeof body.roundIndex === 'number' && body.roundIndex > state.round && body.roundIndex <= 3) {
+        state.round = body.roundIndex;
+        if (state.phase === 'revealed') state.phase = 'voting';
+      }
+
       if (role === 'member') {
         if (action === 'claim-rep') {
           state.groups[user.group - 1].representative = user.id;
@@ -380,6 +396,9 @@ export default async function handler(req, res) {
         if (action === 'persuade') {
           if (body.roundIndex !== state.round) fail('回合已更新，請重新整理', 409);
           if (!['voting', 'ready', 'waiting'].includes(state.phase)) fail('目前非說服配點階段', 409);
+          const targetGroup = state.groups[user.group - 1];
+          if (!targetGroup.representative) targetGroup.representative = user.id;
+          if (targetGroup.representative !== user.id) fail('請由本組代表提交說服配點', 403);
           if (!body.points || typeof body.points !== 'object') fail('請提供說服點數分配', 400);
 
           let sum = 0;
@@ -405,6 +424,10 @@ export default async function handler(req, res) {
           if (!['voting', 'ready', 'waiting'].includes(state.phase)) fail('目前非拍板階段', 409);
           const navId = computeNavigator(state, state.round).chiefNavigator;
           if (user.group !== navId) fail('只有本回合首席領航者或講師可拍板最終方案', 403);
+          const targetGroup = state.groups[user.group - 1];
+          if (targetGroup.representative && targetGroup.representative !== user.id) {
+            fail('請由領航組的本組代表按下拍板按鈕', 403);
+          }
           if (!['A', 'B', 'C', 'D'].includes(body.choice)) fail('請選擇方案', 400);
           if (!state.finalDecisions) state.finalDecisions = [null, null, null, null];
           state.finalDecisions[state.round] = body.choice;
