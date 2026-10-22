@@ -551,13 +551,21 @@ export default async function handler(req, res) {
         state.deadline = null;
         state.remaining = null;
       } else if (action === 'next') {
-        if (state.phase !== 'revealed') fail('請先揭曉本回合', 409);
+        if (state.phase !== 'revealed' && !body?.force) fail('請先揭曉本回合', 409);
         state.pitch = null;
         if (state.round === 3) state.phase = 'finished';
         else {
           state.round++;
           state.phase = 'ready';
         }
+      } else if (action === 'jump') {
+        const target = Number(body.roundIndex);
+        if (!Number.isInteger(target) || target < 0 || target > 3) fail('無效的回合', 400);
+        state.round = target;
+        state.phase = 'ready';
+        state.pitch = null;
+        state.deadline = null;
+        state.remaining = null;
       } else if (action === 'representative') {
         const member = Object.values(state.participants).find(p => p.id === body.memberId && p.expires > Date.now());
         if (!member) fail('找不到此成員');

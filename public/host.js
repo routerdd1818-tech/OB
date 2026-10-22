@@ -112,6 +112,9 @@ function render() {
       <span class="control-note">
         ${revealed ? '每一個決策，都是一次跨文化理解的練習。' : state.phase === 'voting' ? '第 1～5 組研討初投、60 秒辯論配點、首席領航者拍板最終答案！' : '邀請學員掃碼加入，5 組皆為戰略決策組。'}
       </span>
+      ${state.roundIndex < 3 && !revealed ? `
+        <button class="button quiet" data-host-action="skip-next" type="button" title="直接跳轉至下一回合">跳下一回合 ⏭</button>
+      ` : ''}
       ${state.phase === 'finished' ? `
         <button class="button secondary" id="finish-manage">課堂管理</button>
       ` : `
@@ -125,6 +128,14 @@ function render() {
   document.body.append(controls);
 
   document.querySelectorAll('[data-host-action]').forEach(el => el.addEventListener('click', () => hostAction(el.dataset.hostAction)));
+  document.querySelectorAll('[data-nav-step]').forEach(el => {
+    el.style.cursor = 'pointer';
+    el.onclick = () => {
+      const target = Number(el.dataset.navStep);
+      if (target === state.roundIndex) return;
+      hostAction('jump', { roundIndex: target });
+    };
+  });
   $('#finish-manage')?.addEventListener('click', openManage);
   document.querySelectorAll('[data-review]').forEach(el => el.addEventListener('click', () => { selectedReview = el.dataset.review; renderReview(); }));
   document.querySelectorAll('[data-pitch-group]').forEach(btn => btn.addEventListener('click', async () => {
@@ -182,97 +193,92 @@ function scenarioMarkup() {
   const allVoted = state.completed >= 5;
   const now = Date.now() + (state.clockOffset || 0);
   const isPitchActive = Boolean(state.pitch && state.pitch.deadline && state.pitch.deadline > now);
+  const showQrDock = state.phase !== 'voting' || state.groups.filter(g => g.count).length < 5;
 
   const persuasionRows = (state.persuasionBoard || []).map(item => {
-    const maxPts = 12;
-    const pct = Math.min(100, Math.round((item.totalPoints / maxPts) * 100));
+    const pct = Math.min(100, Math.round((item.totalPoints / 12) * 100));
     return `
       <div class="persuasion-row ${item.isNavigator ? 'is-leading' : ''}">
         <div class="persuasion-row-head">
-          <span>${item.isNavigator ? '<span class="lead-crown">👑</span>' : ''}第 ${item.id} 組 (${item.voterCount} 組認同)</span>
+          <span>${item.isNavigator ? '<span class="lead-crown">👑</span>' : ''}第 ${item.id} 組 <small class="muted">(${item.voterCount}組認同)</small></span>
           <strong>${item.totalPoints} <small>點</small></strong>
         </div>
-        <div class="mana-progress-track">
-          <div class="mana-progress-fill" style="width:${pct}%;"></div>
-        </div>
+        <div class="mana-progress-track"><div class="mana-progress-fill" style="width:${pct}%;"></div></div>
       </div>
     `;
   }).join('');
 
   return `
     <div class="voting-stage-grid">
-      <!-- Left Column: JRPG Stage Dialogue Box & Bust -->
+      <!-- 左欄：JRPG 沉浸式主舞台 -->
       <div class="voting-left-col">
         ${leftStageHtml}
       </div>
 
-      <!-- Right Column: Interactive 3-Act Control Panel -->
+      <!-- 右欄：戰術指揮面板（依階段自動收合） -->
       <div class="voting-right-col">
-        ${renderQrJoinDock(resolveJoinUrl(), state.groups.reduce((n, g) => n + (g.count || 0), 0), state.groups.filter(g => g.count).length)}
-        <!-- 1. Real-time Initial Vote Progress -->
+        ${showQrDock ? renderQrJoinDock(resolveJoinUrl(), state.groups.reduce((n, g) => n + (g.count || 0), 0), state.groups.filter(g => g.count).length) : ''}
+
+        <!-- ACT 1：初投定錨狀態（全部投完後自動變緊湊橫條） -->
         <section class="progress-card card" aria-label="全班初投進度">
           <div class="progress-intro">
             <div>
-              <h2>初投定錨進度（全班 5 組）</h2>
-              <p>${state.phase === 'voting' ? (allVoted ? '5 組已全數鎖定初投 · 進入跨立場辯論' : '各組研討初投提交中…') : '學員加入後即可開始'}</p>
+              <span class="eyebrow">ACT I · ANCHORING</span>
+              <h2>初投定錨進度</h2>
             </div>
             <div class="stat-number">${state.completed}<small>/ 5 組</small></div>
           </div>
           <div class="progress-chips-row">
             ${state.groups.map(g => `
               <div class="progress-chip ${g.submitted ? 'is-done done' : g.count ? 'is-active' : ''}">
-                <span class="chip-dot" aria-hidden="true"></span>
-                <span class="chip-name">第 ${g.id} 組</span>
-                <span class="chip-status">${g.submitted ? '已鎖定' : g.count ? '研討中' : '未加入'}</span>
-                ${g.cascade ? `<small class="cascade-mini">(${esc(g.cascade.badge)})</small>` : ''}
+                <span class="chip-dot"></span>
+                <span class="chip-name">G${g.id}</span>
+                <span class="chip-status">${g.submitted ? '鎖定' : g.count ? '研討' : '待命'}</span>
               </div>
             `).join('')}
           </div>
         </section>
 
-        <!-- 2. Persuasion Live Board & 60s Debate Timer -->
-        <div class="card pitch-timer-card ${isPitchActive ? 'is-active' : ''}">
-          <div class="pitch-timer-head">
-            <div>
-              <span class="eyebrow">PERSUASION & 60s DEBATE</span>
-              <h2>5 點說服點數即時戰況榜</h2>
-              <span class="pitch-status-note ${isPitchActive ? 'active-note' : ''}">
-                ${state.chiefNavigator ? `當前首席領航者：👑 第 ${state.chiefNavigator} 組` : '跨立場辯論中 · 每組分配 5 點（單組上限 3 點）'}
-              </span>
+        <!-- ACT 2：60秒跨立場辯論 ＆ 說服點數戰況榜 -->
+        <div class="card pitch-timer-card ${isPitchActive ? 'is-active' : ''}" style="flex:1; display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <div class="pitch-timer-head">
+              <div>
+                <span class="eyebrow">ACT II · 60s DEBATE & PERSUASION</span>
+                <h2 style="margin:2px 0;">說服點數即時戰況榜</h2>
+              </div>
+              <div class="pitch-clock-display">
+                <span class="pitch-clock mono" data-pitch-clock>01:00</span>
+              </div>
             </div>
-            <div class="pitch-clock-display">
-              <span class="pitch-clock mono" data-pitch-clock>01:00</span>
+            <div class="persuasion-live-board">
+              ${persuasionRows || '<div class="muted" style="padding:12px 0; text-align:center;">等待各組初投後配發說服點數（每組 5 點）…</div>'}
             </div>
           </div>
-          <div class="persuasion-live-board">
-            ${persuasionRows || '<div class="muted" style="padding:10px; font-size:12px;">尚無組別送出說服點數</div>'}
-          </div>
-          <div class="pitch-actions-grid" style="margin-top:10px;">
-            ${[1, 2, 3, 4, 5].map(gid => `<button type="button" class="pitch-btn ${state.pitch?.group === gid || state.pitch?.group === String(gid) ? 'active' : ''}" data-pitch-group="${gid}">第 ${gid} 組 60s</button>`).join('')}
-            <button type="button" class="pitch-btn pitch-all-btn ${state.pitch?.group === 'all' ? 'active' : ''}" data-pitch-group="all">全班 60s 辯論</button>
-            <button type="button" class="pitch-btn pitch-stop-btn" data-pitch-group="stop">結束辯論</button>
+          <div class="pitch-actions-grid" style="margin-top:10px; grid-template-columns: repeat(4, 1fr);">
+            ${[1, 2, 3, 4, 5].map(gid => `<button type="button" class="pitch-btn ${String(state.pitch?.group) === String(gid) ? 'active' : ''}" data-pitch-group="${gid}">G${gid} 申辯</button>`).join('')}
+            <button type="button" class="pitch-btn pitch-all-btn ${state.pitch?.group === 'all' ? 'active' : ''}" data-pitch-group="all" style="grid-column: span 2;">🔥 全班 60s 激辯</button>
+            <button type="button" class="pitch-btn pitch-stop-btn" data-pitch-group="stop">⏹ 停止</button>
           </div>
         </div>
 
-        <!-- 3. Chief Navigator Final Decision Status Panel -->
-        <div class="card navigator-final-panel" style="margin-top:10px;">
-          <div class="eyebrow">CHIEF NAVIGATOR'S CALL</div>
-          <div style="margin-top:6px;">
+        <!-- ACT 3：首席領航者最終拍板 -->
+        <div class="card navigator-final-panel" style="margin:0; padding:12px 16px;">
+          <div class="eyebrow">ACT III · CHIEF NAVIGATOR'S CALL</div>
+          <div style="margin-top:4px;">
             ${state.chiefNavigator ? (
               state.hasFinalDecision ? `
-                <div style="background:#fefce8; border:1.5px solid #eab308; border-radius:10px; padding:12px 14px; color:#78350f;">
-                  <strong>👑 第 ${state.chiefNavigator} 組（首席領航者）已拍板全班最終策略 ✓</strong>
-                  <p style="margin:4px 0 0; font-size:12px; color:#92400e;">揭曉時將公開方案與領航救援成果</p>
+                <div style="color:#4ade80; font-weight:700; font-size:14px;">
+                  👑 第 ${state.chiefNavigator} 組（首席領航者）已拍板全班最終策略 ✓
                 </div>
               ` : `
-                <div style="background:#fffbeb; border:1.5px dashed #f59e0b; border-radius:10px; padding:12px 14px; color:#92400e;">
-                  <strong>👑 第 ${state.chiefNavigator} 組（首席領航者）正在研讀【極密情報】並代表全班拍板…</strong>
-                  <p style="margin:4px 0 0; font-size:12px; color:#b45309;">該組手機端已解鎖內幕檔案，請口頭向全班說明後直接拍板！</p>
+                <div style="color:#facc15; font-weight:700; font-size:14px;">
+                  👑 第 ${state.chiefNavigator} 組正在研讀《極密情報》並代表全班拍板…
                 </div>
               `
             ) : `
-              <div style="background:#f8fafc; border:1px dashed var(--line); border-radius:10px; padding:12px 14px; color:var(--muted); font-size:13px;">
-                等待說服點數選出首席領航者 · 隨後解鎖極密情報並拍板全班答案
+              <div class="muted" style="font-size:12.5px;">
+                最高說服點數組別將晉升【👑 首席領航者】，解鎖極密情報並拍板全班答案
               </div>
             `}
           </div>
@@ -428,17 +434,6 @@ function resultsMarkup() {
           `).join('')}
         </div>
         <div id="review-content" role="tabpanel" aria-live="polite"></div>
-
-        ${state.hiddenIntel ? `
-          <div class="classified-intel-box" style="margin-top: 14px;">
-            <div class="classified-stamp">已公開解密</div>
-            <div class="classified-header">
-              <h4 class="classified-title">${esc(state.hiddenIntel.title)}</h4>
-              <p class="classified-subtitle">首度向全班公開之內部機密關鍵情報</p>
-            </div>
-            <div class="classified-body">${esc(state.hiddenIntel.text)}</div>
-          </div>
-        ` : ''}
       </section>
     </div>
   `;
@@ -469,11 +464,62 @@ function renderReview() {
       <div class="eyebrow">BEYOND THE WORDS · 深層文化盲點</div>
       <p class="review-copy">${esc(r.blindspot)}</p>
     </div>
+    ${state.hiddenIntel ? `
+      <div class="classified-intel-box" style="margin-top: 16px;">
+        <div class="classified-stamp">已公開解密</div>
+        <div class="classified-header">
+          <h4 class="classified-title">${esc(state.hiddenIntel.title)}</h4>
+          <p class="classified-subtitle">首度向全班公開之內部機密關鍵情報</p>
+        </div>
+        <div class="classified-body">${esc(state.hiddenIntel.text)}</div>
+      </div>
+    ` : ''}
   `;
 }
 
 async function hostAction(action, extra = {}) {
   if (busy) return;
+  if (action === 'skip-next') {
+    if (!await ask('跳至下一回合', '確定要直接跳轉至下一回合嗎？', '確認跳轉')) return;
+    busy = true;
+    document.querySelectorAll('[data-host-action]').forEach(el => el.disabled = true);
+    try {
+      const target = Math.min(3, state.roundIndex + 1);
+      await api('jump', { roundIndex: target }, 'host');
+      await api('start', {}, 'host').catch(() => {});
+      broadcastSync('host_action', { action: 'jump', roundIndex: target });
+      lastSignature = '';
+      await refresh();
+      toast(`已切換至第 ${target + 1} 回合研討 ✓`);
+    } catch (e) {
+      toast(e.message);
+      await refresh();
+    } finally {
+      busy = false;
+      document.querySelectorAll('[data-host-action]').forEach(el => el.disabled = false);
+    }
+    return;
+  }
+  if (action === 'jump') {
+    if (!await ask('切換回合', `確定要直接切換至第 ${extra.roundIndex + 1} 回合嗎？`, '立即切換')) return;
+    busy = true;
+    document.querySelectorAll('[data-host-action]').forEach(el => el.disabled = true);
+    try {
+      await api('jump', { roundIndex: extra.roundIndex }, 'host');
+      await api('start', {}, 'host').catch(() => {});
+      broadcastSync('host_action', { action: 'jump', roundIndex: extra.roundIndex });
+      lastSignature = '';
+      await refresh();
+      toast(`已切換至第 ${extra.roundIndex + 1} 回合研討 ✓`);
+    } catch (e) {
+      toast(e.message);
+      await refresh();
+    } finally {
+      busy = false;
+      document.querySelectorAll('[data-host-action]').forEach(el => el.disabled = false);
+    }
+    return;
+  }
   if (action === 'next') {
     busy = true;
     document.querySelectorAll('[data-host-action]').forEach(el => el.disabled = true);

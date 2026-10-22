@@ -60,6 +60,11 @@ function updateChoiceUI() {
 }
 
 function render() {
+  if (!state?.member) {
+    if (!gate.open) gate.showModal();
+    $('#app').innerHTML = '<div class="loading">請先填寫姓名與組別入席…</div>';
+    return;
+  }
   const r = state.round;
   const member = state.member;
   const revealed = ['revealed', 'finished'].includes(state.phase);
@@ -214,13 +219,11 @@ function votingMarkup() {
   const myGroup = state.member.group;
   const isNav = state.chiefNavigator === myGroup;
   const remaining = getRemainingPoints();
-
-  // Other 4 groups for persuasion
   const otherGroups = [1, 2, 3, 4, 5].filter(g => g !== myGroup);
 
   return `
     <div class="mobile-timer">
-      <span class="timer-label" data-debate>${state.roundIndex === 3 ? '三方終極協商' : '小組研討時間'}</span>
+      <span class="timer-label" data-debate="${state.roundIndex === 3 ? '⚔️ 三方終極協商' : '⏱️ 小組戰術研討'}"></span>
       <span class="clock" data-clock>--:--</span>
     </div>
 
@@ -230,111 +233,112 @@ function votingMarkup() {
           <span class="cascade-badge">${esc(c.badge)}</span>
           <strong>${esc(c.title)}</strong>
         </div>
-        <p class="cascade-effect">${esc(c.effectText)}</p>
-        ${c.hint ? `<div class="cascade-intel-box">${esc(c.hint)}</div>` : ''}
+        <p class="cascade-effect">${esc(c.effectText)}</p>${c.hint ? `<div class="cascade-intel-box">${esc(c.hint)}</div>` : ''}
       </div>
     ` : ''}
 
-    <!-- Section 1: Initial Vote Options -->
-    <section class="card" style="margin-bottom: 14px;">
-      <div class="eyebrow">STEP 1 · INITIAL ANCHORING VOTE</div>
-      <h2 style="font-size:16px; margin:2px 0 8px;">階段一：各組即時初投（定錨立場）</h2>
-      <p style="font-size:12.5px; color:var(--muted); margin-bottom:12px;">
-        ${hasVoted ? '✓ 本組已完成初投定錨！請繼續進行階段二「說服點數分配」。' : '請與同組夥伴研討，選出本組初投方案。'}
-      </p>
+    <!-- 階段一：完成初投後自動折疊為緊湊狀態列，不再佔用手機螢幕 -->
+    ${!hasVoted ? `
+      <section class="card" style="margin-bottom: 14px; padding: 18px;">
+        <div class="eyebrow">MISSION STEP 1 · ANCHORING</div>
+        <h2 style="font-size:17px; margin:4px 0 6px;">階段一：選擇本組初投方案</h2>
+        <p class="muted" style="font-size:12.5px; margin-bottom:14px;">
+          請與同組夥伴討論，鎖定你們的初步決策立場。
+        </p>
 
-      <div class="options-list" role="radiogroup" aria-label="本組初投方案">
-        ${state.round.options.map(o => `
-          <button type="button" class="option-card ${hasVoted ? 'locked' : ''}" role="radio" aria-checked="${selection === o.id}" data-choice="${o.id}" ${hasVoted ? 'disabled' : ''}>
-            <span class="letter">${o.id}</span>
-            <span>
-              <strong>${esc(o.title)}</strong>
-              <p>${esc(o.text)}</p>
-            </span>
-          </button>
-        `).join('')}
-      </div>
-
-      ${state.roundIndex === 3 ? `
-        <div class="debate-card" style="margin-top:12px; padding:12px; background:#f8fafc; border-radius:10px;">
-          <div class="eyebrow">三方協商表態</div>
-          <p class="muted" style="font-size:12px; margin-bottom:8px;">${hasVoted ? '本組三方協商表態已確認鎖定。' : '任一方拒絕即為未達成協議（破局）。'}</p>
-          ${['總部代表', '東京代表', '客戶代表'].map((name, i) => `
-            <div class="consensus-row">
-              <span>${name}</span>
-              <div class="consensus-options">
-                <button type="button" data-consensus="${i}" data-value="true" aria-pressed="${consensus[i] === true}" ${hasVoted ? 'disabled' : ''}>同意</button>
-                <button type="button" class="refuse" data-consensus="${i}" data-value="false" aria-pressed="${consensus[i] === false}" ${hasVoted ? 'disabled' : ''}>拒絕</button>
-              </div>
-            </div>
+        <div class="options-list" role="radiogroup" aria-label="本組初投方案">
+          ${state.round.options.map(o => `
+            <button type="button" class="option-card" role="radio" aria-checked="${selection === o.id}" data-choice="${o.id}">
+              <span class="letter">${o.id}</span>
+              <span>
+                <strong>${esc(o.title)}</strong>
+                <p>${esc(o.text)}</p>
+              </span>
+            </button>
           `).join('')}
         </div>
-      ` : ''}
-    </section>
 
-    <!-- Section 2: 5 Persuasion Points Allocator Card -->
-    <section class="point-allocator-card card" style="margin-bottom: 14px;">
-      <div class="eyebrow">STEP 2 · 5-POINT PERSUASION DISTRIBUTION</div>
-      <h2 style="font-size:16px; margin:2px 0 4px;">階段二：5 點說服點數分配</h2>
-      <p style="font-size:12.5px; color:var(--muted); margin-bottom:10px;">
-        聆聽辯論交鋒，將 5 點分配給最令人信服的其他組別（禁投本組，單組上限 3 點）。
-      </p>
+        ${state.roundIndex === 3 ? `
+          <div class="debate-card" style="margin-top:14px; padding:12px; border:1px solid var(--line); border-radius:12px;">
+            <div class="eyebrow">三方協商表態（任一方拒絕即破局）</div>
+            ${['總部代表', '東京代表', '客戶代表'].map((name, i) => `
+              <div class="consensus-row">
+                <span>${name}</span>
+                <div class="consensus-options">
+                  <button type="button" data-consensus="${i}" data-value="true" aria-pressed="${consensus[i] === true}">同意</button>
+                  <button type="button" class="refuse" data-consensus="${i}" data-value="false" aria-pressed="${consensus[i] === false}">拒絕</button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+      </section>
 
-      <div class="points-counter">
-        <span>剩餘待配發點數</span>
-        <span class="counter-number" id="remaining-pts-count">${remaining} / 5 點</span>
+      <div class="card" style="padding:14px 16px; text-align:center; opacity:0.65; border-style:dashed;">
+        <small>🔒 鎖定本組初投後，將自動解鎖【階段二：跨組說服配點】與【階段三：極密情報】</small>
+      </div>
+    ` : `
+      <!-- 已完成初投：濃縮成一行徽章，把畫面讓給階段二與階段三 -->
+      <div class="card" style="padding:12px 16px; margin-bottom:14px; display:flex; justify-content:space-between; align-items:center; border-left:4px solid #10b981 !important;">
+        <span style="font-size:13px; font-weight:700;">✓ 階段一初投已定錨</span>
+        <span class="pill positive">方案 ${state.vote.choice}</span>
       </div>
 
-      <div class="alloc-groups-list">
-        ${otherGroups.map(gid => {
-          const pts = Number(pointsAllocated[gid]) || 0;
-          return `
-            <div class="alloc-group-row" data-alloc-group="${gid}">
-              <div class="alloc-group-label">
-                <span class="alloc-group-name">第 ${gid} 組</span>
-                <span class="alloc-group-choice">戰略決策組</span>
+      <!-- 階段二：5 點說服點數分配 -->
+      <section class="point-allocator-card card" style="margin-bottom: 14px;">
+        <div class="eyebrow">MISSION STEP 2 · PERSUASION</div>
+        <h2 style="font-size:16px; margin:2px 0 4px;">階段二：分配 5 點說服點數</h2>
+        <p class="muted" style="font-size:12.5px; margin-bottom:10px;">
+          聆聽各組 60 秒申辯，將點數投給最令人信服的他組（單組上限 3 點）。
+        </p>
+
+        <div class="points-counter">
+          <span>可用說服點數</span>
+          <span class="counter-number" id="remaining-pts-count">${remaining} / 5 點</span>
+        </div>
+
+        <div class="alloc-groups-list">
+          ${otherGroups.map(gid => {
+            const pts = Number(pointsAllocated[gid]) || 0;
+            return `
+              <div class="alloc-group-row" data-alloc-group="${gid}">
+                <div class="alloc-group-label">
+                  <span class="alloc-group-name">第 ${gid} 組</span>
+                  <span class="alloc-group-choice">戰略決策組</span>
+                </div>
+                <div class="alloc-controls">
+                  <button type="button" class="alloc-btn minus" data-alloc-btn="minus" data-group="${gid}" ${pts <= 0 ? 'disabled' : ''}>−</button>
+                  <span class="alloc-value">${pts}</span>
+                  <button type="button" class="alloc-btn plus" data-alloc-btn="plus" data-group="${gid}" ${remaining <= 0 || pts >= 3 ? 'disabled' : ''}>+</button>
+                </div>
               </div>
-              <div class="alloc-controls">
-                <button type="button" class="alloc-btn minus" data-alloc-btn="minus" data-group="${gid}" aria-label="減少第 ${gid} 組點數" ${pts <= 0 ? 'disabled' : ''}>−</button>
-                <span class="alloc-value">${pts}</span>
-                <button type="button" class="alloc-btn plus" data-alloc-btn="plus" data-group="${gid}" aria-label="增加第 ${gid} 組點數" ${remaining <= 0 || pts >= 3 ? 'disabled' : ''}>+</button>
-              </div>
+            `;
+          }).join('')}
+        </div>
+
+        <button type="button" id="submit-persuasion" class="button primary submit-persuasion-btn" ${5 - remaining < 1 ? 'disabled' : ''}>
+          送出說服點數分配 ↗
+        </button>
+      </section>
+
+      <!-- 階段三：首席領航者極密情報與拍板 -->
+      <section class="navigator-intel-card card" style="margin-bottom: 24px;">
+        <div class="eyebrow">MISSION STEP 3 · FINAL CALL</div>
+        <h2 style="font-size:16px; margin:2px 0 8px;">階段三：首席領航者 ＆ 極密檔案</h2>
+        ${isNav ? `
+          <div class="classified-intel-box">
+            <div class="classified-stamp">TOP SECRET</div>
+            <div class="classified-header">
+              <h3 class="classified-title">👑 首席領航專屬極密情報</h3>
+              <p class="classified-subtitle">貴組獲得最高說服認同！請向全班口頭分享此內幕，並拍板全班最終決策：</p>
             </div>
-          `;
-        }).join('')}
-      </div>
-
-      <button type="button" id="submit-persuasion" class="button primary submit-persuasion-btn" ${5 - remaining < 1 || 5 - remaining > 5 ? 'disabled' : ''}>
-        送出說服點數分配 ↗
-      </button>
-    </section>
-
-    <!-- Section 3: Chief Navigator Classified Intel & Final Decision -->
-    <section class="navigator-intel-card card" style="margin-bottom: 24px;">
-      <div class="eyebrow">STEP 3 · CHIEF NAVIGATOR & CLASSIFIED INTEL</div>
-      <h2 style="font-size:16px; margin:2px 0 8px;">階段三：首席領航者 ＆ 極密內幕情報</h2>
-
-      ${isNav ? `
-        <div class="classified-intel-box">
-          <div class="classified-stamp">TOP SECRET 極密檔案</div>
-          <div class="classified-header">
-            <h3 class="classified-title">
-              <span>👑 首席領航專屬情報</span>
-            </h3>
-            <p class="classified-subtitle">
-              貴組榮獲最高說服點數！這是未向全班公開的深層內幕，請向全班口頭分享你的推理，並拍板代表全班的「最終策略」！
-            </p>
-          </div>
-          <div class="classified-body">
-            <strong>${esc(state.hiddenIntel?.title || '《極密情報檔案》')}</strong>
-            <p style="margin:6px 0 0; line-height:1.7;">${esc(state.hiddenIntel?.text || '正在加載極密檔案…')}</p>
-          </div>
-
-          <div style="margin-top: 14px;">
-            <strong style="color:#78350f; font-size:13.5px;">👑 請首席領航者代表全班拍板最終方案：</strong>
+            <div class="classified-body">
+              <strong>${esc(state.hiddenIntel?.title || '《極密情報檔案》')}</strong>
+              <p style="margin:6px 0 0;">${esc(state.hiddenIntel?.text || '正在解密檔案…')}</p>
+            </div>
             ${state.hasFinalDecision ? `
-              <div style="margin-top:8px; background:#dcfce7; border:1.5px solid #86efac; border-radius:10px; padding:12px; color:#15803d; font-weight:700; text-align:center;">
-                ✓ 貴組已拍板全班最終策略：方案 ${state.finalDecision}
+              <div style="background:#dcfce7; border:1.5px solid #86efac; border-radius:10px; padding:12px; color:#15803d; font-weight:700; text-align:center;">
+                ✓ 已拍板全班最終策略：方案 ${state.finalDecision}
               </div>
             ` : `
               <div class="navigator-decision-grid">
@@ -347,21 +351,16 @@ function votingMarkup() {
               </div>
             `}
           </div>
-        </div>
-      ` : `
-        <div style="background:#f8fafc; border:1.5px dashed var(--line); border-radius:14px; padding:16px; text-align:center;">
-          <strong style="color:var(--ink); font-size:14.5px;">
-            ${state.chiefNavigator ? `👑 本輪首席領航者：第 ${state.chiefNavigator} 組` : '等待說服點數統計出【首席領航者】…'}
-          </strong>
-          <p style="font-size:12.5px; color:var(--muted); margin:6px 0 0; line-height:1.6;">
-            ${state.chiefNavigator
-              ? `第 ${state.chiefNavigator} 組已獨家解鎖《極密內幕情報》，請聆聽其分析並等待其代表全班拍板最終答案！`
-              : '請在階段二積極分配說服點數，助最信服的組別榮登首席領航者！'
-            }
-          </p>
-        </div>
-      `}
-    </section>
+        ` : `
+          <div style="border:1px dashed var(--line); border-radius:12px; padding:14px; text-align:center;">
+            <strong>${state.chiefNavigator ? `👑 本輪首席領航者：第 ${state.chiefNavigator} 組` : '等待說服點數選出【👑 首席領航者】…'}</strong>
+            <p class="muted" style="font-size:12px; margin:4px 0 0;">
+              ${state.chiefNavigator ? `請聆聽第 ${state.chiefNavigator} 組分享獨家解鎖的《極密內幕情報》並拍板最終決策！` : '送出階段二點數後，最高分組別將解鎖極密情報！'}
+            </p>
+          </div>
+        `}
+      </section>
+    `}
   `;
 }
 
@@ -540,6 +539,11 @@ async function refresh() {
     state = next;
     online = true;
     status(true);
+    if (!state.member) {
+      if (!gate.open) gate.showModal();
+      $('#app').innerHTML = '<div class="loading">請先填寫姓名與組別入席…</div>';
+      return;
+    }
     if (signature !== lastSignature) {
       lastSignature = signature;
       render();

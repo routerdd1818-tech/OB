@@ -355,3 +355,22 @@ test('branchingContext dynamically switches in publicRound based on worldState',
     assert.ok(prGood.speaker);
   }
 });
+
+test('host can jump directly to any round and force next without reveal', async () => {
+  const jumpRes = await host('jump', { roundIndex: 2 });
+  assert.equal(jumpRes.status, 200);
+  let state = (await host()).data;
+  assert.equal(state.roundIndex, 2);
+  assert.equal(state.phase, 'ready');
+
+  // Can force next even when unrevealed
+  const forceRes = await host('next', { force: true });
+  assert.equal(forceRes.status, 200);
+  state = (await host()).data;
+  assert.equal(state.roundIndex, 3);
+
+  // Jump back to 0
+  await host('jump', { roundIndex: 0 });
+  state = (await host()).data;
+  assert.equal(state.roundIndex, 0);
+});

@@ -3515,6 +3515,70 @@ body.clean-stage .host-main {
   }
 }
 
+/* ==========================================================================
+   沉浸式深色戰情室主題 (Dark Tactical RPG Theme) & 100vh 空間修復
+   ========================================================================== */
+:root {
+  --bg: #070b14;
+  --oat: #111827;
+  --ink: #f8fafc;
+  --muted: #94a3b8;
+  --faint: #64748b;
+  --line: rgba(148, 163, 184, 0.16);
+  --shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+}
+
+body.host, body.participant {
+  background: radial-gradient(circle at 50% 0%, #111c35 0%, #070b14 75%);
+  color: var(--ink);
+}
+
+/* 卡片統一改為深色毛玻璃 HUD */
+.card, .pitch-timer-card, .point-allocator-card, .score-breakdown-card, .host-board-row {
+  background: rgba(15, 23, 42, 0.82) !important;
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(56, 189, 248, 0.18) !important;
+  color: #f8fafc !important;
+}
+
+.host-top, .mobile-top, .host-controls, .mobile-action, .cq-strip, .mobile-identity {
+  background: rgba(7, 11, 20, 0.88) !important;
+  border-color: rgba(148, 163, 184, 0.15) !important;
+}
+
+/* 1. 隱藏佔空間的「四回合進度球」，改由頂部 HUD 呈現，瞬間省下 50px 高度 */
+.host-main > .round-nav,
+.mobile-main > .round-nav {
+  display: none !important;
+}
+
+/* 2. 壓縮頂部 HUD 與 CQ 血條高度，讓主舞台放大 */
+@media (min-width: 1024px) {
+  .host-top { height: 54px !important; }
+  .world-state-hud { padding: 6px 14px !important; margin-bottom: 6px !important; }
+  .cq-strip { margin-bottom: 6px !important; gap: 8px !important; }
+  .cq-group { padding: 6px 12px !important; border-radius: 12px !important; }
+  .cq-value { font-size: 19px !important; }
+  .health-track { margin-top: 6px !important; }
+
+  /* 3. 修復左側 JRPG 舞台與對話框被切掉的問題：改為彈性比例分配 */
+  .voting-left-col .rpg-stage-card {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  .voting-left-col .rpg-stage-top {
+    flex: 1 1 auto !important;
+    height: auto !important;
+    min-height: 220px;
+  }
+  .voting-left-col .rpg-dialogue-wrap {
+    flex: 0 0 auto;
+    margin-top: -20px;
+  }
+}
+
 
 
 
