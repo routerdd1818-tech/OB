@@ -58,32 +58,33 @@ function render() {
 
   const hudHtml = renderWorldStateHud(state.worldState || {});
 
+  const sortedByScore = state.groups.slice().sort((a, b) => (b.cq ?? 0) - (a.cq ?? 0));
+  const kingGid = (sortedByScore[0]?.cq ?? 0) > 0 ? sortedByScore[0]?.id : null;
+
   const cqStripHtml = state.groups.map(g => {
-    const cq = g.cq ?? 100;
+    const pts = g.cq ?? 0;
     const res = state.results?.[g.id];
     const delta = res?.actualDelta;
-    const isNav = state.chiefNavigator === g.id;
-    const navBadge = isNav ? '<span class="navigator-crown-pill">👑 首席領航者</span>' : '';
-    const cqClass = cq < 50 ? 'critical' : cq < 75 ? 'low' : '';
-    const animClass = animate && delta !== undefined ? (delta < 0 ? 'cq-damage-shake' : delta > 0 ? 'cq-heal-glow' : '') : '';
-    const cascadePill = !revealed && g.cascade ? `<span class="host-cascade-pill ${g.cascade.type === 'buff' ? 'is-buff' : 'is-penalty'}">${esc(g.cascade.badge)}</span>` : '';
-    return `<div class="cq-group card ${isNav ? 'is-navigator' : ''} ${animClass}">
+    const isKing = g.id === kingGid;
+    const kingBadge = isKing ? '<span class="navigator-crown-pill" style="background:#fef3c7; color:#b45309; border:1px solid #f59e0b;">👑 文化王</span>' : '';
+    const animClass = animate && delta !== undefined ? (delta > 0 ? 'cq-heal-glow' : '') : '';
+    return `<div class="cq-group card ${isKing ? 'is-navigator' : ''} ${animClass}">
       <div class="cq-group-head">
-        <span class="group-label">第 ${g.id} 組 ${navBadge}${cascadePill}</span>
-        <div class="cq-value">${cq}<small>CQ</small></div>
+        <span class="group-label">第 ${g.id} 組 ${kingBadge}</span>
+        <div class="cq-value">${pts}<small style="font-size:11px; margin-left:3px; color:#92400e; font-weight:700;">分</small></div>
       </div>
-      <div class="health-track" role="progressbar" aria-label="第 ${g.id} 組 CQ 韌性值" aria-valuenow="${cq}" aria-valuemin="0" aria-valuemax="150">
-        <div class="health-fill ${cqClass}" style="width:${Math.min(100, Math.round((cq / 150) * 100))}%"></div>
+      <div class="health-track" role="progressbar" aria-label="第 ${g.id} 組文化積分" aria-valuenow="${pts}" aria-valuemin="0" aria-valuemax="100">
+        <div class="health-fill" style="width:${Math.min(100, Math.round((pts / 80) * 100))}%; background:#d97706;"></div>
       </div>
-      ${animate && delta !== undefined ? `<span class="cq-float ${delta < 0 ? 'loss' : ''}">${delta > 0 ? '+' : ''}${delta} CQ</span>` : ''}
+      ${animate && delta !== undefined ? `<span class="cq-float">${delta > 0 ? '+' : ''}${delta} 分</span>` : ''}
     </div>`;
   }).join('');
 
   $('#app').innerHTML = `
     ${hudHtml}
-    <section class="cq-strip" aria-label="5 組 CQ 韌性值即時監控">${cqStripHtml}</section>
+    <section class="cq-strip" aria-label="5 組文化積分即時榜">${cqStripHtml}</section>
     ${roundNav(state.roundIndex)}
-    ${state.phase === 'finished' ? '<div class="finished-banner">四回合探索完成 · 帶著理解，回到下一場真實對話。</div>' : ''}
+    ${state.phase === 'finished' ? '<div class="finished-banner">四回合探索完成 · 帶著跨文化洞察力，回到下一場真實對話。</div>' : ''}
     ${revealed ? resultsMarkup() : scenarioMarkup()}
   `;
 
@@ -222,12 +223,24 @@ function scenarioMarkup() {
     `;
   }).join('');
 
+  const sortedGroups = state.groups.slice().sort((a, b) => (b.cq ?? 0) - (a.cq ?? 0));
+  const rankedRows = sortedGroups.map((g, idx) => {
+    const isKing = idx === 0 && (g.cq ?? 0) > 0;
+    const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
+    return `
+      <div class="ck-rank-row ${isKing ? 'is-king' : ''}">
+        <span class="ck-rank-badge">${medals[idx]} 第 ${g.id} 組 ${isKing ? '👑' : ''}</span>
+        <strong class="ck-rank-score">${g.cq ?? 0} 分</strong>
+      </div>
+    `;
+  }).join('');
+
   return `
     <div class="unified-stage-container">
       <!-- 完整滿版 JRPG 舞台（含圍坐桌旁的小人、立繪與底部對話框） -->
       ${stageHtml}
 
-      <!-- 整合在畫面左上角的淺色毛玻璃戰術 HUD 狀態欄 -->
+      <!-- 整合在畫面右側的戰況邊欄，完全不遮擋左側主舞台 -->
       <aside class="integrated-hud-overlay" aria-label="課堂即時戰況與控制面板">
         <!-- 1. 緊湊型掃碼與初投進度列 -->
         <div class="hud-glass-card">
@@ -255,14 +268,14 @@ function scenarioMarkup() {
         <div class="hud-glass-card ${isPitchActive ? 'is-active-pitch' : ''}">
           <div class="hud-row-between" style="margin-bottom:6px;">
             <div>
-              <span class="eyebrow">STEP 2 · 60s 辯論與說服榜</span>
-              <div style="font-size:13.5px; font-weight:800; color:#1c1917;">說服點數即時戰況</div>
+              <span class="eyebrow">STEP 2 · 60s 申辯與 3 點說服</span>
+              <div style="font-size:13.5px; font-weight:800; color:#1c1917;">說服點數即時得點</div>
             </div>
             <span class="pitch-clock mono" data-pitch-clock style="font-size:22px; font-weight:800; color:#1c1917;">01:00</span>
           </div>
 
           <div class="persuasion-live-board">
-            ${persuasionRows || '<div style="padding:6px 0; font-size:12px; color:#57534e;">尚無組別送出說服點數</div>'}
+            ${persuasionRows || '<div style="padding:6px 0; font-size:12px; color:#57534e;">各組研討中，聽完申辯後每組可投 3 點</div>'}
           </div>
 
           <div class="pitch-actions-grid" style="margin-top:8px; grid-template-columns: repeat(4, 1fr); gap:5px;">
@@ -274,15 +287,14 @@ function scenarioMarkup() {
           </div>
         </div>
 
-        <!-- 3. 首席領航者最終拍板狀態 -->
+        <!-- 3. 誰是文化王即時榜 -->
         <div class="hud-glass-card">
-          <span class="eyebrow">STEP 3 · 首席領航者拍板</span>
-          <div style="margin-top:4px; font-size:12.5px; font-weight:700; color:#1c1917;">
-            ${state.chiefNavigator ? (
-              state.hasFinalDecision
-                ? `<span style="color:#15803d;">👑 第 ${state.chiefNavigator} 組已拍板全班最終策略 ✓</span>`
-                : `<span style="color:#b45309;">👑 第 ${state.chiefNavigator} 組正在研讀【極密情報】並拍板…</span>`
-            ) : '<span style="color:#57534e; font-weight:500;">等待說服點數最高組別解鎖【極密情報】</span>'}
+          <div class="hud-row-between" style="margin-bottom:6px;">
+            <span class="eyebrow">STEP 3 · 👑 誰是文化王即時榜</span>
+            <small style="color:#b45309; font-weight:700;">累積積分</small>
+          </div>
+          <div class="culture-king-mini-board">
+            ${rankedRows}
           </div>
         </div>
       </aside>
@@ -336,22 +348,21 @@ function resultsMarkup() {
   const reduction = current === null ? 0 : Math.round((state.round.baseline - current) * 10) / 10;
   const isGoodOutcome = state.worldState?.['r' + (state.roundIndex + 1)] === 'good';
 
+  const leaderGroup = state.groups.slice().sort((a, b) => (b.cq ?? 0) - (a.cq ?? 0))[0];
+
   return `
     <!-- 頂部極簡揭曉橫幅（合併世界狀態與張力變化，省下垂直高度） -->
-    <div class="reveal-top-strip ${isGoodOutcome ? 'is-good' : 'is-bad'}">
+    <div class="reveal-top-strip is-good">
       <div class="reveal-strip-left">
         <span class="topic-badge">ROUND ${String(state.roundIndex + 1).padStart(2, '0')} · ${r.dimension}</span>
         <strong>
-          ${isGoodOutcome
-            ? `🎉 首席領航者（第 ${state.chiefNavigator || '—'} 組）拍板成功！全員共贏 +15 CQ（失誤扣分減免 60%）`
-            : `⚠️ 首席領航者（第 ${state.chiefNavigator || '—'} 組）拍板踩雷！觸發全班共業警報（下輪研討 -30s）`
-          }
+          🏆 【誰是文化王】第 ${leaderGroup?.id || '—'} 組（累計 ${leaderGroup?.cq ?? 0} 分）領先！全員透過跨文化觀點交流累積智慧
         </strong>
       </div>
       <div class="reveal-strip-right">
-        <span>張力 <strong>${r.baseline}% → ${current ?? r.baseline}%</strong></span>
-        <span class="pill ${reduction > 0 ? 'positive' : 'negative'}">
-          ${reduction > 0 ? `↓ 降 ${reduction}%` : reduction < 0 ? `↑ 升 ${Math.abs(reduction)}%` : '持平'}
+        <span>全班對齊：<strong>方案 ${state.finalDecision || '—'}</strong></span>
+        <span class="pill positive">
+          ${isGoodOutcome ? '🎯 命中文化地圖最佳實踐' : '💡 多元觀點碰撞覆盤中'}
         </span>
       </div>
     </div>
@@ -367,30 +378,31 @@ function resultsMarkup() {
 
         <section class="card side-scoreboard-card">
           <div class="side-score-head">
-            <h2>5 組決策與救援結算</h2>
-            <span>全班拍板：<strong>方案 ${state.finalDecision || '—'}</strong></span>
+            <h2>👑 誰是文化王 · 本輪排行榜</h2>
+            <span>四方共識：<strong>方案 ${state.finalDecision || '—'}</strong></span>
           </div>
           <div class="compact-score-list">
-            ${state.groups.map(g => {
+            ${state.groups.slice().sort((a, b) => (b.cq ?? 0) - (a.cq ?? 0)).map((g, idx) => {
               const res = state.results?.[g.id];
-              const isNav = g.id === state.chiefNavigator;
               const delta = res?.actualDelta ?? 0;
+              const isKing = idx === 0 && (g.cq ?? 0) > 0;
+              const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
               return `
-                <div class="compact-score-row ${isNav ? 'is-nav' : ''}">
+                <div class="compact-score-row ${isKing ? 'is-nav' : ''}">
                   <div class="c-group">
+                    <span style="font-size:14px; margin-right:4px;">${medals[idx]}</span>
                     <strong>第 ${g.id} 組</strong>
-                    ${isNav ? '<span class="navigator-crown-pill">👑 領航</span>' : ''}
+                    ${isKing ? '<span class="navigator-crown-pill" style="background:#fef3c7; color:#b45309; border:1px solid #f59e0b;">👑 文化王</span>' : ''}
                   </div>
                   <div class="c-badges">
-                    <span class="score-pill initial">初投 ${res?.id || '—'} (${res?.baseDelta >= 0 ? '+' : ''}${res?.baseDelta ?? 0})</span>
-                    ${res?.rescueBonus > 0 ? `<span class="score-pill rescue">救援 +${res.rescueBonus}</span>` : ''}
-                    ${res?.synergyBonus > 0 ? `<span class="score-pill synergy">共贏 +${res.synergyBonus}</span>` : ''}
+                    <span class="score-pill initial">${res?.isLiteratureOptimal ? '🎯 文獻最佳實踐 (+10)' : '初選方案 ' + (res?.id || '—') + ' (+0)'}</span>
+                    ${(res?.synergyBonus ?? 0) > 0 ? `<span class="score-pill synergy">說服 +${res.synergyBonus}</span>` : ''}
                   </div>
                   <div class="c-total">
-                    <span class="c-delta ${delta > 0 ? 'positive-text' : delta < 0 ? 'negative-text' : ''}">
-                      ${delta >= 0 ? '+' : ''}${delta}
+                    <span class="c-delta positive-text">
+                      +${delta}
                     </span>
-                    <strong class="c-cq">${g.cq} <small>CQ</small></strong>
+                    <strong class="c-cq">${g.cq ?? 0} <small>分</small></strong>
                   </div>
                 </div>
               `;

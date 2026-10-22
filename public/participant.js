@@ -51,12 +51,12 @@ gate.addEventListener('cancel', e => {
 });
 
 function getRemainingPoints() {
-  if (!state?.member) return 5;
+  if (!state?.member) return 3;
   const myGroup = state.member.group;
   const used = Object.entries(pointsAllocated)
     .filter(([k]) => Number(k) !== myGroup)
     .reduce((sum, [, pts]) => sum + (Number(pts) || 0), 0);
-  return Math.max(0, 5 - used);
+  return Math.max(0, 3 - used);
 }
 
 function updateChoiceUI() {
@@ -84,11 +84,11 @@ function updateChoiceUI() {
     submit.disabled = hasVoted || busy || !online || !isRep || !selection || (state?.roundIndex === 3 && consensus.some(x => x === null));
   }
 
-  // 更新階段二：說服點數分配 UI
+  // 更新階段二：3 點說服投票 UI
   const remaining = getRemainingPoints();
-  const totalUsed = 5 - remaining;
+  const totalUsed = 3 - remaining;
   const counterEl = $('#remaining-pts-count');
-  if (counterEl) counterEl.textContent = `${remaining} / 5 點`;
+  if (counterEl) counterEl.textContent = `${remaining} / 3 點`;
 
   document.querySelectorAll('[data-alloc-group]').forEach(row => {
     const gid = Number(row.dataset.allocGroup);
@@ -96,14 +96,14 @@ function updateChoiceUI() {
     const valEl = row.querySelector('.alloc-value');
     if (valEl) valEl.textContent = String(pts);
     const plusBtn = row.querySelector('.alloc-btn.plus');
-    if (plusBtn) plusBtn.disabled = busy || !isRep || remaining <= 0 || pts >= 3;
+    if (plusBtn) plusBtn.disabled = busy || !isRep || remaining <= 0 || pts >= 2;
     const minusBtn = row.querySelector('.alloc-btn.minus');
     if (minusBtn) minusBtn.disabled = busy || !isRep || pts <= 0;
   });
 
   const submitPersuasion = $('#submit-persuasion');
   if (submitPersuasion) {
-    submitPersuasion.disabled = busy || !online || !isRep || totalUsed < 1 || totalUsed > 5;
+    submitPersuasion.disabled = busy || !online || !isRep || totalUsed < 1 || totalUsed > 3;
   }
 }
 
@@ -158,11 +158,11 @@ function render() {
         </span>
       </div>
       <div class="mobile-health">
-        <span class="health-label">本組 CQ 韌性</span>
-        <div class="health-track" role="progressbar" aria-label="本組 CQ 韌性值" aria-valuenow="${cq}" aria-valuemin="0" aria-valuemax="150">
-          <div class="health-fill ${cqClass}" style="width:${Math.min(100, Math.round((cq / 150) * 100))}%"></div>
+        <span class="health-label">🏆 本組文化積分</span>
+        <div class="health-track" role="progressbar" aria-label="本組文化積分" aria-valuenow="${cq}" aria-valuemin="0" aria-valuemax="100">
+          <div class="health-fill" style="width:${Math.min(100, Math.round((cq / 80) * 100))}%; background:#d97706;"></div>
         </div>
-        <span class="cq-value">${cq}<small> CQ</small></span>
+        <span class="cq-value">${cq}<small> 分</small></span>
       </div>
     </div>
   `;
@@ -267,7 +267,7 @@ function render() {
     const cur = Number(pointsAllocated[gid]) || 0;
     const remaining = getRemainingPoints();
 
-    if (action === 'plus' && remaining > 0 && cur < 3) {
+    if (action === 'plus' && remaining > 0 && cur < 2) {
       pointsAllocated[gid] = cur + 1;
       updateChoiceUI();
     } else if (action === 'minus' && cur > 0) {
@@ -295,7 +295,7 @@ function votingMarkup() {
   const isRep = Boolean(state.member.isRepresentative);
   const isNav = state.chiefNavigator === myGroup;
   const remaining = getRemainingPoints();
-  const totalUsed = 5 - remaining;
+  const totalUsed = 3 - remaining;
   const otherGroups = [1, 2, 3, 4, 5].filter(g => g !== myGroup);
   const hasSubmittedPersuasion = state.myPersuasion && Object.keys(state.myPersuasion).length > 0;
 
@@ -361,22 +361,22 @@ function votingMarkup() {
       </div>
     `}
 
-    <!-- 階段二：5 點說服點數分配 -->
+    <!-- 階段二：3 點說服投票 -->
     <section class="point-allocator-card card" style="margin-bottom: 14px; ${!hasVoted ? 'opacity:0.65; pointer-events:none;' : ''}">
       <div class="eyebrow">STEP 2 · PERSUASION POINTS</div>
       <div style="display:flex; justify-content:space-between; align-items:center;">
-        <h2 style="font-size:16px; margin:2px 0 4px;">階段二：分配 5 點說服點數</h2>
+        <h2 style="font-size:16px; margin:2px 0 4px;">階段二：分配 3 點說服點數</h2>
         ${hasSubmittedPersuasion ? '<span class="pill positive" style="font-size:11px;">✓ 已送出配點</span>' : ''}
       </div>
       <p style="font-size:12.5px; color:var(--muted); margin-bottom:10px;">
         ${!hasVoted
           ? '🔒 請先完成「階段一：本組初投」，即可解鎖說服點數分配。'
-          : '聆聽各組辯論，將 5 點分配給最令人信服的其他組別（禁投本組，單組上限 3 點）。'}
+          : '聆聽各組申辯，將 3 點分配給講得最有道理的其他組別（禁投本組，單組上限 2 點）。'}
       </p>
 
       <div class="points-counter">
         <span>剩餘可分配點數</span>
-        <span class="counter-number" id="remaining-pts-count">${remaining} / 5 點</span>
+        <span class="counter-number" id="remaining-pts-count">${remaining} / 3 點</span>
       </div>
 
       <div class="alloc-groups-list">
@@ -386,24 +386,24 @@ function votingMarkup() {
             <div class="alloc-group-row" data-alloc-group="${gid}">
               <div class="alloc-group-label">
                 <span class="alloc-group-name">第 ${gid} 組</span>
-                <span class="alloc-group-choice">戰略決策組</span>
+                <span class="alloc-group-choice">決策小組</span>
               </div>
               <div class="alloc-controls">
                 <button type="button" class="alloc-btn minus" data-alloc-btn="minus" data-group="${gid}" ${!isRep || pts <= 0 ? 'disabled' : ''}>−</button>
                 <span class="alloc-value">${pts}</span>
-                <button type="button" class="alloc-btn plus" data-alloc-btn="plus" data-group="${gid}" ${!isRep || remaining <= 0 || pts >= 3 ? 'disabled' : ''}>+</button>
+                <button type="button" class="alloc-btn plus" data-alloc-btn="plus" data-group="${gid}" ${!isRep || remaining <= 0 || pts >= 2 ? 'disabled' : ''}>+</button>
               </div>
             </div>
           `;
         }).join('')}
       </div>
 
-      <button type="button" id="submit-persuasion" class="button primary submit-persuasion-btn" ${!isRep || totalUsed < 1 || totalUsed > 5 ? 'disabled' : ''}>
+      <button type="button" id="submit-persuasion" class="button primary submit-persuasion-btn" ${!isRep || totalUsed < 1 || totalUsed > 3 ? 'disabled' : ''}>
         ${!isRep
           ? '👑 等待本組代表送出配點…'
           : hasSubmittedPersuasion
             ? '✓ 已送出（點此可更新本組配點 ↗）'
-            : '👑 代表本組送出說服點數分配 ↗'}
+            : '👑 代表本組送出 3 點說服投票 ↗'}
       </button>
     </section>
 
@@ -466,74 +466,67 @@ function votingMarkup() {
 
 function resultMarkup() {
   const res = state.result || {};
-  const isGood = state.worldState?.['r' + (state.roundIndex + 1)] === 'good';
   const myGroup = state.member.group;
-  const isNav = myGroup === state.chiefNavigator;
+  const rank = res.rank ?? 1;
+  const isKing = res.isCultureKing;
+  const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
 
   return `
-    <div class="card" style="border:2px solid ${isGood ? '#16a34a' : '#dc2626'}; background:${isGood ? '#f0fdf4' : '#fef2f2'}; margin-bottom:14px; padding:14px 16px;">
-      <strong style="color:${isGood ? '#15803d' : '#b91c1c'}; font-size:15px;">
-        ${isGood
-          ? '🎉 首席領航者拍板成功！全員共贏（本組 +15 CQ）'
-          : '⚠️ 首席領航者拍板踩雷！全班共業警報啟動'
-        }
+    <div class="card" style="border:2px solid #f59e0b; background:#fef3c7; margin-bottom:14px; padding:14px 16px;">
+      <strong style="color:#92400e; font-size:15px;">
+        🏆 【誰是文化王】本輪結算公布！
       </strong>
-      <p style="margin:4px 0 0; font-size:12.5px; color:${isGood ? '#166534' : '#991b1b'}; line-height:1.5;">
-        ${isGood
-          ? '初投失誤組別負面扣分減免 60%，全班同享共贏加成！'
-          : '初投失誤組別承受全額扣分，下回合全班研討時間縮短 30 秒！'
-        }
+      <p style="margin:4px 0 0; font-size:12.5px; color:#78350f; line-height:1.5;">
+        聆聽不同視角、校準文化座標。透過文獻理論分析與同儕說服交流累積智慧！
       </p>
     </div>
 
     <section class="card" style="margin-bottom:14px; padding:16px; border:1.5px solid var(--line);">
-      <div class="eyebrow">YOUR GROUP RESULT</div>
+      <div class="eyebrow">YOUR GROUP SCORE</div>
       <h2 style="font-size:16px; margin:2px 0 10px;">
-        第 ${myGroup} 組本輪結算明細 ${isNav ? '<span class="navigator-crown-pill">👑 領航組</span>' : ''}
+        第 ${myGroup} 組本輪得分 ${isKing ? '<span class="navigator-crown-pill" style="background:#fef3c7; color:#b45309; border:1px solid #f59e0b;">👑 文化王</span>' : ''}
       </h2>
       <div style="display:flex; flex-direction:column; gap:8px;">
         <div style="display:flex; justify-content:space-between; font-size:13.5px; padding:6px 0; border-bottom:1px solid var(--line);">
-          <span>初投方案 ${esc(res.id || '—')} 基礎分</span>
-          <strong class="${res.baseDelta > 0 ? 'positive-text' : res.baseDelta < 0 ? 'negative-text' : ''}">
-            ${res.baseDelta >= 0 ? '+' : ''}${res.baseDelta ?? 0} CQ
+          <span>初選方案 ${esc(res.id || '—')}</span>
+          <strong class="${res.baseDelta > 0 ? 'positive-text' : ''}">
+            ${res.isLiteratureOptimal ? '🎯 命中最佳實踐 (+10 分)' : '探索性策略 (+0 分)'}
           </strong>
         </div>
         <div style="display:flex; justify-content:space-between; font-size:13.5px; padding:6px 0; border-bottom:1px solid var(--line);">
-          <span>領航救援減免</span>
-          <strong class="${res.rescueBonus > 0 ? 'positive-text' : ''}">
-            ${res.rescueBonus > 0 ? `+${res.rescueBonus} CQ` : '0 CQ'}
-          </strong>
-        </div>
-        <div style="display:flex; justify-content:space-between; font-size:13.5px; padding:6px 0; border-bottom:1px solid var(--line);">
-          <span>全員協同共贏加成</span>
+          <span>同儕說服認同</span>
           <strong class="${res.synergyBonus > 0 ? 'positive-text' : ''}">
-            ${res.synergyBonus > 0 ? `+${res.synergyBonus} CQ` : '0 CQ'}
+            獲 ${res.peerPersuasionPts || 0} 點認同（+${res.synergyBonus || 0} 分）
           </strong>
         </div>
         <div style="display:flex; justify-content:space-between; font-size:14.5px; font-weight:800; padding:8px 0 0;">
-          <span>本輪淨變動 / 總 CQ</span>
+          <span>本輪總得點 / 累計總分</span>
           <span>
-            ${res.actualDelta >= 0 ? '+' : ''}${res.actualDelta ?? 0} CQ ｜ <strong style="color:var(--accent);">${state.group?.cq ?? 100} CQ</strong>
+            +${res.actualDelta ?? 0} 分 ｜ <strong style="color:var(--accent);">${state.group?.cq ?? 0} 分</strong>
           </span>
+        </div>
+        <div style="font-size:13px; color:#b45309; font-weight:700; margin-top:4px;">
+          當前排名：第 ${rank} 名 ${isKing ? '👑 文化王領先！' : ''}
         </div>
       </div>
     </section>
 
     <section class="card" style="padding:16px; margin-bottom:20px;">
-      <div class="eyebrow">CLASS LEADERBOARD</div>
-      <h2 style="font-size:16px; margin:2px 0 10px;">全班 5 組排行榜</h2>
+      <div class="eyebrow">WHO IS THE CULTURE KING</div>
+      <h2 style="font-size:16px; margin:2px 0 10px;">👑 誰是文化王 · 全班排行榜</h2>
       <div style="display:flex; flex-direction:column; gap:8px;">
-        ${(state.publicBoard || []).map(g => `
-          <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:#f8fafc; border-radius:10px; border:1px solid var(--line);">
+        ${(state.publicBoard || []).map((g, idx) => `
+          <div style="display:flex; justify-content:space-between; align-items:center; padding:8px 12px; background:${g.isCultureKing ? '#fef3c7' : '#f8fafc'}; border-radius:10px; border:1px solid ${g.isCultureKing ? '#f59e0b' : 'var(--line)'};">
             <div>
+              <span style="font-size:14px; margin-right:4px;">${medals[idx] || (idx + 1)}</span>
               <strong>第 ${g.id} 組</strong>
-              ${g.isNavigator ? '<span class="navigator-crown-pill" style="margin-left:4px;">👑 領航</span>' : ''}
-              <small style="color:var(--muted); margin-left:6px;">初投 ${esc(g.optionId || '—')}</small>
+              ${g.isCultureKing ? '<span class="navigator-crown-pill" style="margin-left:4px; background:#fef3c7; color:#b45309; border:1px solid #f59e0b;">👑 文化王</span>' : ''}
+              <small style="color:var(--muted); margin-left:6px;">初選 ${esc(g.optionId || '—')}</small>
             </div>
             <div>
-              <strong>${g.cq} CQ</strong>
-              <small class="${g.actualDelta >= 0 ? 'positive-text' : 'negative-text'}" style="margin-left:6px;">
-                (${g.actualDelta >= 0 ? '+' : ''}${g.actualDelta})
+              <strong style="color:#1c1917;">${g.cq ?? 0} 分</strong>
+              <small class="positive-text" style="margin-left:6px;">
+                (+${g.actualDelta ?? 0})
               </small>
             </div>
           </div>
@@ -574,9 +567,9 @@ async function submitVote() {
 async function submitPersuasion() {
   if (busy || !state?.member?.isRepresentative) return;
   const remaining = getRemainingPoints();
-  const used = 5 - remaining;
-  if (used < 1 || used > 5) {
-    toast('說服點數總和必須在 1 至 5 點之間！');
+  const used = 3 - remaining;
+  if (used < 1 || used > 3) {
+    toast('說服點數總和必須在 1 至 3 點之間！');
     return;
   }
   busy = true;

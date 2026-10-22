@@ -82,7 +82,7 @@ test('five groups join independently; all 5 groups are decision groups', async (
     assert.equal(data.member.group, i + 1);
     assert.equal(data.member.isRepresentative, true);
     assert.equal(data.member.isJury, false);
-    assert.equal(data.group.cq, 100);
+    assert.equal(data.group.cq, 0);
     assert.equal('groups' in data, false);
     assert.equal('count' in data.group, false);
     assert.equal('cq' in data.round.options[0], false);
@@ -131,28 +131,28 @@ test('persuasion points allocation validation, chief navigator computation, and 
   const current = (await host()).data;
 
   // 1. Cannot vote for self
-  const selfVote = await request('persuade', { points: { 1: 3, 2: 2 }, roundIndex: 0 }, memberCookies[0]);
+  const selfVote = await request('persuade', { points: { 1: 2, 2: 1 }, roundIndex: 0 }, memberCookies[0]);
   assert.equal(selfVote.status, 400);
 
-  // 2. Single target > 3 points forbidden
-  const excessTarget = await request('persuade', { points: { 2: 4, 3: 1 }, roundIndex: 0 }, memberCookies[0]);
+  // 2. Single target > 2 points forbidden
+  const excessTarget = await request('persuade', { points: { 2: 3 }, roundIndex: 0 }, memberCookies[0]);
   assert.equal(excessTarget.status, 400);
 
-  // 3. Total sum > 5 points forbidden
-  const excessSum = await request('persuade', { points: { 2: 3, 3: 3 }, roundIndex: 0 }, memberCookies[0]);
+  // 3. Total sum > 3 points forbidden
+  const excessSum = await request('persuade', { points: { 2: 2, 3: 2 }, roundIndex: 0 }, memberCookies[0]);
   assert.equal(excessSum.status, 400);
 
-  // 4. Valid allocations: make Group 2 chief navigator
-  // Group 1 votes for G2: 3, G3: 2
-  assert.equal((await request('persuade', { points: { 2: 3, 3: 2 }, roundIndex: 0 }, memberCookies[0])).status, 200);
-  // Group 3 votes for G2: 3, G4: 2
-  assert.equal((await request('persuade', { points: { 2: 3, 4: 2 }, roundIndex: 0 }, memberCookies[2])).status, 200);
-  // Group 4 votes for G2: 3, G5: 2
-  assert.equal((await request('persuade', { points: { 2: 3, 5: 2 }, roundIndex: 0 }, memberCookies[3])).status, 200);
-  // Group 5 votes for G2: 3, G1: 2
-  assert.equal((await request('persuade', { points: { 2: 3, 1: 2 }, roundIndex: 0 }, memberCookies[4])).status, 200);
+  // 4. Valid allocations: make Group 2 chief navigator (2 points each from 4 groups = 8 points)
+  // Group 1 votes for G2: 2, G3: 1
+  assert.equal((await request('persuade', { points: { 2: 2, 3: 1 }, roundIndex: 0 }, memberCookies[0])).status, 200);
+  // Group 3 votes for G2: 2, G4: 1
+  assert.equal((await request('persuade', { points: { 2: 2, 4: 1 }, roundIndex: 0 }, memberCookies[2])).status, 200);
+  // Group 4 votes for G2: 2, G5: 1
+  assert.equal((await request('persuade', { points: { 2: 2, 5: 1 }, roundIndex: 0 }, memberCookies[3])).status, 200);
+  // Group 5 votes for G2: 2, G1: 1
+  assert.equal((await request('persuade', { points: { 2: 2, 1: 1 }, roundIndex: 0 }, memberCookies[4])).status, 200);
 
-  // Group 2 receives 3 + 3 + 3 + 3 = 12 points
+  // Group 2 receives 2 + 2 + 2 + 2 = 8 points
   const g2State = (await request('state', undefined, memberCookies[1])).data;
   assert.equal(g2State.chiefNavigator, 2);
   assert.equal(g2State.member.isNavigator, true);
@@ -177,42 +177,36 @@ test('persuasion points allocation validation, chief navigator computation, and 
   assert.equal(g2Decided.finalDecision, 'B');
 });
 
-test('reveal settlement: optimal final decision triggers rescue 60%, synergy bonus +15 (+20 for navigator), and sets worldState to good', async () => {
+test('reveal settlement: optimal final decision triggers literature optimal +10, persuasion points * 5, and sets worldState to good', async () => {
   assert.equal((await host('reveal', {})).status, 200);
   const afterReveal = (await host()).data;
 
   // Round 1 initial votes:
-  // G1: A (-20 CQ base). Final was B (Best). Rescue = round(20 * 0.6) = 12. Synergy = 15. Delta = -20 + 12 + 15 = +7 CQ.
-  // G1 CQ: 100 + 7 = 107.
-  assert.equal(afterReveal.results[1].baseDelta, -20);
-  assert.equal(afterReveal.results[1].rescueBonus, 12);
-  assert.equal(afterReveal.results[1].synergyBonus, 15);
-  assert.equal(afterReveal.results[1].actualDelta, 7);
-  assert.equal(afterReveal.groups[0].cq, 107);
+  // G1: A (not optimal -> 0). Peer persuasion = 1 pt (* 5 = 5). Total Delta = 5.
+  assert.equal(afterReveal.results[1].baseDelta, 0);
+  assert.equal(afterReveal.results[1].synergyBonus, 5);
+  assert.equal(afterReveal.results[1].actualDelta, 5);
+  assert.equal(afterReveal.groups[0].cq, 5);
 
-  // G2: B (+25 CQ base). Chief Navigator! Rescue = 0. Synergy = 20 (+5 navigator honor). Delta = +25 + 20 = +45 CQ.
-  // G2 CQ: 100 + 45 = 145.
-  assert.equal(afterReveal.results[2].baseDelta, 25);
-  assert.equal(afterReveal.results[2].rescueBonus, 0);
-  assert.equal(afterReveal.results[2].synergyBonus, 20);
-  assert.equal(afterReveal.results[2].actualDelta, 45);
-  assert.equal(afterReveal.groups[1].cq, 145);
+  // G2: B (Literature optimal -> +10). Peer persuasion = 8 pts (* 5 = 40). Total Delta = 10 + 40 = 50. Chief Navigator / Culture King!
+  assert.equal(afterReveal.results[2].baseDelta, 10);
+  assert.equal(afterReveal.results[2].synergyBonus, 40);
+  assert.equal(afterReveal.results[2].actualDelta, 50);
+  assert.equal(afterReveal.groups[1].cq, 50);
+  assert.equal(afterReveal.results[2].rank, 1);
+  assert.equal(afterReveal.results[2].isCultureKing, true);
 
-  // G3: C (-10 CQ base). Rescue = round(10 * 0.6) = 6. Synergy = 15. Delta = -10 + 6 + 15 = +11 CQ.
-  // G3 CQ: 100 + 11 = 111.
-  assert.equal(afterReveal.results[3].baseDelta, -10);
-  assert.equal(afterReveal.results[3].rescueBonus, 6);
-  assert.equal(afterReveal.results[3].synergyBonus, 15);
-  assert.equal(afterReveal.results[3].actualDelta, 11);
-  assert.equal(afterReveal.groups[2].cq, 111);
+  // G3: C (not optimal -> 0). Peer persuasion = 1 pt (* 5 = 5). Total Delta = 5.
+  assert.equal(afterReveal.results[3].baseDelta, 0);
+  assert.equal(afterReveal.results[3].synergyBonus, 5);
+  assert.equal(afterReveal.results[3].actualDelta, 5);
+  assert.equal(afterReveal.groups[2].cq, 5);
 
-  // G4: D (-15 CQ base). Rescue = round(15 * 0.6) = 9. Synergy = 15. Delta = -15 + 9 + 15 = +9 CQ.
-  // G4 CQ: 100 + 9 = 109.
-  assert.equal(afterReveal.results[4].baseDelta, -15);
-  assert.equal(afterReveal.results[4].rescueBonus, 9);
-  assert.equal(afterReveal.results[4].synergyBonus, 15);
-  assert.equal(afterReveal.results[4].actualDelta, 9);
-  assert.equal(afterReveal.groups[3].cq, 109);
+  // G4: D (not optimal -> 0). Peer persuasion = 1 pt (* 5 = 5). Total Delta = 5.
+  assert.equal(afterReveal.results[4].baseDelta, 0);
+  assert.equal(afterReveal.results[4].synergyBonus, 5);
+  assert.equal(afterReveal.results[4].actualDelta, 5);
+  assert.equal(afterReveal.groups[3].cq, 5);
 
   // World state after R1 optimal outcome
   assert.equal(afterReveal.worldState.r1, 'good');
@@ -254,8 +248,8 @@ test('bad outcome in round 2 causes full penalty, no rescue, and shared conseque
   for (let i = 0; i < 5; i++) {
     await request('vote', { choice: 'A', epoch: state.epoch, roundIndex: 2 }, memberCookies[i]);
   }
-  // Allocate points to G1 as navigator
-  await request('persuade', { points: { 1: 3, 2: 2 }, roundIndex: 2 }, memberCookies[4]);
+  // Allocate points to G1 as navigator (G5 votes G1: 2, G2: 1)
+  await request('persuade', { points: { 1: 2, 2: 1 }, roundIndex: 2 }, memberCookies[4]);
   // G1 picks A (bad choice)
   await request('final-decision', { choice: 'A', roundIndex: 2 }, memberCookies[0]);
 
@@ -263,10 +257,12 @@ test('bad outcome in round 2 causes full penalty, no rescue, and shared conseque
   await host('reveal', {});
   const revealed = (await host()).data;
   assert.equal(revealed.worldState.r3, 'bad');
-  // No rescue, no synergy
-  assert.equal(revealed.results[1].rescueBonus, 0);
-  assert.equal(revealed.results[1].synergyBonus, 0);
-  assert.equal(revealed.results[1].actualDelta, -25);
+  // No insight bonus because A is not literature optimal
+  assert.equal(revealed.results[1].baseDelta, 0);
+  assert.equal(revealed.results[1].synergyBonus, 10);
+  assert.equal(revealed.results[1].actualDelta, 10);
+  // G3 received 0 persuasion points and chose A -> 0 delta, 0 deduction!
+  assert.equal(revealed.results[3].actualDelta, 0);
 
   // Next round (Round 4, index 3) starts with penalty!
   await host('next', {});
@@ -306,7 +302,7 @@ test('representative transfer and reset preserve only host access', async () => 
   assert.equal((await request('state', undefined, memberCookies[0])).status, 401);
   const state = (await host()).data;
   assert.equal(state.phase, 'waiting');
-  assert.ok(state.groups.every(g => g.cq === 100 && g.count === 0));
+  assert.ok(state.groups.every(g => g.cq === 0 && g.count === 0));
 });
 
 test('all tension values match the requested matrix; answers are not in static client code', async () => {

@@ -144,7 +144,7 @@ function shared(state, options) {
 function memberView(state, member) {
   const group = state.groups[member.group - 1];
   const revealed = ['revealed', 'finished'].includes(state.phase);
-  const cqVal = group.cq ?? 100;
+  const cqVal = group.cq ?? 0;
   const navInfo = computeNavigator(state, state.round);
   const chiefNavigator = navInfo.chiefNavigator;
   const cascade = state.round >= 1 ? computeCascade(state.round, state.worldState) : null;
@@ -159,16 +159,20 @@ function memberView(state, member) {
     const r = state.results[state.round]?.[g.id];
     return {
       id: g.id,
-      cq: g.cq ?? 100,
+      cq: g.cq ?? 0,
       optionId: r?.id || null,
       optionTitle: r?.title || null,
-      baseDelta: r?.baseDelta ?? r?.cq ?? 0,
+      baseDelta: r?.baseDelta ?? 0,
       rescueBonus: r?.rescueBonus ?? 0,
       synergyBonus: r?.synergyBonus ?? 0,
       actualDelta: r?.actualDelta ?? 0,
+      peerPersuasionPts: r?.peerPersuasionPts ?? 0,
+      isLiteratureOptimal: r?.isLiteratureOptimal ?? false,
+      rank: r?.rank ?? 1,
+      isCultureKing: r?.isCultureKing ?? false,
       isNavigator: g.id === chiefNavigator
     };
-  }) : null;
+  }).sort((a, b) => (a.rank ?? 1) - (b.rank ?? 1)) : null;
 
   // 若組內尚無有效代表，自動將當前第一位讀取的組員設為代表（不需前端重連）
   const activeRep = Object.values(state.participants).find(p => p.id === group.representative && p.expires > Date.now());
@@ -216,7 +220,7 @@ function hostView(state, req) {
   const hasFinalDecision = Boolean(state.finalDecisions?.[state.round]);
 
   const groups = state.groups.map(g => {
-    const gCq = g.cq ?? 100;
+    const gCq = g.cq ?? 0;
     return {
       ...g,
       cq: gCq,
@@ -410,11 +414,11 @@ export default async function handler(req, res) {
             if (!Number.isInteger(pts) || pts < 0) fail('分配點數必須為大於等於 0 的整數', 400);
             if (pts === 0) continue;
             if (gid === user.group) fail('不可將說服點數分配給本組', 400);
-            if (pts > 3) fail('單一組別最多只能分配 3 點（請至少分給兩組）', 400);
+            if (pts > 2) fail('單一組別最多只能分配 2 點（請至少分給兩組）', 400);
             clean[gid] = pts;
             sum += pts;
           }
-          if (sum > 5 || sum < 1) fail('說服點數總和必須在 1 至 5 點之間', 400);
+          if (sum > 3 || sum < 1) fail('說服點數總和必須在 1 至 3 點之間', 400);
           if (!state.persuasion) state.persuasion = [{}, {}, {}, {}];
           state.persuasion[state.round][user.group] = clean;
           return;
@@ -556,37 +560,51 @@ export default async function handler(req, res) {
         if (!state.worldState) state.worldState = { r1: 'idle', r2: 'idle', r3: 'idle', r4: 'idle' };
         state.worldState[rKey] = isBestFinal ? 'good' : 'bad';
 
+        // 統計各組收到的說服點數
+        const persuasionPointsMap = {};
+        for (const item of navInfo.persuasionBoard) {
+          persuasionPointsMap[item.id] = item.totalPoints || 0;
+        }
+
         for (const group of state.groups) {
           const vote = state.votes[state.round]?.[group.id];
           if (!vote) continue;
           const result = outcome(state.round, vote);
           if (result) {
-            const before = group.cq ?? 100;
-            const baseDelta = result.cq ?? 0;
-            let rescueBonus = 0;
-            if (baseDelta < 0 && isBestFinal) {
-              rescueBonus = Math.round(Math.abs(baseDelta) * 0.6);
-            }
-            let synergyBonus = 0;
-            if (isBestFinal) {
-              synergyBonus = group.id === navId ? 20 : 15;
-            }
-            const totalDelta = baseDelta + rescueBonus + synergyBonus;
-            const after = Math.min(150, Math.max(0, before + totalDelta));
+            const before = group.cq ?? 0;
+            // 判斷初選是否命中「文獻理論最佳實踐」
+            const isLiteratureOptimal = (result.cq ?? 0) > 0;
+            const insightBonus = isLiteratureOptimal ? 10 : 0; // 命中 +10 分，未命中 0 分（零扣分！）
+            const peerPts = persuasionPointsMap[group.id] || 0;
+            const persuasionScore = peerPts * 5; // 每獲得 1 點同儕說服認同 = +5 分
+            const totalDelta = insightBonus + persuasionScore;
+            const after = before + totalDelta;
             group.cq = after;
 
             state.results[state.round][group.id] = {
               ...result,
               cqBefore: before,
               cqAfter: after,
-              baseDelta,
-              rescueBonus,
-              synergyBonus,
-              actualDelta: totalDelta,
+              baseDelta: insightBonus, // 學理觀念得分 (10 或 0)
+              rescueBonus: 0,
+              synergyBonus: persuasionScore, // 同儕說服得分 (peerPts * 5)
+              actualDelta: totalDelta, // 本輪總得點
+              peerPersuasionPts: peerPts,
+              isLiteratureOptimal,
               finalChoice,
               isBestFinal,
               isNavigator: group.id === navId
             };
+          }
+        }
+
+        // 依累計文化總分由高至低嚴格排序，產生「誰是文化王排行榜」
+        const ranking = state.groups.slice().sort((a, b) => (b.cq ?? 0) - (a.cq ?? 0));
+        for (let idx = 0; idx < ranking.length; idx++) {
+          const gid = ranking[idx].id;
+          if (state.results[state.round]?.[gid]) {
+            state.results[state.round][gid].rank = idx + 1;
+            state.results[state.round][gid].isCultureKing = (idx === 0 && (ranking[0].cq ?? 0) > 0);
           }
         }
         state.phase = 'revealed';
