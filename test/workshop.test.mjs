@@ -59,6 +59,15 @@ test('host allows direct access without password', async () => {
   assert.equal((await request('login', {}, '', 'host')).status, 200);
 });
 
+test('anonymous participant gets public state with member: null', async () => {
+  const { status, data } = await request('state', undefined, '');
+  assert.equal(status, 200);
+  assert.equal(data.member, null);
+  assert.equal(data.group, null);
+  assert.equal(data.roundIndex, 0);
+  assert.ok(data.round);
+});
+
 test('five groups join independently; all 5 groups are decision groups', async () => {
   const joined = await Promise.all(
     Array.from({ length: 5 }, (_, i) => request('join', { name: `代表${i + 1}`, group: i + 1 }))

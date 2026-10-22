@@ -285,7 +285,23 @@ export default async function handler(req, res) {
 
     if (req.method === 'GET') {
       const state = await readState();
-      const user = session(req, state, role);
+      let user = null;
+      try {
+        user = session(req, state, role);
+      } catch (err) {
+        if (role === 'member' && !extractToken(req)) {
+          res.end(JSON.stringify({
+            ...shared(state, false),
+            member: null,
+            group: null,
+            chiefNavigator: null,
+            pitch: state.pitch || null,
+            worldState: state.worldState || { r1: 'idle', r2: 'idle', r3: 'idle', r4: 'idle' }
+          }));
+          return;
+        }
+        throw err;
+      }
       res.end(JSON.stringify(role === 'host' ? hostView(state, req) : memberView(state, user)));
       return;
     }

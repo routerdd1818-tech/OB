@@ -524,7 +524,7 @@ async function hostAction(action, extra = {}) {
     busy = true;
     document.querySelectorAll('[data-host-action]').forEach(el => el.disabled = true);
     try {
-      await api('next', extra, 'host');
+      await api('next', { force: true, ...extra }, 'host');
       const latest = await api('state', undefined, 'host');
       if (latest.roundIndex <= 3 && latest.phase !== 'finished') {
         try { await api('start', {}, 'host'); } catch (err) {}

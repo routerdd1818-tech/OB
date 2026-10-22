@@ -6,6 +6,11 @@ let pointsAllocated = {};
 
 const gate = $('#onboarding');
 gate.addEventListener('cancel', e => { if (!state?.member) e.preventDefault(); });
+try {
+  if (!localStorage.getItem('cq_member_token')) {
+    if (!gate.open) gate.showModal();
+  }
+} catch {}
 
 function getRemainingPoints() {
   if (!state?.member) return 5;
@@ -549,6 +554,17 @@ async function refresh() {
       render();
     }
   } catch (e) {
+    if (e.status === 401) {
+      online = true;
+      status(true);
+      state = null;
+      try {
+        localStorage.removeItem('cq_member_token');
+      } catch {}
+      if (!gate.open) gate.showModal();
+      $('#app').innerHTML = '<div class="loading">請先填寫姓名與組別入席…</div>';
+      return;
+    }
     online = false;
     status(false);
   }
