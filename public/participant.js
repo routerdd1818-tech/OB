@@ -23,6 +23,7 @@ function getRemainingPoints() {
 
 function updateChoiceUI() {
   const hasVoted = Boolean(state?.vote?.choice);
+  const isRep = Boolean(state?.member?.isRepresentative);
   document.querySelectorAll('[data-choice]').forEach(el => {
     el.setAttribute('aria-checked', String(el.dataset.choice === selection));
     if (hasVoted) {
@@ -38,7 +39,7 @@ function updateChoiceUI() {
 
   const submit = $('#submit-vote');
   if (submit) {
-    submit.disabled = hasVoted || busy || !online || !selection || (state?.roundIndex === 3 && consensus.some(x => x === null));
+    submit.disabled = hasVoted || !isRep || busy || !online || !selection || (state?.roundIndex === 3 && consensus.some(x => x === null));
   }
 
   // Update persuasion points allocation UI
@@ -60,7 +61,7 @@ function updateChoiceUI() {
   const submitPersuasion = $('#submit-persuasion');
   if (submitPersuasion) {
     const totalUsed = 5 - remaining;
-    submitPersuasion.disabled = busy || !online || totalUsed < 1 || totalUsed > 5;
+    submitPersuasion.disabled = busy || !online || !hasVoted || totalUsed < 1 || totalUsed > 5;
   }
 }
 
@@ -107,7 +108,7 @@ function render() {
           第 ${member.group} 組 · 決策組 ${navBadge}
         </div>
         <button type="button" class="switch-group-btn" id="open-switch-group" aria-label="更換組別">換組</button>
-        <span class="rep-tag">${member.isRepresentative ? '本組代表' : '共同決策員'}</span>
+        <span class="rep-tag ${member.isRepresentative ? 'is-rep' : 'can-claim'}" id="claim-rep-btn" style="cursor:pointer;" title="${member.isRepresentative ? '你是本組代表' : '點擊切換為代表'}">${member.isRepresentative ? '本組代表 👑' : '共同決策員（點此接任代表）'}</span>
       </div>
       <div class="mobile-health">
         <span class="health-label">團隊 CQ 韌性值</span>
@@ -159,7 +160,9 @@ function render() {
     buttonHtml = `<div class="button secondary wide revealed-status-pill" id="revealed-status-pill">${state.phase === 'finished' ? '本次課堂已完成 · 感謝參與' : '本回合已揭曉 · 請看大螢幕'}</div>`;
   } else if (hasVoted) {
     const choiceLabel = state.vote.choice === 'X' ? '未達成協議' : `方案 ${state.vote.choice}`;
-    buttonHtml = `<button id="submit-vote" class="button secondary wide locked-btn" type="button" disabled>✓ 本組初投已鎖定${choiceLabel}</button>`;
+    buttonHtml = `<button id="submit-vote" class="button secondary wide locked-btn" type="button" disabled>✓ 本組初投已鎖定（${choiceLabel}）</button>`;
+  } else if (!member.isRepresentative) {
+    buttonHtml = `<button id="submit-vote" class="button secondary wide locked-btn" type="button" disabled>由本組代表（${esc(state.group.representativeName)}）鎖定初投 🔒</button>`;
   } else {
     let buttonText = '鎖定本組初投 ↗';
     if (isWaiting) {
@@ -466,6 +469,10 @@ function resultMarkup() {
 
 async function submitVote() {
   if (!selection || busy) return;
+  if (!state?.member?.isRepresentative) {
+    toast(`請由本組代表（${state.group?.representativeName || '指定代表'}）提交初投，或點擊上方「接任代表」`);
+    return;
+  }
   busy = true;
   $('#submit-vote').disabled = true;
   try {
@@ -570,7 +577,18 @@ async function refresh() {
   }
 }
 
-document.body.addEventListener('click', e => {
+document.body.addEventListener('click', async e => {
+  if (e.target.closest('#claim-rep-btn')) {
+    if (state?.member?.isRepresentative) return;
+    try {
+      await api('claim-rep');
+      toast('你已接任本組代表 ✓');
+      await refresh();
+    } catch (err) {
+      toast(err.message);
+    }
+    return;
+  }
   if (e.target.closest('#open-switch-group')) {
     if (!state?.member) return;
     $('#join-title').innerHTML = '更換組別 / 姓名';
