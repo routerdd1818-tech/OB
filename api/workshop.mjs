@@ -477,7 +477,7 @@ export default async function handler(req, res) {
 
       if (action === 'start') {
         if (!['waiting', 'ready', 'voting'].includes(state.phase)) fail('本回合已揭曉或已結束', 409);
-        let roundSeconds = rounds[state.round].seconds;
+        let roundSeconds = rounds[state.round].seconds || (state.round === 3 ? 60 : 180);
         if (state.round === 1) {
           if (state.worldState?.r1 === 'bad') roundSeconds = Math.max(30, roundSeconds - 30);
         } else if (state.round === 2) {
@@ -502,7 +502,8 @@ export default async function handler(req, res) {
           state.remaining = Math.max(0, state.deadline - Date.now());
           state.deadline = null;
         } else {
-          state.deadline = Date.now() + (state.remaining ?? rounds[state.round].seconds * 1000);
+          const fallbackSec = (rounds[state.round].seconds ?? (state.round === 3 ? 60 : 180)) * 1000;
+          state.deadline = Date.now() + (state.remaining ?? fallbackSec);
           state.remaining = null;
         }
       } else if (action === 'pitch') {
