@@ -188,11 +188,14 @@ function render() {
 
         ${hasDialogue ? `
           <div style="margin-top:8px; padding-top:8px; border-top:1px dashed #fcd34d; display:flex; flex-direction:column; gap:6px;">
-            ${r.dialogue.map(line => `
-              <div style="font-size:12.5px; line-height:1.45; color:#1c1917; background:rgba(255,255,255,0.75); padding:6px 9px; border-radius:6px;">
-                <strong style="color:#b45309;">${esc(line.who)}：</strong>「${esc(line.text)}」
-              </div>
-            `).join('')}
+            ${r.dialogue.map(line => {
+              const txt = String(line.text || '').trim().replace(/^[「"“\s]+|[」"”\s]+$/g, '');
+              return `
+                <div style="font-size:12.5px; line-height:1.45; color:#1c1917; background:rgba(255,255,255,0.75); padding:6px 9px; border-radius:6px;">
+                  <strong style="color:#b45309;">${esc(line.who)}：</strong>「${esc(txt)}」
+                </div>
+              `;
+            }).join('')}
           </div>
         ` : ''}
 

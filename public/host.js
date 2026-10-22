@@ -188,6 +188,11 @@ function scenarioMarkup() {
 
   const stageHtml = renderRpgDialogueBox({
     roundIndex: state.roundIndex,
+    title: r.title,
+    dimension: r.dimension,
+    location: r.location,
+    context: r.context,
+    dialogue: r.dialogue,
     speaker: r.speaker,
     text: r.dialogue?.[1]?.text || r.context,
     prompt: r.prompt,

@@ -1183,11 +1183,17 @@ export function renderWorldStateHud(worldState = {}) {
 export function renderRpgDialogueBox({
   roundIndex = 0,
   speaker = '',
+  title = '',
+  dimension = '',
+  location = '',
+  context = '',
+  dialogue = [],
   text = '',
   prompt = '',
   mood = 'normal',
   worldState = {},
-  groups = []
+  groups = [],
+  chiefNavId = null
 }) {
   const sceneHtml = renderRpgScene(roundIndex, worldState, groups);
   const bustHtml = renderCharacterBust(roundIndex, mood);
@@ -1201,6 +1207,17 @@ export function renderRpgDialogueBox({
       : '荷蘭大客戶 · 范德堡';
 
   const finalSpeaker = speaker || defaultSpeaker;
+
+  const cleanQuote = (str) => {
+    if (!str) return '';
+    let s = String(str).trim();
+    s = s.replace(/^[「"“\s]+|[」"”\s]+$/g, '');
+    return `「${s}」`;
+  };
+
+  const dialogueList = Array.isArray(dialogue) && dialogue.length > 0
+    ? dialogue
+    : (text ? [{ who: finalSpeaker, text }] : []);
 
   return `
     <div class="rpg-stage-card card" data-round="${roundIndex}">
@@ -1221,7 +1238,36 @@ export function renderRpgDialogueBox({
         <div class="rpg-message-box" role="region" aria-label="JRPG 對話框">
           <div class="rpg-message-inner">
             <div class="rpg-message-content">
-              <p class="rpg-dialogue-text">「${esc(text)}」</p>
+              <!-- 1. 題目列 (Round + Dimension + Title) -->
+              <div class="rpg-topic-bar">
+                <div class="rpg-topic-tags">
+                  <span class="rpg-round-pill">ROUND 0${roundIndex + 1}</span>
+                  ${dimension ? `<span class="rpg-dimension-pill">${esc(dimension)}</span>` : ''}
+                </div>
+                <h2 class="rpg-topic-headline">${esc(title || '跨文化決策挑戰')}</h2>
+              </div>
+
+              <!-- 2. 情境背景 (Context) -->
+              ${context ? `
+                <div class="rpg-context-card">
+                  <span class="context-badge">📖 決策情境</span>
+                  <p class="context-desc">${esc(context)}</p>
+                </div>
+              ` : ''}
+
+              <!-- 3. 現場對話串列 (Dialogue Stream) -->
+              ${dialogueList.length > 0 ? `
+                <div class="rpg-dialogue-stream">
+                  ${dialogueList.map(d => `
+                    <div class="rpg-dialogue-line">
+                      <strong class="rpg-line-who">${esc(d.who)}：</strong>
+                      <span class="rpg-line-speech">${esc(cleanQuote(d.text))}</span>
+                    </div>
+                  `).join('')}
+                </div>
+              ` : ''}
+
+              <!-- 4. 決策課題 (Dilemma Prompt) -->
               ${prompt ? `
                 <div class="rpg-dialogue-prompt">
                   <span class="prompt-badge">⚔️ 決策課題</span>
