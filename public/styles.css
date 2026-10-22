@@ -3516,67 +3516,284 @@ body.clean-stage .host-main {
 }
 
 /* ==========================================================================
-   沉浸式深色戰情室主題 (Dark Tactical RPG Theme) & 100vh 空間修復
+   1. 淺色溫潤實驗室主題 & 修復「白底白字」問題
    ========================================================================== */
 :root {
-  --bg: #070b14;
-  --oat: #111827;
-  --ink: #f8fafc;
-  --muted: #94a3b8;
-  --faint: #64748b;
-  --line: rgba(148, 163, 184, 0.16);
-  --shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+  --bg: #f7f4ed !important;
+  --oat: #ede8dc !important;
+  --ink: #1c1917 !important;
+  --muted: #57534e !important;
+  --faint: #78716c !important;
+  --line: rgba(60, 50, 40, 0.14) !important;
 }
 
 body.host, body.participant {
-  background: radial-gradient(circle at 50% 0%, #111c35 0%, #070b14 75%);
-  color: var(--ink);
+  background: var(--bg) !important;
+  color: var(--ink) !important;
 }
 
-/* 卡片統一改為深色毛玻璃 HUD */
-.card, .pitch-timer-card, .point-allocator-card, .score-breakdown-card, .host-board-row {
-  background: rgba(15, 23, 42, 0.82) !important;
-  backdrop-filter: blur(16px);
-  border: 1px solid rgba(56, 189, 248, 0.18) !important;
-  color: #f8fafc !important;
+/* 強制修復「學員端初投選項卡」、「說服點數榜」與「申辯按鈕」的深色清晰字體 */
+.option-card {
+  background: #ffffff !important;
+  border: 1.5px solid rgba(60, 50, 40, 0.18) !important;
+  color: #1c1917 !important;
 }
 
-.host-top, .mobile-top, .host-controls, .mobile-action, .cq-strip, .mobile-identity {
-  background: rgba(7, 11, 20, 0.88) !important;
-  border-color: rgba(148, 163, 184, 0.15) !important;
+.option-card strong {
+  color: #1c1917 !important;
+  font-weight: 800 !important;
 }
 
-/* 1. 隱藏佔空間的「四回合進度球」，改由頂部 HUD 呈現，瞬間省下 50px 高度 */
+.option-card p {
+  color: #57534e !important;
+}
+
+.option-card .letter {
+  background: #ede8dc !important;
+  color: #1c1917 !important;
+  border: 1px solid rgba(60, 50, 40, 0.18) !important;
+}
+
+.persuasion-row {
+  background: #ffffff !important;
+  border: 1.5px solid rgba(60, 50, 40, 0.15) !important;
+  padding: 6px 10px !important;
+}
+
+.persuasion-row-head,
+.persuasion-row-head span,
+.persuasion-row-head strong,
+.persuasion-row-head small {
+  color: #1c1917 !important;
+  font-weight: 700 !important;
+}
+
+.pitch-btn {
+  background: #f4f1ea !important;
+  color: #1c1917 !important;
+  border: 1px solid rgba(60, 50, 40, 0.2) !important;
+  font-weight: 700 !important;
+  font-size: 12px !important;
+  padding: 6px 8px !important;
+}
+
+.pitch-btn:hover {
+  background: #e5e0d5 !important;
+}
+
+.pitch-btn.active {
+  background: #d97706 !important;
+  color: #ffffff !important;
+  border-color: #b45309 !important;
+}
+
+.pitch-btn.pitch-stop-btn {
+  background: #fee2e2 !important;
+  color: #991b1b !important;
+  border-color: #fca5a5 !important;
+}
+
+/* ==========================================================================
+   2. 將淺色主題套用至 JRPG 舞台與對話框
+   ========================================================================== */
+.rpg-stage-card {
+  background: #f5f2eb !important;
+  border: 2px solid rgba(60, 50, 40, 0.18) !important;
+  box-shadow: 0 10px 30px rgba(60, 50, 40, 0.08) !important;
+}
+
+.rpg-stage-top {
+  background: #efeae1 !important;
+  height: clamp(400px, 52vh, 520px) !important;
+}
+
+/* 對話框改為淺米白羊皮紙/現代簡約風，深色字清晰易讀 */
+.yep-name-box, .rpg-name-box {
+  background: #1c1917 !important;
+  border: 2px solid #d6d3d1 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12) !important;
+}
+
+.name-box-text {
+  color: #ffffff !important;
+}
+
+.rpg-message-box {
+  background: rgba(255, 253, 249, 0.96) !important;
+  border: 2px solid rgba(60, 50, 40, 0.22) !important;
+  box-shadow: 0 8px 24px rgba(60, 50, 40, 0.1) !important;
+  color: #1c1917 !important;
+  padding: 14px 20px 16px !important;
+  min-height: 96px !important;
+}
+
+.rpg-dialogue-text {
+  color: #1c1917 !important;
+  text-shadow: none !important;
+  font-weight: 600 !important;
+}
+
+.rpg-dialogue-prompt {
+  background: #fffbeb !important;
+  border: 1.5px solid #f59e0b !important;
+  border-left: 5px solid #d97706 !important;
+  box-shadow: none !important;
+}
+
+.rpg-dialogue-prompt .prompt-text {
+  color: #78350f !important;
+  text-shadow: none !important;
+  font-weight: 700 !important;
+}
+
+/* ==========================================================================
+   3. 單一滿版舞台 ＋ 右側狀態欄整合至舞台左側 (Unified HUD Overlay)
+   ========================================================================== */
+.unified-stage-container {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.unified-stage-container > .rpg-stage-card {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.integrated-hud-overlay {
+  position: absolute;
+  top: 12px;
+  left: 14px;
+  width: clamp(300px, 28vw, 370px);
+  max-height: calc(100% - 145px);
+  overflow-y: auto;
+  z-index: 15;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: auto;
+}
+
+.hud-glass-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1.5px solid rgba(60, 50, 40, 0.16);
+  border-radius: 14px;
+  padding: 10px 12px;
+  box-shadow: 0 6px 20px rgba(60, 50, 40, 0.1);
+}
+
+.hud-glass-card.is-active-pitch {
+  border-color: #f59e0b;
+  background: rgba(255, 251, 235, 0.95);
+}
+
+.hud-row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.qr-mini-box {
+  width: 42px;
+  height: 42px;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 2px;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.qr-mini-box svg {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+}
+
+/* ==========================================================================
+   4. 讓 G1 ~ G5 Q版小人「圍繞在會議桌旁」入座！
+   ========================================================================== */
+.scene-party-dock {
+  position: absolute !important;
+  inset: 0 !important;
+  transform: none !important;
+  pointer-events: none;
+  z-index: 7;
+}
+
+.rpg-chibi-party {
+  position: relative !important;
+  width: 100% !important;
+  height: 100% !important;
+  display: block !important;
+}
+
+.chibi-party-member {
+  position: absolute !important;
+  transform: translate(-50%, -50%) !important;
+  pointer-events: auto;
+}
+
+.chibi-party-member:hover {
+  transform: translate(-50%, -58%) scale(1.08) !important;
+}
+
+/* 精準對應 SVG 會議桌 (X:240~660, Y:165~320) 的 5 張人體工學椅座標 */
+/* G1：桌北側左席 */
+.chibi-party-member[data-group-id="1"] {
+  left: 41.5%;
+  top: 41%;
+}
+/* G2：桌北側中席（主位） */
+.chibi-party-member[data-group-id="2"] {
+  left: 51.5%;
+  top: 39%;
+}
+/* G3：桌北側右席 */
+.chibi-party-member[data-group-id="3"] {
+  left: 61.5%;
+  top: 41%;
+}
+/* G4：桌南側左席 */
+.chibi-party-member[data-group-id="4"] {
+  left: 44.5%;
+  top: 76%;
+}
+/* G5：桌南側右席 */
+.chibi-party-member[data-group-id="5"] {
+  left: 58.5%;
+  top: 76%;
+}
+
+/* 小人名牌改為清爽白底深字 */
+.chibi-nametag {
+  background: rgba(255, 255, 255, 0.95) !important;
+  color: #1c1917 !important;
+  border: 1.5px solid rgba(60, 50, 40, 0.25) !important;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.12) !important;
+}
+
+/* 隱藏佔空間的 round-nav，節省大螢幕與手機端高度 */
 .host-main > .round-nav,
 .mobile-main > .round-nav {
   display: none !important;
 }
 
-/* 2. 壓縮頂部 HUD 與 CQ 血條高度，讓主舞台放大 */
 @media (min-width: 1024px) {
-  .host-top { height: 54px !important; }
+  .host-top { height: 58px !important; }
   .world-state-hud { padding: 6px 14px !important; margin-bottom: 6px !important; }
   .cq-strip { margin-bottom: 6px !important; gap: 8px !important; }
   .cq-group { padding: 6px 12px !important; border-radius: 12px !important; }
   .cq-value { font-size: 19px !important; }
   .health-track { margin-top: 6px !important; }
-
-  /* 3. 修復左側 JRPG 舞台與對話框被切掉的問題：改為彈性比例分配 */
-  .voting-left-col .rpg-stage-card {
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-between;
-  }
-  .voting-left-col .rpg-stage-top {
-    flex: 1 1 auto !important;
-    height: auto !important;
-    min-height: 220px;
-  }
-  .voting-left-col .rpg-dialogue-wrap {
-    flex: 0 0 auto;
-    margin-top: -20px;
-  }
 }
 
 

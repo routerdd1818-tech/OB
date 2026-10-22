@@ -179,7 +179,7 @@ function scenarioMarkup() {
   const prevWorld = state.worldState ? (state.roundIndex === 1 ? state.worldState.r1 : state.roundIndex === 2 ? state.worldState.r2 : state.roundIndex === 3 ? state.worldState.r3 : 'idle') : 'idle';
   const mood = prevWorld === 'good' ? 'ally' : prevWorld === 'bad' ? 'angry' : 'normal';
 
-  const leftStageHtml = renderRpgDialogueBox({
+  const stageHtml = renderRpgDialogueBox({
     roundIndex: state.roundIndex,
     speaker: r.speaker,
     text: r.dialogue?.[1]?.text || r.context,
@@ -190,100 +190,90 @@ function scenarioMarkup() {
     chiefNavId: state.chiefNavigator
   });
 
-  const allVoted = state.completed >= 5;
   const now = Date.now() + (state.clockOffset || 0);
   const isPitchActive = Boolean(state.pitch && state.pitch.deadline && state.pitch.deadline > now);
-  const showQrDock = state.phase !== 'voting' || state.groups.filter(g => g.count).length < 5;
+  const onlineGroups = state.groups.filter(g => g.count).length;
+  const totalStudents = state.groups.reduce((n, g) => n + (g.count || 0), 0);
 
   const persuasionRows = (state.persuasionBoard || []).map(item => {
     const pct = Math.min(100, Math.round((item.totalPoints / 12) * 100));
     return `
       <div class="persuasion-row ${item.isNavigator ? 'is-leading' : ''}">
         <div class="persuasion-row-head">
-          <span>${item.isNavigator ? '<span class="lead-crown">👑</span>' : ''}第 ${item.id} 組 <small class="muted">(${item.voterCount}組認同)</small></span>
+          <span>${item.isNavigator ? '<span class="lead-crown">👑</span>' : ''}第 ${item.id} 組 <small>(${item.voterCount}組認同)</small></span>
           <strong>${item.totalPoints} <small>點</small></strong>
         </div>
-        <div class="mana-progress-track"><div class="mana-progress-fill" style="width:${pct}%;"></div></div>
+        <div class="mana-progress-track">
+          <div class="mana-progress-fill" style="width:${pct}%;"></div>
+        </div>
       </div>
     `;
   }).join('');
 
   return `
-    <div class="voting-stage-grid">
-      <!-- 左欄：JRPG 沉浸式主舞台 -->
-      <div class="voting-left-col">
-        ${leftStageHtml}
-      </div>
+    <div class="unified-stage-container">
+      <!-- 完整滿版 JRPG 舞台（含圍坐桌旁的小人、立繪與底部對話框） -->
+      ${stageHtml}
 
-      <!-- 右欄：戰術指揮面板（依階段自動收合） -->
-      <div class="voting-right-col">
-        ${showQrDock ? renderQrJoinDock(resolveJoinUrl(), state.groups.reduce((n, g) => n + (g.count || 0), 0), state.groups.filter(g => g.count).length) : ''}
-
-        <!-- ACT 1：初投定錨狀態（全部投完後自動變緊湊橫條） -->
-        <section class="progress-card card" aria-label="全班初投進度">
-          <div class="progress-intro">
+      <!-- 整合在畫面左上角的淺色毛玻璃戰術 HUD 狀態欄 -->
+      <aside class="integrated-hud-overlay" aria-label="課堂即時戰況與控制面板">
+        <!-- 1. 緊湊型掃碼與初投進度列 -->
+        <div class="hud-glass-card">
+          <div class="hud-row-between">
             <div>
-              <span class="eyebrow">ACT I · ANCHORING</span>
-              <h2>初投定錨進度</h2>
+              <span class="eyebrow">STEP 1 · 初投定錨進度</span>
+              <div style="font-size:13px; font-weight:800; color:#1c1917;">
+                已鎖定 ${state.completed} / 5 組 <small style="font-weight:500; color:#57534e;">(${totalStudents}人入席)</small>
+              </div>
             </div>
-            <div class="stat-number">${state.completed}<small>/ 5 組</small></div>
+            <div id="stage-qr-code" class="qr-mini-box" title="點擊放大 QR Code" onclick="document.getElementById('qr-open')?.click()"></div>
           </div>
-          <div class="progress-chips-row">
+          <div class="progress-chips-row" style="margin-top:8px;">
             ${state.groups.map(g => `
               <div class="progress-chip ${g.submitted ? 'is-done done' : g.count ? 'is-active' : ''}">
                 <span class="chip-dot"></span>
                 <span class="chip-name">G${g.id}</span>
-                <span class="chip-status">${g.submitted ? '鎖定' : g.count ? '研討' : '待命'}</span>
+                <span class="chip-status">${g.submitted ? '✓' : g.count ? '…' : '-'}</span>
               </div>
             `).join('')}
           </div>
-        </section>
+        </div>
 
-        <!-- ACT 2：60秒跨立場辯論 ＆ 說服點數戰況榜 -->
-        <div class="card pitch-timer-card ${isPitchActive ? 'is-active' : ''}" style="flex:1; display:flex; flex-direction:column; justify-content:space-between;">
-          <div>
-            <div class="pitch-timer-head">
-              <div>
-                <span class="eyebrow">ACT II · 60s DEBATE & PERSUASION</span>
-                <h2 style="margin:2px 0;">說服點數即時戰況榜</h2>
-              </div>
-              <div class="pitch-clock-display">
-                <span class="pitch-clock mono" data-pitch-clock>01:00</span>
-              </div>
+        <!-- 2. 60秒辯論計時與說服點數榜 -->
+        <div class="hud-glass-card ${isPitchActive ? 'is-active-pitch' : ''}">
+          <div class="hud-row-between" style="margin-bottom:6px;">
+            <div>
+              <span class="eyebrow">STEP 2 · 60s 辯論與說服榜</span>
+              <div style="font-size:13.5px; font-weight:800; color:#1c1917;">說服點數即時戰況</div>
             </div>
-            <div class="persuasion-live-board">
-              ${persuasionRows || '<div class="muted" style="padding:12px 0; text-align:center;">等待各組初投後配發說服點數（每組 5 點）…</div>'}
-            </div>
+            <span class="pitch-clock mono" data-pitch-clock style="font-size:22px; font-weight:800; color:#1c1917;">01:00</span>
           </div>
-          <div class="pitch-actions-grid" style="margin-top:10px; grid-template-columns: repeat(4, 1fr);">
-            ${[1, 2, 3, 4, 5].map(gid => `<button type="button" class="pitch-btn ${String(state.pitch?.group) === String(gid) ? 'active' : ''}" data-pitch-group="${gid}">G${gid} 申辯</button>`).join('')}
+
+          <div class="persuasion-live-board">
+            ${persuasionRows || '<div style="padding:6px 0; font-size:12px; color:#57534e;">尚無組別送出說服點數</div>'}
+          </div>
+
+          <div class="pitch-actions-grid" style="margin-top:8px; grid-template-columns: repeat(4, 1fr); gap:5px;">
+            ${[1, 2, 3, 4, 5].map(gid => `
+              <button type="button" class="pitch-btn ${String(state.pitch?.group) === String(gid) ? 'active' : ''}" data-pitch-group="${gid}">G${gid} 申辯</button>
+            `).join('')}
             <button type="button" class="pitch-btn pitch-all-btn ${state.pitch?.group === 'all' ? 'active' : ''}" data-pitch-group="all" style="grid-column: span 2;">🔥 全班 60s 激辯</button>
-            <button type="button" class="pitch-btn pitch-stop-btn" data-pitch-group="stop">⏹ 停止</button>
+            <button type="button" class="pitch-btn pitch-stop-btn" data-pitch-group="stop">■ 停止</button>
           </div>
         </div>
 
-        <!-- ACT 3：首席領航者最終拍板 -->
-        <div class="card navigator-final-panel" style="margin:0; padding:12px 16px;">
-          <div class="eyebrow">ACT III · CHIEF NAVIGATOR'S CALL</div>
-          <div style="margin-top:4px;">
+        <!-- 3. 首席領航者最終拍板狀態 -->
+        <div class="hud-glass-card">
+          <span class="eyebrow">STEP 3 · 首席領航者拍板</span>
+          <div style="margin-top:4px; font-size:12.5px; font-weight:700; color:#1c1917;">
             ${state.chiefNavigator ? (
-              state.hasFinalDecision ? `
-                <div style="color:#4ade80; font-weight:700; font-size:14px;">
-                  👑 第 ${state.chiefNavigator} 組（首席領航者）已拍板全班最終策略 ✓
-                </div>
-              ` : `
-                <div style="color:#facc15; font-weight:700; font-size:14px;">
-                  👑 第 ${state.chiefNavigator} 組正在研讀《極密情報》並代表全班拍板…
-                </div>
-              `
-            ) : `
-              <div class="muted" style="font-size:12.5px;">
-                最高說服點數組別將晉升【👑 首席領航者】，解鎖極密情報並拍板全班答案
-              </div>
-            `}
+              state.hasFinalDecision
+                ? `<span style="color:#15803d;">👑 第 ${state.chiefNavigator} 組已拍板全班最終策略 ✓</span>`
+                : `<span style="color:#b45309;">👑 第 ${state.chiefNavigator} 組正在研讀【極密情報】並拍板…</span>`
+            ) : '<span style="color:#57534e; font-weight:500;">等待說服點數最高組別解鎖【極密情報】</span>'}
           </div>
         </div>
-      </div>
+      </aside>
     </div>
   `;
 }

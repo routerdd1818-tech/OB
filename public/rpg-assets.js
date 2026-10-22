@@ -132,11 +132,10 @@ function renderSceneAct1Tokyo(worldState = {}, groups = []) {
             <stop offset="100%" stop-color="#f59e0b"/>
           </linearGradient>
 
-          <!-- Modern Executive Boardroom Dark Charcoal Floor -->
+          <!-- Modern Executive Boardroom Light Wood Floor -->
           <linearGradient id="tokyo-floor" x1="0" y1="0" x2="1" y2="1">
-            <stop offset="0%" stop-color="#1a1d24"/>
-            <stop offset="50%" stop-color="#13161c"/>
-            <stop offset="100%" stop-color="#0c0e12"/>
+            <stop offset="0%" stop-color="#f5f2eb"/>
+            <stop offset="100%" stop-color="#e6e0d4"/>
           </linearGradient>
 
           <!-- Executive Sleek Walnut Surface (#452c24 ~ #1e110c) -->
@@ -163,8 +162,8 @@ function renderSceneAct1Tokyo(worldState = {}, groups = []) {
 
           <!-- Executive Architectural Carpet Pattern -->
           <pattern id="executive-carpet-grid" width="32" height="32" patternUnits="userSpaceOnUse">
-            <rect width="32" height="32" fill="#13161c" stroke="#1c222e" stroke-width="0.8"/>
-            <line x1="0" y1="16" x2="32" y2="16" stroke="#181e28" stroke-width="0.5"/>
+            <rect width="32" height="32" fill="#efeae1" stroke="#e2dbd0" stroke-width="1"/>
+            <line x1="0" y1="16" x2="32" y2="16" stroke="#e7e1d6" stroke-width="0.6"/>
           </pattern>
         </defs>
 
@@ -377,8 +376,7 @@ function renderSceneAct1Tokyo(worldState = {}, groups = []) {
         ${renderMiniLabelHtml('💼 跨國併購核心談判長桌', '💼')}
       </div>
 
-      <!-- Chibi Party: G1~G5 seated neatly in front of table, mid-left placed to fully clear the bust -->
-      <div class="scene-party-dock" style="left: 285px; bottom: 35px;">
+      <div class="scene-party-dock">
         ${renderChibiPartyHtml(groups, worldState.chiefNavigator)}
       </div>
     </div>
@@ -462,8 +460,7 @@ function renderSceneAct2Hangzhou(worldState = {}, groups = []) {
         }
       </div>
 
-      <!-- Chibi Party: G1~G5 placed safely mid-left along the green safety walkway -->
-      <div class="scene-party-dock" style="left: 320px; bottom: 35px;">
+      <div class="scene-party-dock">
         ${renderChibiPartyHtml(groups, worldState.chiefNavigator)}
       </div>
     </div>
@@ -546,8 +543,7 @@ function renderSceneAct3Munich(worldState = {}, groups = []) {
         }
       </div>
 
-      <!-- Chibi Party: G1~G5 placed safely mid-left, fully avoiding Hans bust -->
-      <div class="scene-party-dock" style="left: 330px; bottom: 35px;">
+      <div class="scene-party-dock">
         ${renderChibiPartyHtml(groups, worldState.chiefNavigator)}
       </div>
     </div>
@@ -619,8 +615,7 @@ function renderSceneAct4Brussels(worldState = {}, groups = []) {
         ${renderMiniLabelHtml('⚖️ 歐盟合規審查席', '⚖️')}
       </div>
 
-      <!-- Chibi Party: G1~G5 placed safely mid-left runway, fully avoiding Vanderberg bust -->
-      <div class="scene-party-dock" style="left: 330px; bottom: 35px;">
+      <div class="scene-party-dock">
         ${renderChibiPartyHtml(groups, worldState.chiefNavigator)}
       </div>
     </div>
