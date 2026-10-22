@@ -3796,6 +3796,421 @@ body.host, body.participant {
   .health-track { margin-top: 6px !important; }
 }
 
+/* ==========================================================================
+   揭曉頁面重構：聚焦「題目深度解析與文化盲點」 (64% 主舞台 + 36% 緊湊戰況)
+   ========================================================================== */
+
+/* 1. 頂部極簡結果橫條 */
+.reveal-top-strip {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 8px 16px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+  font-size: 13.5px;
+}
+
+.reveal-top-strip.is-good {
+  background: #f0fdf4;
+  border: 1.5px solid #22c55e;
+  color: #14532d;
+}
+
+.reveal-top-strip.is-bad {
+  background: #fef2f2;
+  border: 1.5px solid #ef4444;
+  color: #7f1d1d;
+}
+
+.reveal-strip-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.reveal-strip-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* 2. 左窄右寬雙欄網格 (35% vs 65%) */
+.results-focus-grid {
+  display: grid;
+  grid-template-columns: 35% 1fr;
+  gap: 14px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* 左欄：象限圖 + 緊湊計分板 */
+.results-side-col {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.side-matrix-card {
+  padding: 12px 14px !important;
+  flex: 0 0 auto;
+}
+
+.side-matrix-card .quadrant-matrix-wrap {
+  margin-bottom: 0;
+}
+
+.side-matrix-card .quadrant-board {
+  height: clamp(165px, 22vh, 215px) !important;
+}
+
+.side-scoreboard-card {
+  padding: 12px 14px !important;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.side-score-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.side-score-head h2 {
+  font-size: 14.5px;
+  font-weight: 800;
+  margin: 0;
+}
+
+.side-score-head span {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+.compact-score-list {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  flex: 1;
+  justify-content: space-between;
+  overflow-y: auto;
+}
+
+.compact-score-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  padding: 6px 10px;
+  background: #faf8f5;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  font-size: 12.5px;
+}
+
+.compact-score-row.is-nav {
+  background: #fefce8;
+  border-color: #facc15;
+}
+
+.c-group {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  white-space: nowrap;
+}
+
+.c-badges {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+}
+
+.c-total {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  white-space: nowrap;
+  font-family: "SF Mono", ui-monospace, monospace;
+}
+
+.c-delta {
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.c-cq {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+/* 3. 右欄（主角）：題目深度解析大舞台 */
+.results-main-review {
+  padding: 18px 24px !important;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+  border: 2px solid rgba(60, 50, 40, 0.18) !important;
+}
+
+.review-main-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  margin-bottom: 10px;
+  flex-shrink: 0;
+}
+
+.review-main-header h2 {
+  font-size: 22px;
+  font-weight: 800;
+  margin: 2px 0 0;
+  color: #1c1917;
+}
+
+.review-hint-text {
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* 單行緊湊型方案切換 Tabs */
+.review-tabs-compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 8px;
+  margin-bottom: 14px;
+  flex-shrink: 0;
+}
+
+.review-tab-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 10px;
+  border-radius: 10px;
+  background: #f4f1ea;
+  border: 1.5px solid rgba(60, 50, 40, 0.14);
+  color: #57534e;
+  font-size: 13.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.review-tab-btn:hover {
+  background: #e9e4d8;
+  color: #1c1917;
+}
+
+.review-tab-btn.active {
+  background: #1c1917 !important;
+  color: #ffffff !important;
+  border-color: #1c1917 !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.review-tab-btn.is-best-tab:not(.active) {
+  border-color: #86efac;
+  background: #f0fdf4;
+  color: #166534;
+}
+
+.tab-count {
+  font-size: 11px;
+  padding: 1px 6px;
+  border-radius: 99px;
+  background: rgba(0, 0, 0, 0.08);
+}
+
+.review-tab-btn.active .tab-count {
+  background: rgba(255, 255, 255, 0.22);
+  color: #ffffff;
+}
+
+/* 4. 題目解析內容區（寬敞清晰、不切字） */
+.review-main-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding-right: 4px;
+}
+
+.debrief-hero-box {
+  background: #faf8f5;
+  border: 1.5px solid rgba(60, 50, 40, 0.14);
+  border-left: 6px solid #d97706;
+  border-radius: 14px;
+  padding: 18px 22px;
+}
+
+.debrief-hero-box.is-optimal {
+  background: #f4fbf7;
+  border-color: #bbf7d0;
+  border-left: 6px solid #16a34a;
+}
+
+.debrief-meta-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.debrief-badges, .debrief-metrics {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.debrief-opt-tag {
+  font-size: 13px;
+  font-weight: 800;
+  color: #1c1917;
+  background: #ffffff;
+  border: 1px solid var(--line);
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.review-zone-badge {
+  margin-bottom: 0 !important;
+  font-size: 13px !important;
+  padding: 4px 10px !important;
+}
+
+.picked-groups-tag {
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #0369a1;
+  background: #e0f2fe;
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.debrief-verdict-title {
+  font-size: clamp(22px, 2vw, 28px) !important;
+  font-weight: 850 !important;
+  color: #1c1917 !important;
+  margin: 6px 0 10px !important;
+  line-height: 1.35 !important;
+}
+
+.debrief-analysis-text {
+  font-size: clamp(16.5px, 1.4vw, 19.5px) !important;
+  line-height: 1.75 !important;
+  color: #292524 !important;
+  font-weight: 500 !important;
+  margin: 0 !important;
+}
+
+/* 下半部：深層文化盲點 + 機密情報 並排設計 */
+.debrief-bottom-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  flex: 1;
+}
+
+.debrief-bottom-grid.has-intel {
+  grid-template-columns: 1.25fr 1fr;
+}
+
+.debrief-blindspot-card {
+  background: #fffbeb;
+  border: 2px solid #f59e0b;
+  border-radius: 14px;
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.debrief-blindspot-card .eyebrow {
+  font-size: 12.5px !important;
+  font-weight: 800 !important;
+  color: #b45309 !important;
+  margin-bottom: 8px;
+  letter-spacing: 1px;
+}
+
+.debrief-blindspot-text {
+  font-size: clamp(16px, 1.35vw, 18.5px) !important;
+  line-height: 1.7 !important;
+  font-weight: 700 !important;
+  color: #451a03 !important;
+  margin: 0 !important;
+}
+
+.debrief-intel-card {
+  background: #fefce8;
+  border: 1.5px dashed #eab308;
+  border-radius: 14px;
+  padding: 14px 18px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.debrief-intel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.intel-mini-stamp {
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #dc2626;
+  border: 1.5px solid #dc2626;
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.debrief-intel-card h4 {
+  font-size: 15px;
+  font-weight: 800;
+  color: #78350f;
+  margin: 0 0 6px;
+}
+
+.debrief-intel-card p {
+  font-size: 13.5px;
+  line-height: 1.65;
+  color: #713f12;
+  margin: 0;
+}
+
+@media (max-width: 1024px) {
+  .results-focus-grid,
+  .debrief-bottom-grid.has-intel {
+    grid-template-columns: 1fr;
+  }
+}
+
+
 
 
 

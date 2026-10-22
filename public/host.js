@@ -332,106 +332,98 @@ function resultsMarkup() {
   const isGoodOutcome = state.worldState?.['r' + (state.roundIndex + 1)] === 'good';
 
   return `
-    <!-- Top Result Banner -->
-    <div class="card" style="border:2px solid ${isGoodOutcome ? '#16a34a' : '#dc2626'}; background:${isGoodOutcome ? '#f0fdf4' : '#fef2f2'}; margin-bottom:12px; padding:12px 18px; display:flex; justify-content:space-between; align-items:center;">
-      <div>
-        <strong style="color:${isGoodOutcome ? '#15803d' : '#b91c1c'}; font-size:16px;">
+    <!-- 頂部極簡揭曉橫幅（合併世界狀態與張力變化，省下垂直高度） -->
+    <div class="reveal-top-strip ${isGoodOutcome ? 'is-good' : 'is-bad'}">
+      <div class="reveal-strip-left">
+        <span class="topic-badge">ROUND ${String(state.roundIndex + 1).padStart(2, '0')} · ${r.dimension}</span>
+        <strong>
           ${isGoodOutcome
-            ? `🎉 首席領航者（第 ${state.chiefNavigator || '—'} 組）拍板成功！全員協同大共贏（每組 +15 CQ）`
-            : `⚠️ 首席領航者（第 ${state.chiefNavigator || '—'} 組）拍板踩雷！觸發【全班共業警報】`
+            ? `🎉 首席領航者（第 ${state.chiefNavigator || '—'} 組）拍板成功！全員共贏 +15 CQ（失誤扣分減免 60%）`
+            : `⚠️ 首席領航者（第 ${state.chiefNavigator || '—'} 組）拍板踩雷！觸發全班共業警報（下輪研討 -30s）`
           }
         </strong>
-        <p style="margin:2px 0 0; font-size:12.5px; color:${isGoodOutcome ? '#166534' : '#991b1b'};">
-          ${isGoodOutcome
-            ? '初投失誤組別負面扣分減免 60%，全班 5 組加分，下回合解鎖正面盟友支援！'
-            : '初投失誤組別承受全額扣分，下回合全班 5 組共同承受負面組織困境（研討時間縮短 30 秒）！'
-          }
-        </p>
       </div>
-      <span class="pill ${isGoodOutcome ? 'positive' : 'negative'}" style="font-size:13.5px; font-weight:700;">
-        世界狀態：${isGoodOutcome ? '正面連鎖 🟢' : '深層共業 🔴'}
-      </span>
-    </div>
-
-    <div class="compact-reveal-header">
-      <div class="reveal-header-title">
-        <span class="topic-badge">ROUND ${String(state.roundIndex + 1).padStart(2, '0')} · ${r.dimension}</span>
-        <span class="reveal-location">${esc(r.location)}</span>
-      </div>
-      <div class="reveal-header-tension">
-        <span>基準張力 <strong>${r.baseline}%</strong></span>
-        <i>→</i>
-        <span>平均決策張力 <strong class="${reduction > 0 ? 'positive-text' : 'negative-text'}">${current ?? r.baseline}%</strong></span>
-        <span class="pill ${reduction > 0 ? 'positive' : 'negative'}">${reduction > 0 ? `↓ 張力降 ${reduction} 點` : reduction < 0 ? `↑ 張力升 ${Math.abs(reduction)} 點` : '張力持平'}</span>
+      <div class="reveal-strip-right">
+        <span>張力 <strong>${r.baseline}% → ${current ?? r.baseline}%</strong></span>
+        <span class="pill ${reduction > 0 ? 'positive' : 'negative'}">
+          ${reduction > 0 ? `↓ 降 ${reduction}%` : reduction < 0 ? `↑ 升 ${Math.abs(reduction)}%` : '持平'}
+        </span>
       </div>
     </div>
 
-    <div class="results-bento-grid">
-      <!-- Col 1: Matrix & Distribution -->
-      <section class="card bento-col bento-col-matrix">
-        ${quadrantMatrixMarkup()}
-        <div class="bento-dist-bar">
-          ${state.distribution.map(o => `
-            <span class="dist-mini-chip ${o.id === selectedReview ? 'active' : ''}" data-review="${o.id}">
-              <b>${o.id === 'X' ? '✕' : o.id}</b> ${esc(o.result?.shortTitle || o.title.slice(0, 4))} <small>(${o.count}組)</small>
-            </span>
-          `).join('')}
-        </div>
-      </section>
+    <!-- 主體雙欄佈局：左窄 (36% 象限與5組戰況) / 右寬 (64% 題目解釋與文化盲點主舞台) -->
+    <div class="results-focus-grid">
+      
+      <!-- 左欄：2x2 象限圖 + 5 組單行極簡戰況表 -->
+      <div class="results-side-col">
+        <section class="card side-matrix-card">
+          ${quadrantMatrixMarkup()}
+        </section>
 
-      <!-- Col 2: Central 5-Group Score Breakdown & Rescue Showcase -->
-      <section class="card bento-col bento-col-leaderboard">
-        <div class="leaderboard-head">
-          <div class="eyebrow">RESCUE & SCORE BREAKDOWN</div>
-          <h2>5 組初投與領航救援明細榜</h2>
-          <div class="host-jury-role-strip">
-            <span>全班最終方案：<strong>方案 ${state.finalDecision || '—'}</strong></span>
-            <span class="jury-status-pill">${isGoodOutcome ? '雙層救援生效' : '全額扣分結算'}</span>
+        <section class="card side-scoreboard-card">
+          <div class="side-score-head">
+            <h2>5 組決策與救援結算</h2>
+            <span>全班拍板：<strong>方案 ${state.finalDecision || '—'}</strong></span>
           </div>
+          <div class="compact-score-list">
+            ${state.groups.map(g => {
+              const res = state.results?.[g.id];
+              const isNav = g.id === state.chiefNavigator;
+              const delta = res?.actualDelta ?? 0;
+              return `
+                <div class="compact-score-row ${isNav ? 'is-nav' : ''}">
+                  <div class="c-group">
+                    <strong>第 ${g.id} 組</strong>
+                    ${isNav ? '<span class="navigator-crown-pill">👑 領航</span>' : ''}
+                  </div>
+                  <div class="c-badges">
+                    <span class="score-pill initial">初投 ${res?.id || '—'} (${res?.baseDelta >= 0 ? '+' : ''}${res?.baseDelta ?? 0})</span>
+                    ${res?.rescueBonus > 0 ? `<span class="score-pill rescue">救援 +${res.rescueBonus}</span>` : ''}
+                    ${res?.synergyBonus > 0 ? `<span class="score-pill synergy">共贏 +${res.synergyBonus}</span>` : ''}
+                  </div>
+                  <div class="c-total">
+                    <span class="c-delta ${delta > 0 ? 'positive-text' : delta < 0 ? 'negative-text' : ''}">
+                      ${delta >= 0 ? '+' : ''}${delta}
+                    </span>
+                    <strong class="c-cq">${g.cq} <small>CQ</small></strong>
+                  </div>
+                </div>
+              `;
+            }).join('')}
+          </div>
+        </section>
+      </div>
+
+      <!-- 右欄（64% 主視覺焦點）：看見文化盲點 ＆ 題目深度解釋 -->
+      <section class="card results-main-review">
+        <div class="review-main-header">
+          <div>
+            <div class="eyebrow">CULTURAL BLINDSPOT & CASE DEBRIEF</div>
+            <h2>看見文化盲點（題目深度解析）</h2>
+          </div>
+          <span class="review-hint-text">點擊下方方案切換解析</span>
         </div>
 
-        <div class="host-jury-board-list" style="display:flex; flex-direction:column; gap:8px;">
-          ${state.groups.map(g => {
-            const res = state.results?.[g.id];
-            const isNav = g.id === state.chiefNavigator;
+        <!-- 單行緊湊型方案切換 Tabs -->
+        <div class="review-tabs-compact" role="tablist" aria-label="方案覆盤">
+          ${state.distribution.map(o => {
+            const isFinal = state.finalDecision === o.id;
+            const isBest = (o.result?.cq ?? 0) > 0;
             return `
-              <div class="score-breakdown-card ${isNav ? 'is-winner' : ''}">
-                <div class="breakdown-header">
-                  <span>第 ${g.id} 組 ${isNav ? '<span class="navigator-crown-pill">👑 領航組</span>' : ''}</span>
-                  <strong style="font-size: 15px;">${g.cq} <small>CQ</small></strong>
-                </div>
-                <div class="breakdown-pills">
-                  <span class="score-pill initial">初投 ${res?.id || '—'} (${res?.baseDelta >= 0 ? '+' : ''}${res?.baseDelta ?? 0})</span>
-                  ${res?.rescueBonus > 0 ? `<span class="score-pill rescue">領航救援 +${res.rescueBonus}</span>` : ''}
-                  ${res?.synergyBonus > 0 ? `<span class="score-pill synergy">全員共贏 +${res.synergyBonus}</span>` : ''}
-                </div>
-                <div class="breakdown-net">
-                  <span>本輪淨變動：</span>
-                  <strong class="${res?.actualDelta > 0 ? 'positive-text' : res?.actualDelta < 0 ? 'negative-text' : ''}">
-                    ${res?.actualDelta >= 0 ? '+' : ''}${res?.actualDelta ?? 0} CQ
-                  </strong>
-                </div>
-              </div>
+              <button class="review-tab-btn ${selectedReview === o.id ? 'active' : ''} ${isBest ? 'is-best-tab' : ''}" role="tab" data-review="${o.id}" aria-selected="${selectedReview === o.id}">
+                <span class="tab-letter">${o.id === 'X' ? '破局' : '方案 ' + o.id}</span>
+                <span class="tab-title">${esc(o.result?.shortTitle || o.title.slice(0, 6))}</span>
+                <span class="tab-count">${o.count}組</span>
+                ${isFinal ? '<span class="tab-final-crown" title="全班最終拍板方案">👑</span>' : ''}
+              </button>
             `;
           }).join('')}
         </div>
+
+        <!-- 題目解釋與深層盲點主要內容區 -->
+        <div id="review-content" class="review-main-body" role="tabpanel" aria-live="polite"></div>
       </section>
 
-      <!-- Col 3: Review Deep Dive & Classified Intel Decryption -->
-      <section class="card bento-col bento-col-review">
-        <div class="review-head-banner">
-          <div class="eyebrow">CULTURAL BLINDSPOT ANALYSIS</div>
-          <h2>看見文化盲點（情境解密）</h2>
-        </div>
-        <div class="review-tabs" role="tablist" aria-label="方案覆盤">
-          ${state.distribution.map(o => `
-            <button class="review-tab" role="tab" data-review="${o.id}" aria-selected="${selectedReview === o.id}" aria-controls="review-content">
-              ${o.id === 'X' ? '破局' : '方案 ' + o.id} · ${esc(o.result?.shortTitle || o.title.slice(0, 4))}
-            </button>
-          `).join('')}
-        </div>
-        <div id="review-content" role="tabpanel" aria-live="polite"></div>
-      </section>
     </div>
   `;
 }
@@ -441,36 +433,62 @@ function renderReview() {
   if (!entry) return;
   selectedReview = entry.id;
   const r = entry.result;
+
   document.querySelectorAll('[data-review]').forEach(el => {
-    el.setAttribute('aria-selected', String(el.dataset.review === selectedReview));
-    el.classList.toggle('is-active-point', el.dataset.review === selectedReview);
-    el.classList.toggle('active', el.dataset.review === selectedReview);
+    const isSelected = el.dataset.review === selectedReview;
+    el.setAttribute('aria-selected', String(isSelected));
+    el.classList.toggle('is-active-point', isSelected);
+    el.classList.toggle('active', isSelected);
   });
+
   const q = r.quadrant;
   const contentEl = $('#review-content');
   if (!contentEl) return;
+
+  const pickedGroups = [1, 2, 3, 4, 5].filter(gid => state.results?.[gid]?.id === entry.id);
+
   contentEl.innerHTML = `
-    <div class="review-badge-row">
-      ${q ? `<span class="review-zone-badge">象限落點：${esc(q.zone)}</span>` : ''}
-      <span class="pill ${r.reduction > 0 ? 'positive' : 'negative'}">${r.reduction > 0 ? '↓ 張力降 ' + r.reduction + ' 點' : r.reduction < 0 ? '↑ 張力升 ' + Math.abs(r.reduction) + ' 點' : '張力持平'}</span>
-      <span class="pill ${r.cq > 0 ? 'positive' : 'negative'}">方案基礎 ${r.cq > 0 ? '+' + r.cq : r.cq} CQ</span>
-    </div>
-    <h3 class="review-verdict">${esc(r.verdict)}</h3>
-    <p class="review-copy">${esc(r.analysis)}</p>
-    <div class="review-insight">
-      <div class="eyebrow">BEYOND THE WORDS · 深層文化盲點</div>
-      <p class="review-copy">${esc(r.blindspot)}</p>
-    </div>
-    ${state.hiddenIntel ? `
-      <div class="classified-intel-box" style="margin-top: 16px;">
-        <div class="classified-stamp">已公開解密</div>
-        <div class="classified-header">
-          <h4 class="classified-title">${esc(state.hiddenIntel.title)}</h4>
-          <p class="classified-subtitle">首度向全班公開之內部機密關鍵情報</p>
+    <!-- 1. 方案標題與決策成效指標列 -->
+    <div class="debrief-hero-box ${(r.cq ?? 0) > 0 ? 'is-optimal' : 'is-risk'}">
+      <div class="debrief-meta-row">
+        <div class="debrief-badges">
+          <span class="debrief-opt-tag">${entry.id === 'X' ? '談判破局' : '方案 ' + entry.id + '：' + esc(entry.title)}</span>
+          ${q ? `<span class="review-zone-badge">📍 象限落點：${esc(q.zone)}</span>` : ''}
+          ${pickedGroups.length ? `<span class="picked-groups-tag">初投選擇：第 ${pickedGroups.join('、')} 組</span>` : '<span class="picked-groups-tag muted">無組別初投此項</span>'}
         </div>
-        <div class="classified-body">${esc(state.hiddenIntel.text)}</div>
+        <div class="debrief-metrics">
+          <span class="pill ${r.reduction > 0 ? 'positive' : 'negative'}">
+            ${r.reduction > 0 ? '↓ 張力降 ' + r.reduction + ' 點' : r.reduction < 0 ? '↑ 張力升 ' + Math.abs(r.reduction) + ' 點' : '張力持平'}
+          </span>
+          <span class="pill ${r.cq > 0 ? 'positive' : 'negative'}">
+            方案基礎 ${r.cq > 0 ? '+' + r.cq : r.cq} CQ
+          </span>
+        </div>
       </div>
-    ` : ''}
+
+      <!-- 2. 核心診斷結論與題目情境解釋（字體放大、行距寬鬆） -->
+      <h3 class="debrief-verdict-title">${esc(r.verdict)}</h3>
+      <p class="debrief-analysis-text">${esc(r.analysis)}</p>
+    </div>
+
+    <!-- 3. 下半部雙欄並排：深層文化盲點 ＋ 內部極密情報解密 -->
+    <div class="debrief-bottom-grid ${state.hiddenIntel ? 'has-intel' : ''}">
+      <div class="debrief-blindspot-card">
+        <div class="eyebrow">💡 BEYOND THE WORDS · 深層文化盲點與管理啟示</div>
+        <p class="debrief-blindspot-text">${esc(r.blindspot)}</p>
+      </div>
+
+      ${state.hiddenIntel ? `
+        <div class="debrief-intel-card">
+          <div class="debrief-intel-head">
+            <span class="eyebrow">📂 CLASSIFIED INTEL · 關鍵內幕解密</span>
+            <span class="intel-mini-stamp">已解密公開</span>
+          </div>
+          <h4>${esc(state.hiddenIntel.title)}</h4>
+          <p>${esc(state.hiddenIntel.text)}</p>
+        </div>
+      ` : ''}
+    </div>
   `;
 }
 
