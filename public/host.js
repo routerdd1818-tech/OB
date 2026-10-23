@@ -570,18 +570,17 @@ async function hostAction(action, extra = {}) {
       if (el.dataset.hostAction === 'next') el.textContent = '正在切換下一回合…';
     });
     try {
-      const targetRound = Math.min(3, (state?.roundIndex ?? 0) + 1);
-      highestRoundIndex = targetRound;
-      setSyncRoundLock(highestRoundIndex, highestEpoch);
       const latest = await api('next', { force: true, autoStart: true, ...extra }, 'host');
       if (latest && latest.roundIndex !== undefined) {
         if (latest.epoch) highestEpoch = latest.epoch;
-        if (latest.roundIndex > highestRoundIndex) highestRoundIndex = latest.roundIndex;
+        if (typeof latest.revision === 'number') highestRevision = latest.revision;
+        highestRoundIndex = latest.roundIndex;
+        forceSyncRound(highestRoundIndex, highestEpoch);
         latest.clockOffset = (latest.serverTime || Date.now()) - Date.now();
         state = latest;
         lastSignature = JSON.stringify({ ...latest, serverTime: 0, clockOffset: 0 });
         render();
-        broadcastSync('host_action', { action: 'next', roundIndex: latest.roundIndex });
+        broadcastSync('host_action', { action: 'next', roundIndex: latest.roundIndex, epoch: highestEpoch });
         toast(latest.phase === 'finished' ? '四回合已全部完成！' : `已進入第 ${latest.roundIndex + 1} 回合討論 ✓`);
       } else {
         lastSignature = '';
@@ -656,7 +655,7 @@ async function refresh() {
       highestRoundIndex = typeof next.roundIndex === 'number' ? next.roundIndex : 0;
       forceSyncRound(highestRoundIndex, highestEpoch);
     } else if (next.epoch === highestEpoch) {
-      if (typeof next.revision === 'number' && next.revision > highestRevision) {
+      if (typeof next.revision === 'number' && next.revision >= highestRevision) {
         highestRevision = next.revision;
         highestRoundIndex = typeof next.roundIndex === 'number' ? next.roundIndex : highestRoundIndex;
         forceSyncRound(highestRoundIndex, highestEpoch);

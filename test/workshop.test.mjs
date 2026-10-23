@@ -430,4 +430,10 @@ test('atomic next with autoStart advances round and phase in single request; syn
   // Server state remains on round 0
   state = (await host()).data;
   assert.equal(state.roundIndex, 0);
+
+  // Calling next from Round 0 advances strictly to Round 1 (never skipping to 2 or 3)
+  const nextFromZero = await host('next', { force: true, autoStart: true });
+  assert.equal(nextFromZero.status, 200);
+  state = (await host()).data;
+  assert.equal(state.roundIndex, 1);
 });

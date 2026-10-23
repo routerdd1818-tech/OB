@@ -1,13 +1,11 @@
 export const $ = selector => document.querySelector(selector);
 export const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
-export function setSyncRoundLock(round, epoch, force = false) {
+export function setSyncRoundLock(round, epoch) {
   if (typeof window === 'undefined') return;
   if (!window.__cq_sync) window.__cq_sync = { round: -1, epoch: '' };
-  if (typeof round === 'number') {
-    if (force || window.__cq_sync.round < 0 || round > window.__cq_sync.round) {
-      window.__cq_sync.round = round;
-    }
+  if (typeof round === 'number' && round >= 0) {
+    window.__cq_sync.round = round;
   }
   if (epoch) {
     window.__cq_sync.epoch = epoch;
@@ -17,7 +15,7 @@ export function setSyncRoundLock(round, epoch, force = false) {
 export function forceSyncRound(round, epoch) {
   if (typeof window === 'undefined') return;
   if (!window.__cq_sync) window.__cq_sync = { round: -1, epoch: '' };
-  if (typeof round === 'number') {
+  if (typeof round === 'number' && round >= 0) {
     window.__cq_sync.round = round;
   }
   if (epoch) {

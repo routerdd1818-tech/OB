@@ -437,18 +437,10 @@ export default async function handler(req, res) {
       finalState = state;
       const user = session(req, state, role);
 
-      // 【關鍵防護】若此 Serverless 實例的 state.round 落後於前端傳來的 roundIndex / syncRound，自動對齊最新回合，防止閃退回第一回合
+      // 【跨實例世代同步】僅在冷啟動節點落後於 reset 世代時對齊 epoch
       if (action !== 'reset') {
         if (syncEpochHeader && syncEpochHeader.startsWith('cq-reset-') && state.epoch === 'cq-room-v1') {
           state.epoch = syncEpochHeader;
-        }
-        const targetRound = typeof body.roundIndex === 'number' ? body.roundIndex : (Number.isInteger(clientSyncRound) ? clientSyncRound : null);
-        if (targetRound !== null && targetRound > state.round && targetRound <= 3) {
-          state.round = targetRound;
-          if (state.phase === 'revealed' || state.phase === 'ready' || state.phase === 'waiting') {
-            state.phase = 'voting';
-            state.deadline = Date.now() + calcRoundSeconds(state, targetRound) * 1000;
-          }
         }
       }
 

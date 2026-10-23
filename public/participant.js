@@ -369,7 +369,7 @@ async function refresh() {
     next.clockOffset = next.serverTime - Date.now();
     const savedJoin = getSavedJoin();
 
-    if (next.epoch && (next.epoch !== lastKnownEpoch || (typeof next.revision === 'number' && next.revision > lastKnownRevision))) {
+    if (next.epoch && (next.epoch !== lastKnownEpoch || (typeof next.revision === 'number' && next.revision >= lastKnownRevision))) {
       lastKnownEpoch = next.epoch;
       if (typeof next.revision === 'number') lastKnownRevision = next.revision;
       if (typeof next.roundIndex === 'number') {
