@@ -198,9 +198,8 @@ function render() {
           toast('💡 請與組長討論，由組長手機統一插旗送出！');
         }
         const rect = board.getBoundingClientRect();
-        const touch = e.touches?.[0] || e.changedTouches?.[0];
-        const clientX = touch ? touch.clientX : e.clientX;
-        const clientY = touch ? touch.clientY : e.clientY;
+        const clientX = e.clientX;
+        const clientY = e.clientY;
         const rawX = Math.round(((clientX - rect.left) / rect.width) * 100);
         const rawY = Math.round(100 - ((clientY - rect.top) / rect.height) * 100);
         pin = {
@@ -210,8 +209,7 @@ function render() {
         selection = mapPinToChoice(pin.x, pin.y);
         updatePinUI();
       };
-      board.addEventListener('click', handlePointer);
-      board.addEventListener('touchstart', handlePointer, { passive: true });
+      board.addEventListener('pointerdown', handlePointer);
     }
     $('#submit-vote')?.addEventListener('click', submitVote);
   }

@@ -621,7 +621,7 @@ async function hostAction(action, extra = {}) {
       highestRevision = res.revision || 0;
       resetSyncRoundLock(res.epoch);
     }
-    broadcastSync('host_action', { action, roundIndex: state?.roundIndex });
+    broadcastSync('host_action', { action, roundIndex: state?.roundIndex, epoch: res?.epoch || highestEpoch || state?.epoch });
     if (res && res.roundIndex !== undefined) {
       res.clockOffset = (res.serverTime || Date.now()) - Date.now();
       state = res;

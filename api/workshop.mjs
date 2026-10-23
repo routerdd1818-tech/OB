@@ -357,10 +357,6 @@ export default async function handler(req, res) {
       let member = { id: memberId, name, group, expires: Date.now() + 43200000 };
       let token = '';
       await mutate(state => {
-        // 防回合倒退：若前端已知在更高回合，防止冷啟動節點的舊 round 覆蓋新回合
-        if (typeof body.clientRound === 'number' && body.clientRound > state.round && body.clientRound <= 3) {
-          state.round = body.clientRound;
-        }
         const prior = (verifiedOld && verifiedOld.epoch === state.epoch) ? verifiedOld : (old && state.participants[hash(old)]);
         if (prior && prior.expires > Date.now() && (prior.group !== group || prior.name !== name)) {
           if (!body.allowSwitch) fail('已加入課堂，不能切換至其他組別', 409);
@@ -520,7 +516,7 @@ export default async function handler(req, res) {
           state.remaining = Math.max(0, state.deadline - Date.now());
           state.deadline = null;
         } else {
-          const fallbackSec = (rounds[state.round].seconds ?? (state.round === 3 ? 60 : 180)) * 1000;
+          const fallbackSec = calcRoundSeconds(state, state.round) * 1000;
           state.deadline = Date.now() + (state.remaining ?? fallbackSec);
           state.remaining = null;
         }
