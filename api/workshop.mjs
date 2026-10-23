@@ -163,7 +163,7 @@ function shared(state, options) {
 function memberView(state, member) {
   const group = state.groups[member.group - 1];
   const revealed = ['revealed', 'finished'].includes(state.phase);
-  const cqVal = group.cq ?? 100;
+  const cqVal = group.cq ?? 0;
   const navInfo = computeNavigator(state, state.round);
   const chiefNavigator = navInfo.chiefNavigator;
   const cascade = state.round >= 1 ? computeCascade(state.round, state.worldState) : null;
@@ -178,7 +178,7 @@ function memberView(state, member) {
     const r = state.results[state.round]?.[g.id];
     return {
       id: g.id,
-      cq: g.cq ?? 100,
+      cq: g.cq ?? 0,
       optionId: r?.id || null,
       optionTitle: r?.title || null,
       baseDelta: r?.baseDelta ?? 0,
@@ -241,7 +241,7 @@ function hostView(state, req) {
   const hasFinalDecision = Boolean(state.finalDecisions?.[state.round]);
 
   const groups = state.groups.map(g => {
-    const gCq = g.cq ?? 100;
+    const gCq = g.cq ?? 0;
     return {
       ...g,
       cq: gCq,
@@ -386,7 +386,7 @@ export default async function handler(req, res) {
         if (typeof body.clientRound === 'number' && body.clientRound > state.round && body.clientRound <= 3) {
           state.round = body.clientRound;
         }
-        const prior = old && (verifiedOld || state.participants[hash(old)]);
+        const prior = (verifiedOld && verifiedOld.epoch === state.epoch) ? verifiedOld : (old && state.participants[hash(old)]);
         if (prior && prior.expires > Date.now() && (prior.group !== group || prior.name !== name)) {
           if (!body.allowSwitch) fail('已加入課堂，不能切換至其他組別', 409);
         }
@@ -637,31 +637,51 @@ export default async function handler(req, res) {
           persuasionPointsMap[item.id] = item.totalPoints || 0;
         }
 
+        const TARGETS = [
+          { x: 78, y: 82 },
+          { x: 84, y: 18 },
+          { x: 22, y: 24 },
+          { x: 18, y: 85 }
+        ];
+        const FALLBACK_COORDS = {
+          A: { x: 25, y: 75 },
+          B: { x: 75, y: 75 },
+          C: { x: 25, y: 25 },
+          D: { x: 75, y: 25 }
+        };
+        const target = TARGETS[state.round] || { x: 50, y: 50 };
+
         for (const group of state.groups) {
           const vote = state.votes[state.round]?.[group.id];
           if (!vote) continue;
           const result = outcome(state.round, vote);
           if (result) {
-            const before = group.cq ?? 100;
-            // 判斷初選是否命中「文獻理論最佳實踐」：選對加 15 分，選錯扣 10 分！
-            const isLiteratureOptimal = (result.cq ?? 0) > 0;
-            const insightDelta = isLiteratureOptimal ? 15 : -10;
+            const before = group.cq ?? 0;
+            const gx = typeof vote.pinX === 'number' ? vote.pinX : (FALLBACK_COORDS[vote.choice]?.x ?? 50);
+            const gy = typeof vote.pinY === 'number' ? vote.pinY : (FALLBACK_COORDS[vote.choice]?.y ?? 50);
+            const dist = Math.round(Math.hypot(gx - target.x, gy - target.y));
+            // 計分從 0 開始，越靠近分數越高，越遠分數越低（滿分 100，每差 1 單位距離扣 1 分，最低 0 分）
+            const roundScore = Math.max(0, Math.round(100 - dist));
             const peerPts = persuasionPointsMap[group.id] || 0;
-            const persuasionScore = peerPts * 5; // 每獲得 1 點同儕說服認同 = +5 分
-            const totalDelta = insightDelta + persuasionScore;
-            const after = Math.max(0, before + totalDelta);
+            const persuasionScore = peerPts * 5;
+            const totalDelta = roundScore;
+            const after = before + totalDelta;
             group.cq = after;
 
             state.results[state.round][group.id] = {
               ...result,
               cqBefore: before,
               cqAfter: after,
-              baseDelta: insightDelta, // 選對 +15，選錯 -10
+              dist,
+              pinX: gx,
+              pinY: gy,
+              roundScore,
+              baseDelta: roundScore,
               rescueBonus: 0,
-              synergyBonus: persuasionScore, // 同儕說服得分 (peerPts * 5)
-              actualDelta: totalDelta, // 本輪總得點
+              synergyBonus: persuasionScore,
+              actualDelta: totalDelta,
               peerPersuasionPts: peerPts,
-              isLiteratureOptimal,
+              isLiteratureOptimal: roundScore >= 80,
               finalChoice,
               isBestFinal,
               isNavigator: group.id === navId,
@@ -671,7 +691,7 @@ export default async function handler(req, res) {
         }
 
         // 依累計文化總分由高至低嚴格排序，產生「誰是文化王排行榜」
-        const ranking = state.groups.slice().sort((a, b) => (b.cq ?? 100) - (a.cq ?? 100));
+        const ranking = state.groups.slice().sort((a, b) => (b.cq ?? 0) - (a.cq ?? 0));
         for (let idx = 0; idx < ranking.length; idx++) {
           const gid = ranking[idx].id;
           if (state.results[state.round]?.[gid]) {

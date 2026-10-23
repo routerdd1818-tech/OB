@@ -74,27 +74,21 @@ const GEO_ROUNDS_DATA = [
 // 紀錄 5 組學員送來的精確座標 { "${roundIndex}_${groupId}": { x, y } }
 const groupPins = {};
 
-// 根據歐幾里得距離 d 計算 GeoGuessr 得分與 CQ 增減
+// 根據歐幾里得距離 d 計算得分（計分從 0 開始，越靠近分數越高，越遠分數越低，滿分 100 分）
 function calcGeoScore(gx, gy, tx, ty) {
   const dist = Math.round(Math.hypot(gx - tx, gy - ty));
-  let cqDelta = -20;
-  let tier = '嚴重誤判';
-  let accuracy = Math.max(0, Math.round(100 - dist * 0.85));
-
+  const roundScore = Math.max(0, Math.round(100 - dist));
+  let tier = '嚴重偏離';
   if (dist <= 15) {
-    cqDelta = 20;
     tier = '完美命中';
   } else if (dist <= 30) {
-    cqDelta = 10;
     tier = '精準落點';
-  } else if (dist <= 45) {
-    cqDelta = 0;
+  } else if (dist <= 50) {
     tier = '方向尚可';
-  } else if (dist <= 65) {
-    cqDelta = -10;
+  } else if (dist <= 75) {
     tier = '象限偏差';
   }
-  return { dist, cqDelta, tier, accuracy };
+  return { dist, roundScore, cqDelta: roundScore, tier, accuracy: roundScore };
 }
 
 let state = null;
@@ -144,26 +138,26 @@ function render() {
   document.body.classList.toggle('is-revealed', revealed);
   document.documentElement.style.setProperty('--accent', r.color);
 
-  const sortedByScore = state.groups.slice().sort((a, b) => (b.cq ?? 100) - (a.cq ?? 100));
-  const kingGid = (sortedByScore[0]?.cq ?? 100) > 0 ? sortedByScore[0]?.id : null;
+  const sortedByScore = state.groups.slice().sort((a, b) => (b.cq ?? 0) - (a.cq ?? 0));
+  const kingGid = (sortedByScore[0]?.cq ?? 0) > 0 ? sortedByScore[0]?.id : null;
 
   const cqStripHtml = state.groups.map(g => {
+    const pts = g.cq ?? 0;
     if (revealed) {
-      const pts = g.cq ?? 100;
       const res = state.results?.[g.id];
-      const delta = res?.actualDelta;
+      const delta = res?.actualDelta ?? res?.roundScore ?? 0;
       const isKing = g.id === kingGid;
       const kingBadge = isKing ? '<span class="navigator-crown-pill" style="background:#fef3c7; color:#b45309; border:1px solid #f59e0b; font-weight:700;">文化王</span>' : '';
-      const animClass = animate && delta !== undefined ? (delta > 0 ? 'cq-heal-glow' : delta < 0 ? 'cq-damage-shake' : '') : '';
+      const animClass = animate && delta > 0 ? 'cq-heal-glow' : '';
       return `<div class="cq-group card ${isKing ? 'is-navigator' : ''} ${animClass}">
         <div class="cq-group-head">
           <span class="group-label">第 ${g.id} 組 ${kingBadge}</span>
           <div class="cq-value">${pts}<small style="font-size:11px; margin-left:3px; color:#92400e; font-weight:700;">分</small></div>
         </div>
-        <div class="health-track" role="progressbar" aria-label="第 ${g.id} 組文化積分" aria-valuenow="${pts}" aria-valuemin="0" aria-valuemax="160">
-          <div class="health-fill" style="width:${Math.min(100, Math.round((pts / 160) * 100))}%; background:#d97706;"></div>
+        <div class="health-track" role="progressbar" aria-label="第 ${g.id} 組文化積分" aria-valuenow="${pts}" aria-valuemin="0" aria-valuemax="400">
+          <div class="health-fill" style="width:${Math.min(100, Math.round((pts / 400) * 100))}%; background:#d97706;"></div>
         </div>
-        ${animate && delta !== undefined ? `<span class="cq-float ${delta < 0 ? 'loss' : ''}">${delta > 0 ? '+' : ''}${delta} 分</span>` : ''}
+        ${animate && delta !== undefined ? `<span class="cq-float">+${delta} 分</span>` : ''}
       </div>`;
     } else {
       const isDone = Boolean(g.submitted);
@@ -175,7 +169,7 @@ function render() {
           </span>
         </div>
         <div style="font-size:12px; color:#78716c; margin-top:6px; display:flex; justify-content:space-between; align-items:center;">
-          <span>小組席位</span>
+          <span>目前累計：<strong style="color:#d97706;">${pts} 分</strong></span>
           <strong style="color:#44403c;">${g.count || 0} 人在線</strong>
         </div>
       </div>`;
@@ -354,7 +348,7 @@ function resultsMarkup() {
     const hasSubmitted = Boolean(customPin || res?.id);
 
     if (!hasSubmitted) {
-      return { id: g.id, submitted: false, dist: null, cqDelta: 0, tier: '未提交', accuracy: 0, totalCq: g.cq ?? 100 };
+      return { id: g.id, submitted: false, dist: null, roundScore: 0, cqDelta: 0, tier: '未提交', accuracy: 0, totalCq: g.cq ?? 0 };
     }
 
     const offset = (g.id - 3) * 3;
@@ -369,21 +363,21 @@ function resultsMarkup() {
       y: gy,
       top: 100 - gy,
       ...scoreInfo,
-      totalCq: g.cq ?? 100
+      totalCq: g.cq ?? 0
     };
   });
 
   // 繪製每組旗幟到真實靶心的虛線
   const svgLines = groupEvaluations.filter(g => g.submitted).map(n => `
     <line x1="${n.x}%" y1="${n.top}%" x2="${target.x}%" y2="${targetTop}%"
-      stroke="${n.cqDelta > 0 ? '#16a34a' : n.cqDelta === 0 ? '#d97706' : '#dc2626'}"
+      stroke="${n.roundScore >= 80 ? '#16a34a' : n.roundScore >= 50 ? '#d97706' : '#dc2626'}"
       stroke-width="2.5" stroke-dasharray="5 4" opacity="0.85" />
   `).join('');
 
   // 繪製 5 組的插旗位置
   const flagsHtml = groupEvaluations.filter(g => g.submitted).map(n => `
     <div class="geo-group-flag" style="left:${n.x}%; top:${n.top}%; z-index:9;" title="第 ${n.id} 組 (${n.x}, ${n.y}) · 距離誤差 ${n.dist}">
-      <span class="flag-badge" style="background:${n.cqDelta > 0 ? '#15803d' : n.cqDelta === 0 ? '#b45309' : '#b91c1c'}; color:#fff; border-color:#fff;">
+      <span class="flag-badge" style="background:${n.roundScore >= 80 ? '#15803d' : n.roundScore >= 50 ? '#b45309' : '#b91c1c'}; color:#fff; border-color:#fff;">
         G${n.id} <small>(${n.x}, ${n.y})</small>
       </span>
     </div>
@@ -397,7 +391,7 @@ function resultsMarkup() {
         <strong style="margin-left:10px;">真實最佳文化靶心：(${target.x}, ${target.y}) — ${esc(target.zone)}</strong>
       </div>
       <div class="reveal-strip-right">
-        <span>依歐幾里得距離誤差換算 CQ 積分</span>
+        <span>計分從 0 開始 · 越靠近靶心分數越高（滿分 100 分）</span>
       </div>
     </div>
 
@@ -445,25 +439,25 @@ function resultsMarkup() {
         <section class="card side-scoreboard-card" style="padding:14px 16px;">
           <div class="side-score-head" style="margin-bottom:8px;">
             <h2>5 組落點距離與得分榜</h2>
-            <span>依距離誤差 $d$ 計分</span>
+            <span>離靶心越近得分越高（滿分 100 分）</span>
           </div>
           <div class="compact-score-list">
             ${groupEvaluations
               .slice()
-              .sort((a, b) => (a.dist ?? 999) - (b.dist ?? 999))
+              .sort((a, b) => (b.roundScore ?? 0) - (a.roundScore ?? 0))
               .map((g, idx) => `
                 <div class="compact-score-row ${idx === 0 && g.submitted ? 'is-nav' : ''}" style="padding:6px 10px;">
                   <div class="c-group">
                     <strong>第 ${g.id} 組</strong>
-                    ${g.submitted ? `<small class="muted">(${g.x}, ${g.y})</small>` : '<small class="muted">未插旗</small>'}
+                    ${g.submitted ? `<small class="muted">(${g.x}, ${g.y}) · 累計 ${g.totalCq} 分</small>` : '<small class="muted">未插旗</small>'}
                   </div>
                   <div class="c-badges">
                     ${g.submitted ? `<span class="score-pill initial" style="font-size:11px;">誤差 ${g.dist}</span>` : ''}
-                    <span class="score-pill ${g.cqDelta > 0 ? 'synergy' : g.cqDelta === 0 ? 'rescue' : 'negative'}" style="font-size:11px;">${g.tier}</span>
+                    <span class="score-pill ${g.roundScore >= 80 ? 'synergy' : g.roundScore >= 50 ? 'rescue' : 'negative'}" style="font-size:11px;">${g.tier}</span>
                   </div>
                   <div class="c-total">
-                    <span class="c-delta ${g.cqDelta > 0 ? 'positive-text' : g.cqDelta < 0 ? 'negative-text' : ''}">
-                      ${g.cqDelta > 0 ? '+' : ''}${g.cqDelta} CQ
+                    <span class="c-delta positive-text" style="font-weight:800; font-size:13.5px;">
+                      +${g.roundScore} 分
                     </span>
                   </div>
                 </div>

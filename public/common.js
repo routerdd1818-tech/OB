@@ -41,7 +41,12 @@ export async function api(action = 'state', body, role = 'member') {
       signal: controller.signal
     });
     const data = await response.json();
-    if (!response.ok) throw Object.assign(new Error(data.error || '請求失敗'), { status: response.status });
+    if (!response.ok) {
+      if (response.status === 401 && role === 'member' && typeof localStorage !== 'undefined') {
+        localStorage.removeItem('cq_member_token');
+      }
+      throw Object.assign(new Error(data.error || '請求失敗'), { status: response.status });
+    }
     return data;
   } catch (error) {
     if (error.name === 'AbortError') throw new Error('連線逾時，請檢查網路並重試');

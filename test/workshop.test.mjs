@@ -82,7 +82,7 @@ test('five groups join independently; all 5 groups are decision groups', async (
     assert.equal(data.member.group, i + 1);
     assert.equal(data.member.isRepresentative, true);
     assert.equal(data.member.isJury, false);
-    assert.equal(data.group.cq, 100);
+    assert.equal(data.group.cq, 0);
     assert.equal('groups' in data, false);
     assert.equal('count' in data.group, false);
     assert.equal('cq' in data.round.options[0], false);
@@ -177,36 +177,33 @@ test('persuasion points allocation validation, chief navigator computation, and 
   assert.equal(g2Decided.finalDecision, 'B');
 });
 
-test('reveal settlement: optimal final decision triggers literature optimal +15, persuasion points * 5, and sets worldState to good', async () => {
+test('reveal settlement: optimal final decision triggers literature optimal, distance-based scoring from 0, and sets worldState to good', async () => {
   assert.equal((await host('reveal', {})).status, 200);
   const afterReveal = (await host()).data;
 
-  // Round 1 initial votes:
-  // G1: A (not optimal -> -10). Peer persuasion = 1 pt (* 5 = 5). Total Delta = -10 + 5 = -5. (cq: 100 - 5 = 95)
-  assert.equal(afterReveal.results[1].baseDelta, -10);
-  assert.equal(afterReveal.results[1].synergyBonus, 5);
-  assert.equal(afterReveal.results[1].actualDelta, -5);
-  assert.equal(afterReveal.groups[0].cq, 95);
+  // Round 1 initial votes distance scoring (starts from 0, closer = higher score):
+  // Target: (78, 82)
+  // G1: A -> fallback (25, 75). dist = 53. roundScore = 47. (cq: 0 + 47 = 47)
+  assert.equal(afterReveal.results[1].baseDelta, 47);
+  assert.equal(afterReveal.results[1].actualDelta, 47);
+  assert.equal(afterReveal.groups[0].cq, 47);
 
-  // G2: B (Literature optimal -> +15). Peer persuasion = 8 pts (* 5 = 40). Total Delta = 15 + 40 = 55. Chief Navigator / Culture King! (cq: 100 + 55 = 155)
-  assert.equal(afterReveal.results[2].baseDelta, 15);
-  assert.equal(afterReveal.results[2].synergyBonus, 40);
-  assert.equal(afterReveal.results[2].actualDelta, 55);
-  assert.equal(afterReveal.groups[1].cq, 155);
+  // G2: B -> fallback (75, 75). dist = 8. roundScore = 92. Chief Navigator / Culture King! (cq: 0 + 92 = 92)
+  assert.equal(afterReveal.results[2].baseDelta, 92);
+  assert.equal(afterReveal.results[2].actualDelta, 92);
+  assert.equal(afterReveal.groups[1].cq, 92);
   assert.equal(afterReveal.results[2].rank, 1);
   assert.equal(afterReveal.results[2].isCultureKing, true);
 
-  // G3: C (not optimal -> -10). Peer persuasion = 1 pt (* 5 = 5). Total Delta = -5. (cq: 95)
-  assert.equal(afterReveal.results[3].baseDelta, -10);
-  assert.equal(afterReveal.results[3].synergyBonus, 5);
-  assert.equal(afterReveal.results[3].actualDelta, -5);
-  assert.equal(afterReveal.groups[2].cq, 95);
+  // G3: C -> fallback (25, 25). dist = 78. roundScore = 22. (cq: 0 + 22 = 22)
+  assert.equal(afterReveal.results[3].baseDelta, 22);
+  assert.equal(afterReveal.results[3].actualDelta, 22);
+  assert.equal(afterReveal.groups[2].cq, 22);
 
-  // G4: D (not optimal -> -10). Peer persuasion = 1 pt (* 5 = 5). Total Delta = -5. (cq: 95)
-  assert.equal(afterReveal.results[4].baseDelta, -10);
-  assert.equal(afterReveal.results[4].synergyBonus, 5);
-  assert.equal(afterReveal.results[4].actualDelta, -5);
-  assert.equal(afterReveal.groups[3].cq, 95);
+  // G4: D -> fallback (75, 25). dist = 57. roundScore = 43. (cq: 0 + 43 = 43)
+  assert.equal(afterReveal.results[4].baseDelta, 43);
+  assert.equal(afterReveal.results[4].actualDelta, 43);
+  assert.equal(afterReveal.groups[3].cq, 43);
 
   // World state after R1 optimal outcome
   assert.equal(afterReveal.worldState.r1, 'good');
@@ -257,13 +254,11 @@ test('bad outcome in round 2 causes full penalty, no rescue, and shared conseque
   await host('reveal', {});
   const revealed = (await host()).data;
   assert.equal(revealed.worldState.r3, 'bad');
-  // G1 chose A (not optimal -> -10) + received 2 persuasion points (+10) -> actualDelta = 0
-  assert.equal(revealed.results[1].baseDelta, -10);
-  assert.equal(revealed.results[1].synergyBonus, 10);
-  assert.equal(revealed.results[1].actualDelta, 0);
-  // G3 chose A (not optimal -> -10) + received 0 persuasion points -> actualDelta = -10
-  assert.equal(revealed.results[3].baseDelta, -10);
-  assert.equal(revealed.results[3].actualDelta, -10);
+  // G1 chose A -> fallback (25, 75). dist = 51, roundScore = 49
+  assert.equal(revealed.results[1].baseDelta, 49);
+  assert.equal(revealed.results[1].actualDelta, 49);
+  assert.equal(revealed.results[3].baseDelta, 49);
+  assert.equal(revealed.results[3].actualDelta, 49);
 
   // Next round (Round 4, index 3) starts with penalty!
   await host('next', {});
@@ -303,7 +298,7 @@ test('representative transfer and reset preserve only host access', async () => 
   assert.equal((await request('state', undefined, memberCookies[0])).status, 401);
   const state = (await host()).data;
   assert.equal(state.phase, 'waiting');
-  assert.ok(state.groups.every(g => g.cq === 100 && g.count === 0));
+  assert.ok(state.groups.every(g => g.cq === 0 && g.count === 0));
 });
 
 test('all tension values match the requested matrix; answers are not in static client code', async () => {

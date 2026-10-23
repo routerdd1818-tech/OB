@@ -128,8 +128,7 @@ function render() {
   const hasVoted = Boolean(state.vote?.choice) || localVotedRoundKey === key;
 
   document.documentElement.style.setProperty('--accent', r.color);
-  const cq = state.group?.cq ?? 100;
-  const cqClass = cq < 50 ? 'critical' : cq < 75 ? 'low' : '';
+  const cq = state.group?.cq ?? 0;
   const qData = MOBILE_QUESTIONS[state.roundIndex] || MOBILE_QUESTIONS[0];
 
   const identityBar = `
@@ -146,9 +145,9 @@ function render() {
         </span>
       </div>
       <div class="mobile-health">
-        <span class="health-label">團隊 CQ 韌性</span>
-        <div class="health-track"><div class="health-fill ${cqClass}" style="width:${Math.min(100, Math.round((cq / 150) * 100))}%"></div></div>
-        <span class="cq-value">${cq}<small> CQ</small></span>
+        <span class="health-label">文化積分</span>
+        <div class="health-track"><div class="health-fill" style="width:${Math.min(100, Math.round((cq / 400) * 100))}%; background:#d97706;"></div></div>
+        <span class="cq-value">${cq}<small> 分</small></span>
       </div>
     </div>
   `;
@@ -276,12 +275,30 @@ function quadrantSelectMarkup() {
 
 function resultMarkup() {
   const myGroup = state.member.group;
+  const res = state.result || {};
+  const myScore = state.group?.cq ?? 0;
+  const roundGain = res?.actualDelta ?? res?.roundScore ?? 0;
+  const dist = res?.dist !== undefined ? res.dist : null;
   return `
-    <section class="card" style="padding:18px; margin-bottom:20px; text-align:center;">
-      <div class="eyebrow">ROUND REVEALED</div>
-      <h2 style="font-size:18px; margin:6px 0 8px;">第 ${myGroup} 組結果已公布於大螢幕！</h2>
+    <section class="card" style="padding:22px 18px; margin-bottom:20px; text-align:center;">
+      <div class="eyebrow">ROUND REVEALED · 座標揭曉</div>
+      <h2 style="font-size:19px; margin:6px 0 8px;">第 ${myGroup} 組結果已公布</h2>
+      <div style="margin:16px 0; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+        ${dist !== null ? `<div style="padding:10px 14px; background:#faf8f5; border:1px solid var(--line); border-radius:12px;">
+          <div style="font-size:11px; color:var(--muted); font-weight:700;">落點誤差</div>
+          <div style="font-size:20px; font-weight:900; color:#451a03;">${dist} 格</div>
+        </div>` : ''}
+        <div style="padding:10px 14px; background:#f0fdf4; border:1.5px solid #86efac; border-radius:12px;">
+          <div style="font-size:11px; color:#15803d; font-weight:700;">本輪獲得</div>
+          <div style="font-size:20px; font-weight:900; color:#15803d;">+${roundGain} 分</div>
+        </div>
+        <div style="padding:10px 14px; background:#fffbeb; border:1.5px solid #f59e0b; border-radius:12px;">
+          <div style="font-size:11px; color:#92400e; font-weight:700;">目前累計</div>
+          <div style="font-size:20px; font-weight:900; color:#b45309;">${myScore} 分</div>
+        </div>
+      </div>
       <p style="font-size:13.5px; color:var(--muted); margin:0;">
-        請抬頭看投影幕上的「四象限落點雷達圖」，檢視各組旗幟與真實答案靶心的距離及象限理論解析。
+        請抬頭看大螢幕，檢視各組旗幟與真實答案靶心的距離及象限理論解析。
       </p>
     </section>
   `;
@@ -366,7 +383,7 @@ async function refresh() {
         group: savedJoin.group,
         isRepresentative: savedJoin.isRepresentative ?? true
       };
-      next.group = next.group || state?.group || { id: savedJoin.group, cq: 100 };
+      next.group = next.group || state?.group || { id: savedJoin.group, cq: 0 };
       if (gate.open && !gate.dataset.manualSwitch) gate.close();
 
       // 背景靜默補登 Token
@@ -375,10 +392,20 @@ async function refresh() {
         api('join', { name: savedJoin.name, group: savedJoin.group, allowSwitch: true })
           .then(res => {
             if (res?.token) localStorage.setItem('cq_member_token', res.token);
-            if (res?.member) saveJoinData(res.member.name, res.member.group, res.member.isRepresentative);
+            if (res?.member) {
+              saveJoinData(res.member.name, res.member.group, res.member.isRepresentative);
+              if (state) state.member = res.member;
+            }
             recoveringSession = false;
           })
-          .catch(() => { recoveringSession = false; });
+          .catch(err => {
+            recoveringSession = false;
+            if (err?.status === 401 || err?.status === 409) {
+              localStorage.removeItem('cq_last_join');
+              localStorage.removeItem('cq_member_token');
+              if (!gate.open) gate.showModal();
+            }
+          });
       }
     } else {
       // 只有真正從未填過組別的全新設備，才開啟報名視窗
@@ -412,6 +439,28 @@ async function refresh() {
       updatePinUI();
     }
   } catch (e) {
+    if (e.status === 401) {
+      localStorage.removeItem('cq_member_token');
+      const savedJoin = getSavedJoin();
+      if (savedJoin && !recoveringSession) {
+        recoveringSession = true;
+        api('join', { name: savedJoin.name, group: savedJoin.group, allowSwitch: true })
+          .then(res => {
+            if (res?.token) localStorage.setItem('cq_member_token', res.token);
+            if (res?.member) saveJoinData(res.member.name, res.member.group, res.member.isRepresentative);
+            recoveringSession = false;
+            refresh();
+          })
+          .catch(() => {
+            recoveringSession = false;
+            if (!gate.open) gate.showModal();
+          });
+        return;
+      } else {
+        if (!gate.open) gate.showModal();
+        return;
+      }
+    }
     online = false;
     status(false);
   }
