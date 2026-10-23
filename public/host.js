@@ -1,5 +1,4 @@
 import { $, esc, api, toast, status, scene, roundNav, tensionCard, dialogue, startClock, broadcastSync, listenSync, playRevealDrum, toggleSound, isSoundEnabled, setSyncRoundLock, resetSyncRoundLock } from './common.js';
-import { renderRpgScene, renderCharacterBust, renderRpgDialogueBox, renderWorldStateHud, renderQrJoinDock } from './rpg-assets.js';
 
 const PRODUCTION_JOIN_URL = 'https://my00-rt-bf0f.vercel.app/';
 
@@ -24,9 +23,84 @@ function paintQr(target, url, cellSize = 4, margin = 8) {
   }
 }
 
-let state = null, lastSignature = '', selectedReview = 'B', busy = false, previousReveal = '', confirmResolve;
+// 去國籍化 · 高誤導性四回合題庫與真實答案靶心定義
+const GEO_ROUNDS_DATA = [
+  {
+    location: '海外併購 · Alpha 精密研發中心',
+    target: { x: 78, y: 82, zone: '右上：共識 × 階層區（文獻原型：日本稟議/根回模式）' },
+    title: '沉默的正式會議與消失的測試數據',
+    context: '併購 Alpha 晶圓封裝廠的第三週，你在週一全體正式會議上提出「縮短高溫老練測試 20% 工時」的新方案。會議中你詢問有無異議，在場 12 位當地主管與資深技師全數低頭抄筆記，資深總工僅微笑點頭說：「我們會盡力研究。」你以為方案已獲全場同意並當場拍板週三上線。然而到了週三早上，產線一動也沒動；更奇怪的是，你經過茶水間時，聽見資深總工正嚴厲斥責一位昨晚直接寫信給你提供修改建議的年輕工程師「不懂規矩、破壞團隊秩序」。',
+    prompt: '請先判斷對方屬於哪種文化類型？面對週五的進度審查，組長應在四象限中釘出哪個領導座標？',
+    verdict: '文化診斷：高權力距離（階層）× 高共識校準（文獻原型：日本組織）',
+    analysis: '許多組別會被「會議上沒人反對」與「總工訓斥下屬」的表象誤導，以為這是獨裁威權文化而選右下（由上而下 × 階層）。事實上，在 HBR 跨文化矩陣中，這種現象屬於典型的「右上：階層 × 共識」：正式會議只是蓋章儀式，真正的共識必須在會前尊重職級序列、私下與各關鍵幹部非正式校準（根回 Nemawashi），由下而上凝聚共識後才能推動。',
+    blindspot: '誤把「禮貌性的沉默」當成同意，或跨越職級直接鼓勵年輕員工越級提案，會同時摧毀該團隊的階層秩序與群體互信。'
+  },
+  {
+    location: '海外量產 · Beta 核心試產基地',
+    target: { x: 84, y: 18, zone: '右下：由上而下 × 階層區（文獻原型：危機指令擔當模式）' },
+    title: '良率暴跌夜的群組風暴',
+    context: 'Beta 廠夜班試產發生塗佈異常，良率瞬間掉到 48%。資深廠長主張立刻停線洗機，但試產組的幾位年輕工程師在工作群組裡激烈反駁，抱怨廠長「一言堂、不看數據」，雙方在群組裡互相指責誰該為延誤負全責。產線領班站在機台旁不知所措，私訊問你：「老大，現在到底聽誰的？要不要召集兩邊坐下來開個民主協調會投票決定？」',
+    prompt: '請先判斷現場的組織文化期待！距離清晨交貨只剩 4 小時，組長應將決策模式釘在哪個座標？',
+    verdict: '文化診斷：高權力距離（階層）× 由上而下速決（文獻原型：中/法/印危機領導）',
+    analysis: '看到群組爭吵抱怨「一言堂」與領班提議「開民主協調會」，極易誤導團隊選左上（共識 × 平等）。然而細看行為線索：雙方爭執的核心是「誰該為延誤負全責」，領班問的是「現在到底聽誰的」。在「右下：階層 × 由上而下」的文化中，緊急時刻下放投票不會被視為民主，反而會被認為是「最高主管不敢拍板背鍋、想把失敗責任推給下屬」。',
+    blindspot: '你必須私下快速聽取雙方數據後，以最高負責人身分由上而下做出明確裁決，並公開宣布由自己承擔成敗責任，團隊才會立刻安定執行。'
+  },
+  {
+    location: '海外研發 · Gamma 系統架構中心',
+    target: { x: 68, y: 78, zone: '右上偏中：共識 × 階層區（文獻原型：德國專業制度共審）' },
+    title: '當眾被撕碎的架構藍圖',
+    context: '為了趕上車用晶片認證，你在 Gamma 架構週會上提出一套「先以軟體修補繞過硬體延遲」的臨時應變方案。話才剛講完，首席架構師當著全場 20 名工程師的面直接打斷你：「這個邏輯完全不成立，這會破壞底層記憶體的確定性，我絕對不會在這種架構上簽字！」現場氣氛瞬間結冰，隨行的專案經理低聲問你要不要直接動用總部副總裁職權壓制他，或乾脆讓各小隊自行決定。',
+    prompt: '為什麼下屬敢當眾嗆聲卻又拒絕妥協？請判斷該團隊的文化座標並插旗定位！',
+    verdict: '文化診斷：低語境直接批判 × 專業職權階層與大 D 共識（文獻原型：德國工程組織）',
+    analysis: '首席架構師「當眾不留情面反駁老闆」的表象極具誤導性，常讓人誤判這是「左下：平等 × 速決」的自由文化。但請注意他的關鍵句：「我不會在這種架構上簽字！」這代表該組織擁有嚴格的專業職責邊界與制度階層（中高 X），且一旦做出決策就是不可動搖的「大 D（Big-D）剛性共識」（高 Y）。當眾反駁只是「對事不對人」的技術辯證過程。',
+    blindspot: '若因覺得沒面子而用長官頭銜強壓（右下），或未經嚴謹技術論證就要求敏捷試錯（左下），將徹底引發專業工程團隊的消極抵抗。'
+  },
+  {
+    location: '全球首發 · Delta 戰略客戶攤牌現場',
+    target: { x: 18, y: 85, zone: '左上：共識 × 平等區（文獻原型：荷蘭/北歐促進者模式）' },
+    title: '首發登台前兩小時的極限攤牌',
+    context: '全球發表會倒數兩小時，最大客戶端技術長帶著兩名年輕的基層測試員直接闖入後台休息室，將一份剛測出的「極端低溫環境訊號衰減報告」摔在桌上。與此同時，總部執行長在耳機裡對你咆哮：「絕對不能延後登台！你現在就以總指揮身分給對方高層一個明確的商業賠償數字，叫他們閉嘴坐回台下！」然而客戶方的年輕基層測試員卻直接插嘴對你說：「我們不在乎你的頭銜或賠償金，這份數據如果不公開透明處理，我們現在就走出會場。」',
+    prompt: '在倒數兩小時的極限壓力下，面對基層也能直接主導談判的團隊，你的領導落點應釘在哪裡？',
+    verdict: '文化診斷：極低權力距離（平等）× 全員透明共識（文獻原型：荷蘭圍海造田模式）',
+    analysis: '「倒數兩小時」與「總部執行長咆哮」是強烈的時間壓力陷阱，誘導你選「由上而下速決（Y 軸底部）」。但最關鍵的文化線索在於：客戶方連「基層測試員」都能直接插嘴代表團隊表態，且完全不吃頭銜與私下賠償這一套！這正是 HBR 文獻中典型的「左上：平等 × 共識」文化。',
+    blindspot: '在極度平等與共識導向的文化中，任何由上而下的威權拍板或私下與高層摸頭交易都會引發強烈反彈；唯有領導者退居「促進者（Facilitator）」，讓各方工程師與客戶測試員平起平坐、公開透明簽署分批驗證協議才能化解危機。'
+  }
+];
 
-// 防回合倒退單調鎖：記錄最高 epoch 與 roundIndex，徹底防範多 Lambda 容器冷啟動造成的舊回合閃退
+// 紀錄 5 組學員送來的精確座標 { "${roundIndex}_${groupId}": { x, y } }
+const groupPins = {};
+
+// 根據歐幾里得距離 d 計算 GeoGuessr 得分與 CQ 增減
+function calcGeoScore(gx, gy, tx, ty) {
+  const dist = Math.round(Math.hypot(gx - tx, gy - ty));
+  let cqDelta = -20;
+  let tier = '嚴重誤判';
+  let accuracy = Math.max(0, Math.round(100 - dist * 0.85));
+
+  if (dist <= 15) {
+    cqDelta = 20;
+    tier = '完美命中';
+  } else if (dist <= 30) {
+    cqDelta = 10;
+    tier = '精準落點';
+  } else if (dist <= 45) {
+    cqDelta = 0;
+    tier = '方向尚可';
+  } else if (dist <= 65) {
+    cqDelta = -10;
+    tier = '象限偏差';
+  }
+  return { dist, cqDelta, tier, accuracy };
+}
+
+let state = null;
+let lastSignature = '';
+let selectedReview = 'B';
+let busy = false;
+let previousReveal = '';
+let confirmResolve;
+
+// 防回合倒退單調鎖
 let highestEpoch = '';
 let highestRoundIndex = 0;
 let highestRevision = 0;
@@ -37,7 +111,9 @@ function ask(title, text, label = '確認') {
   $('#confirm-text').textContent = text;
   $('#confirm-yes').textContent = label;
   modal.showModal();
-  return new Promise(resolve => confirmResolve = resolve);
+  return new Promise(resolve => {
+    confirmResolve = resolve;
+  });
 }
 
 function closeConfirm(value) {
@@ -48,7 +124,10 @@ function closeConfirm(value) {
 
 $('#confirm-yes').addEventListener('click', () => closeConfirm(true));
 $('#confirm-no').addEventListener('click', () => closeConfirm(false));
-$('#confirm-dialog').addEventListener('cancel', e => { e.preventDefault(); closeConfirm(false); });
+$('#confirm-dialog').addEventListener('cancel', e => {
+  e.preventDefault();
+  closeConfirm(false);
+});
 
 function render() {
   const r = state.round;
@@ -61,8 +140,6 @@ function render() {
   document.body.classList.toggle('is-revealed', revealed);
   document.documentElement.style.setProperty('--accent', r.color);
 
-  const hudHtml = renderWorldStateHud(state.worldState || {});
-
   const sortedByScore = state.groups.slice().sort((a, b) => (b.cq ?? 100) - (a.cq ?? 100));
   const kingGid = (sortedByScore[0]?.cq ?? 100) > 0 ? sortedByScore[0]?.id : null;
 
@@ -72,7 +149,7 @@ function render() {
       const res = state.results?.[g.id];
       const delta = res?.actualDelta;
       const isKing = g.id === kingGid;
-      const kingBadge = isKing ? '<span class="navigator-crown-pill" style="background:#fef3c7; color:#b45309; border:1px solid #f59e0b;">👑 文化王</span>' : '';
+      const kingBadge = isKing ? '<span class="navigator-crown-pill" style="background:#fef3c7; color:#b45309; border:1px solid #f59e0b; font-weight:700;">文化王</span>' : '';
       const animClass = animate && delta !== undefined ? (delta > 0 ? 'cq-heal-glow' : delta < 0 ? 'cq-damage-shake' : '') : '';
       return `<div class="cq-group card ${isKing ? 'is-navigator' : ''} ${animClass}">
         <div class="cq-group-head">
@@ -85,13 +162,12 @@ function render() {
         ${animate && delta !== undefined ? `<span class="cq-float ${delta < 0 ? 'loss' : ''}">${delta > 0 ? '+' : ''}${delta} 分</span>` : ''}
       </div>`;
     } else {
-      // 未揭曉階段：隱藏即時分數與文化王，僅展示研討與初投鎖定狀態，防止從眾效應！
       const isDone = Boolean(g.submitted);
       return `<div class="cq-group card">
         <div class="cq-group-head">
           <span class="group-label">第 ${g.id} 組</span>
-          <span class="status-pill ${isDone ? 'done' : 'pending'}" style="${isDone ? 'background:#ecfdf5; color:#065f46;' : 'background:#fef3c7; color:#92400e;'} font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px;">
-            ${isDone ? '初投已鎖定 ✓' : '研討中 💬'}
+          <span class="status-pill ${isDone ? 'done' : 'pending'}" style="${isDone ? 'background:#ecfdf5; color:#065f46;' : 'background:#fef3c7; color:#92400e;'} font-size:11.5px; font-weight:700; padding:2px 8px; border-radius:6px;">
+            ${isDone ? '已鎖定' : '討論中'}
           </span>
         </div>
         <div style="font-size:12px; color:#78716c; margin-top:6px; display:flex; justify-content:space-between; align-items:center;">
@@ -103,12 +179,14 @@ function render() {
   }).join('');
 
   $('#app').innerHTML = `
-    ${hudHtml}
     <section class="cq-strip" aria-label="5 組文化積分即時榜">${cqStripHtml}</section>
     ${roundNav(state.roundIndex)}
     ${state.phase === 'finished' ? '<div class="finished-banner">四回合探索完成 · 帶著跨文化洞察力，回到下一場真實對話。</div>' : ''}
     ${revealed ? resultsMarkup() : scenarioMarkup()}
   `;
+
+  // 繪製右欄常駐 mini QR Code
+  paintQr($('#stage-qr-code'), resolveJoinUrl(), 3, 4);
 
   document.querySelector('.host-controls')?.remove();
   const controls = document.createElement('footer');
@@ -121,7 +199,7 @@ function render() {
       ` : `
         <span class="clock" data-clock>--:--</span>
         <div class="timer-label">
-          <strong data-debate>${state.roundIndex === 3 ? '三方終極協商' : '小組研討時間'}</strong>
+          <strong data-debate>小組討論時間</strong>
           ${state.deadline ? '倒數進行中' : state.remaining !== null ? '計時已暫停' : '準備好，就開始'}
         </div>
       `}
@@ -133,7 +211,7 @@ function render() {
     </div>
     <div class="control-right">
       <span class="control-note">
-        ${revealed ? '每一個決策，都是一次跨文化理解的練習。' : state.phase === 'voting' ? '第 1～5 組研討初投、60 秒辯論配點、首席領航者拍板最終答案！' : '邀請學員掃碼加入，5 組皆為戰略決策組。'}
+        ${revealed ? '每一個決策，都是一次跨文化理解的練習。' : state.phase === 'voting' ? '各組於手機點擊四象限插旗，離真實文化靶心越近得分越高。' : '邀請學員掃碼加入，5 組皆為戰略決策組。'}
       </span>
       ${state.roundIndex < 3 && !revealed ? `
         <button class="button quiet" data-host-action="skip-next" type="button" title="直接跳轉至下一回合">跳下一回合 ⏭</button>
@@ -142,7 +220,7 @@ function render() {
         <button class="button secondary" id="finish-manage">課堂管理</button>
       ` : `
         <button class="button primary" data-host-action="${revealed ? 'next' : state.phase === 'voting' ? 'reveal' : 'start'}">
-          ${revealed ? (state.roundIndex === 3 ? '完成本次課堂' : '進入下一回合') : state.phase === 'voting' ? '揭曉決策與 CQ 韌性' : '開始本回合研討'}
+          ${revealed ? (state.roundIndex === 3 ? '完成本次課堂' : '進入下一回合') : state.phase === 'voting' ? '揭曉座標與計分' : '開始本回合討論'}
           <span aria-hidden="true">${state.phase === 'voting' ? '↗' : '→'}</span>
         </button>
       `}
@@ -153,375 +231,269 @@ function render() {
   document.querySelectorAll('[data-host-action]').forEach(el => el.addEventListener('click', () => hostAction(el.dataset.hostAction)));
   document.querySelectorAll('[data-nav-step]').forEach(el => {
     el.style.cursor = 'pointer';
-    el.onclick = () => {
+    el.addEventListener('click', () => {
       const target = Number(el.dataset.navStep);
-      if (target === state.roundIndex) return;
-      hostAction('jump', { roundIndex: target });
-    };
-  });
-  $('#finish-manage')?.addEventListener('click', openManage);
-  document.querySelectorAll('[data-review]').forEach(el => el.addEventListener('click', () => { selectedReview = el.dataset.review; renderReview(); }));
-  document.querySelectorAll('[data-pitch-group]').forEach(btn => btn.addEventListener('click', async () => {
-    const group = btn.dataset.pitchGroup;
-    try {
-      const pitchObj = group === 'stop' ? null : {
-        group,
-        deadline: Date.now() + 60 * 1000,
-        seconds: 60,
-        startedAt: Date.now()
-      };
-      state.pitch = pitchObj;
-      render();
-      await api('pitch', { group, seconds: 60 }, 'host');
-      broadcastSync('pitch_update', { pitch: pitchObj });
-      toast(group === 'stop' ? '已停止辯論倒數' : group === 'all' ? '已啟動全班 60 秒跨立場辯論！' : `已啟動第 ${group} 組 60 秒申辯！`);
-    } catch (e) {
-      toast(e.message);
-    }
-  }));
-
-  if (revealed) renderReview();
-  paintQr(document.getElementById('stage-qr-code'), resolveJoinUrl());
-
-  const qrDock = document.querySelector('.qr-join-dock');
-  if (qrDock) {
-    qrDock.style.cursor = 'pointer';
-    qrDock.setAttribute('title', '點擊放大投影 QR Code');
-    qrDock.onclick = () => $('#qr-open')?.click();
-  }
-  const qrUrlEl = document.querySelector('.qr-dock-url');
-  if (qrUrlEl) {
-    qrUrlEl.style.cursor = 'pointer';
-    qrUrlEl.onclick = async (e) => {
-      e.stopPropagation();
-      try {
-        await navigator.clipboard.writeText(resolveJoinUrl());
-        toast('參與網址已複製到剪貼簿 ✓');
-      } catch {
-        $('#qr-open')?.click();
+      if (Number.isInteger(target) && target >= 0 && target <= 3 && target !== state.roundIndex) {
+        hostAction('jump', { roundIndex: target });
       }
-    };
-  }
+    });
+  });
 }
 
 function scenarioMarkup() {
-  const r = state.round;
-  const prevWorld = state.worldState ? (state.roundIndex === 1 ? state.worldState.r1 : state.roundIndex === 2 ? state.worldState.r2 : state.roundIndex === 3 ? state.worldState.r3 : 'idle') : 'idle';
-  const mood = prevWorld === 'good' ? 'ally' : prevWorld === 'bad' ? 'angry' : 'normal';
-
-  const stageHtml = renderRpgDialogueBox({
-    roundIndex: state.roundIndex,
-    title: r.title,
-    dimension: r.dimension,
-    location: r.location,
-    context: r.context,
-    dialogue: r.dialogue,
-    speaker: r.speaker,
-    text: r.dialogue?.[1]?.text || r.context,
-    prompt: r.prompt,
-    mood,
-    worldState: state.worldState,
-    groups: state.groups,
-    chiefNavId: state.chiefNavigator
-  });
-
-  const now = Date.now() + (state.clockOffset || 0);
-  const isPitchActive = Boolean(state.pitch && state.pitch.deadline && state.pitch.deadline > now);
-  const onlineGroups = state.groups.filter(g => g.count).length;
+  const geoRound = GEO_ROUNDS_DATA[state.roundIndex] || GEO_ROUNDS_DATA[0];
   const totalStudents = state.groups.reduce((n, g) => n + (g.count || 0), 0);
 
-  const persuasionRows = (state.persuasionBoard || []).map(item => {
-    const pct = Math.min(100, Math.round((item.totalPoints / 12) * 100));
-    return `
-      <div class="persuasion-row ${item.isNavigator ? 'is-leading' : ''}">
-        <div class="persuasion-row-head">
-          <span>${item.isNavigator ? '<span class="lead-crown">👑</span>' : ''}第 ${item.id} 組 <small>(${item.voterCount}組認同)</small></span>
-          <strong>${item.totalPoints} <small>點</small></strong>
-        </div>
-        <div class="mana-progress-track">
-          <div class="mana-progress-fill" style="width:${pct}%;"></div>
-        </div>
-      </div>
-    `;
-  }).join('');
-
   return `
-    <div class="unified-stage-container">
-      <!-- 完整滿版 JRPG 舞台（含圍坐桌旁的小人、立繪與底部對話框） -->
-      ${stageHtml}
+    <div class="voting-stage-grid" style="grid-template-columns: 1.4fr 1fr; gap: 20px;">
+      <!-- 左欄：大字聚焦題目與去國籍化真實情境 -->
+      <div class="voting-left-col">
+        <section class="card" style="padding:28px 32px; height:100%; display:flex; flex-direction:column; justify-content:space-between;">
+          <div>
+            <div class="topic-row" style="margin-bottom:14px; justify-content:space-between;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span class="topic-badge">ROUND 0${state.roundIndex + 1} / 04</span>
+                <span class="topic-location" style="font-size:13px; font-weight:700; color:var(--ink);">${esc(geoRound.location)}</span>
+              </div>
+              <span class="pill" style="background:var(--oat); color:var(--muted);">小組討論與座標盲測</span>
+            </div>
 
-      <!-- 整合在畫面右側的戰況邊欄，完全不遮擋左側主舞台 -->
-      <aside class="integrated-hud-overlay" aria-label="課堂即時戰況與控制面板">
-        <!-- 1. 緊湊型掃碼與初投進度列 -->
-        <div class="hud-glass-card">
-          <div class="hud-row-between">
+            <h1 style="font-size:clamp(26px, 2.5vw, 36px); line-height:1.3; font-weight:850; margin:0 0 16px; color:#1c1917;">
+              ${esc(geoRound.title)}
+            </h1>
+
+            <div style="background:#faf8f5; border:1.5px solid var(--line); border-radius:16px; padding:22px 26px; margin-bottom:20px;">
+              <div class="eyebrow" style="margin-bottom:8px;">CASE SCENARIO · 現場實況描述</div>
+              <p style="font-size:clamp(17px, 1.45vw, 20.5px); line-height:1.8; color:#1c1917; font-weight:500; margin:0;">
+                ${esc(geoRound.context)}
+              </p>
+            </div>
+          </div>
+
+          <div class="question-prompt" style="margin:0 !important; background:#fffbeb; border:1.5px solid #f59e0b; border-left:6px solid #d97706; padding:18px 22px; border-radius:14px;">
+            <span class="prompt-badge" style="background:#d97706; color:#fff; font-size:12px; font-weight:800; padding:4px 8px; border-radius:6px; margin-right:8px;">決策課題</span>
+            <span class="prompt-text" style="font-size:16.5px; font-weight:700; color:#451a03;">${esc(geoRound.prompt)}</span>
+          </div>
+        </section>
+      </div>
+
+      <!-- 右欄：四象限盲測雷達 ＋ 邊欄精簡插旗進度與 QR Code -->
+      <div class="voting-right-col" style="display:flex; flex-direction:column; gap:14px; justify-content:space-between;">
+        <section class="card" style="padding:18px 20px; flex:1; display:flex; flex-direction:column; justify-content:space-between;">
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
             <div>
-              <span class="eyebrow">STEP 1 · 初投定錨進度</span>
-              <div style="font-size:13px; font-weight:800; color:#1c1917;">
-                已鎖定 ${state.completed} / 5 組 <small style="font-weight:500; color:#57534e;">(${totalStudents}人入席)</small>
+              <div class="eyebrow">CULTURAL GEOGUESSR RADAR</div>
+              <h2 style="font-size:18px; font-weight:800; margin:2px 0 0;">四象限領導落點雷達</h2>
+            </div>
+            <div id="stage-qr-code" class="qr-mini-box" title="點擊放大 QR Code 掃碼入席" onclick="document.getElementById('qr-open')?.click()"></div>
+          </div>
+
+          <div class="quadrant-axis-header">▲ 共識型決策 Consensual (Y: 100)</div>
+          <div class="quadrant-board" style="flex:1; min-height:210px; position:relative;">
+            <div class="q-cell q-tl"><span class="q-zone-name">左上：共識 × 平等</span></div>
+            <div class="q-cell q-tr"><span class="q-zone-name">右上：共識 × 階層</span></div>
+            <div class="q-cell q-bl"><span class="q-zone-name">左下：由上而下 × 平等</span></div>
+            <div class="q-cell q-br"><span class="q-zone-name">右下：由上而下 × 階層</span></div>
+            <div class="q-axis-h"></div>
+            <div class="q-axis-v"></div>
+            <div style="position:absolute; inset:0; display:grid; place-items:center; pointer-events:none;">
+              <div style="background:rgba(28,25,23,0.88); color:#fff; padding:10px 18px; border-radius:14px; text-align:center; box-shadow:0 8px 24px rgba(0,0,0,0.2);">
+                <strong style="font-size:14px; display:block; color:#facc15; margin-bottom:4px;">座標盲測進行中</strong>
+                <span style="font-size:12px; color:#e7e5e4;">各組在手機象限圖插旗鎖定後，揭曉時公開真實靶心與誤差連線</span>
               </div>
             </div>
-            <div id="stage-qr-code" class="qr-mini-box" title="點擊放大 QR Code" onclick="document.getElementById('qr-open')?.click()"></div>
           </div>
-          <div class="progress-chips-row" style="margin-top:8px;">
+          <div class="quadrant-axis-footer">
+            <span>◀ 平等主義 Egalitarian (X: 0)</span>
+            <span>▼ 由上而下 Top-Down (Y: 0)</span>
+            <span>階層制 Hierarchical (X: 100) ▶</span>
+          </div>
+        </section>
+
+        <!-- 整合在邊邊的 5 組插旗進度 -->
+        <section class="progress-card card" style="padding:16px 20px; margin-top:0;">
+          <div class="progress-intro" style="min-width:auto; margin-bottom:10px;">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+              <h2 style="font-size:14px; margin:0; font-weight:800;">各組插旗進度 <small style="font-weight:500; color:var(--muted);">(${totalStudents} 人在線)</small></h2>
+              <div class="stat-number" style="font-size:20px; font-weight:800;">${state.completed} / 5 組</div>
+            </div>
+            <p style="font-size:11.5px; color:var(--muted); margin:4px 0 0;">
+              ${state.completed >= 5 ? '5 組皆已鎖定落點！可按右下方揭曉靶心與計分' : '各組由代表於手機點擊四象限插旗鎖定…'}
+            </p>
+          </div>
+          <div class="progress-chips-row" style="display:flex; gap:6px; flex-wrap:wrap;">
             ${state.groups.map(g => `
-              <div class="progress-chip ${g.submitted ? 'is-done done' : g.count ? 'is-active' : ''}">
-                <span class="chip-dot"></span>
-                <span class="chip-name">G${g.id}</span>
-                <span class="chip-status">${g.submitted ? '✓' : g.count ? '…' : '-'}</span>
+              <div class="progress-chip ${g.submitted ? 'is-done done' : g.count ? 'is-active' : ''}" style="flex:1; padding:6px 8px; font-size:11.5px; text-align:center;">
+                <span class="chip-name" style="font-weight:700;">G${g.id}</span>
+                <span class="chip-status" style="margin-left:4px;">${g.submitted ? '已鎖定' : g.count ? '討論中' : '未入席'}</span>
               </div>
             `).join('')}
           </div>
-        </div>
-
-        <!-- 2. 60秒辯論計時與說服點數榜 -->
-        <div class="hud-glass-card ${isPitchActive ? 'is-active-pitch' : ''}">
-          <div class="hud-row-between" style="margin-bottom:6px;">
-            <div>
-              <span class="eyebrow">STEP 2 · 60s 申辯與 3 點說服</span>
-              <div style="font-size:13.5px; font-weight:800; color:#1c1917;">說服點數即時得點</div>
-            </div>
-            <span class="pitch-clock mono" data-pitch-clock style="font-size:22px; font-weight:800; color:#1c1917;">01:00</span>
-          </div>
-
-          <div class="persuasion-live-board">
-            ${persuasionRows || '<div style="padding:6px 0; font-size:12px; color:#57534e;">各組研討中，聽完申辯後每組可投 3 點</div>'}
-          </div>
-
-          <div class="pitch-actions-grid" style="margin-top:8px; grid-template-columns: repeat(4, 1fr); gap:5px;">
-            ${[1, 2, 3, 4, 5].map(gid => `
-              <button type="button" class="pitch-btn ${String(state.pitch?.group) === String(gid) ? 'active' : ''}" data-pitch-group="${gid}">G${gid} 申辯</button>
-            `).join('')}
-            <button type="button" class="pitch-btn pitch-all-btn ${state.pitch?.group === 'all' ? 'active' : ''}" data-pitch-group="all" style="grid-column: span 2;">🔥 全班 60s 激辯</button>
-            <button type="button" class="pitch-btn pitch-stop-btn" data-pitch-group="stop">■ 停止</button>
-          </div>
-        </div>
-
-        <!-- 3. 說服王引領機制與連鎖衝擊說明（無即時計分榜，防從眾效應） -->
-        <div class="hud-glass-card">
-          <div class="hud-row-between" style="margin-bottom:6px;">
-            <span class="eyebrow">STEP 3 · 👑 說服王引領機制</span>
-            <small style="color:#b45309; font-weight:700;">共贏 vs 連鎖負面</small>
-          </div>
-          <div style="font-size:12px; color:#44403c; line-height:1.6; background:#fdfbf7; border:1px solid rgba(60,50,40,0.1); border-radius:8px; padding:8px 10px;">
-            獲得最高說服票之組別為<strong>【說服王】</strong>。<br>
-            • 說服王初選命中最佳實踐：引領全班共贏！<br>
-            • <strong style="color:#b91c1c;">說服王若初選踩雷：全班下輪研討時間強制扣減 30 秒！</strong><br>
-            <span style="font-size:11px; color:#78716c; margin-top:3px; display:inline-block;">（為防從眾效應，全班積分與排行榜於揭曉時統一公布）</span>
-          </div>
-        </div>
-      </aside>
+        </section>
+      </div>
     </div>
   `;
-}
-
-function quadrantMatrixMarkup() {
-  const pointsHtml = state.distribution.map(o => {
-    const q = o.result?.quadrant || { x: 50, y: 50, zone: '' };
-    const pickedGroups = [1, 2, 3, 4, 5].filter(gid => state.results?.[gid]?.id === o.id);
-    const isBest = (o.result?.cq ?? 0) > 0;
-    const topPct = 100 - q.y;
-    const short = o.result?.shortTitle || o.title.slice(0, 4);
-    return `<button type="button" class="matrix-point ${isBest ? 'is-best' : 'is-risk'} ${pickedGroups.length ? 'has-groups' : ''}" data-review="${o.id}" style="left:${q.x}%; top:${topPct}%;" title="點擊檢視方案 ${o.id}：${esc(o.title)}">
-      <span class="matrix-node-letter">${o.id === 'X' ? '✕' : o.id}</span>
-      <span class="matrix-node-title">${esc(short)}</span>
-      ${pickedGroups.length ? `<span class="matrix-group-badges">${pickedGroups.map(gid => `<b class="matrix-g-pill">第${gid}組</b>`).join('')}</span>` : ''}
-    </button>`;
-  }).join('');
-
-  return `<div class="quadrant-matrix-wrap">
-    <div class="section-heading" style="margin-bottom:4px;">
-      <h2>2×2 跨文化領導決策象限（HBR Being the Boss）</h2>
-      <span>點擊座標點切換右側解析</span>
-    </div>
-    <div class="quadrant-axis-header">
-      <span>▲ 共識型決策 Consensual（大 D 承諾 · 全員校準）</span>
-    </div>
-    <div class="quadrant-board" role="region" aria-label="2x2 跨文化領導決策象限圖">
-      <div class="q-cell q-tl"><span class="q-zone-name">共識 × 平等區</span><small>北歐 / 荷蘭 · 促進者模式</small></div>
-      <div class="q-cell q-tr"><span class="q-zone-name">共識 × 階層區</span><small>日本 / 德國 · 根回稟議大 D</small></div>
-      <div class="q-cell q-bl"><span class="q-zone-name">由上而下 × 平等區</span><small>美國 / 英國 · 小 d 靈活速決</small></div>
-      <div class="q-cell q-br"><span class="q-zone-name">由上而下 × 階層區</span><small>中國 / 法印 · 導演明確指令</small></div>
-      <div class="q-axis-h"></div>
-      <div class="q-axis-v"></div>
-      ${pointsHtml}
-    </div>
-    <div class="quadrant-axis-footer">
-      <span>◀ 平等主義 Egalitarian</span>
-      <span>▼ 由上而下 Top-Down（小 d 速決 · 敏捷試錯）</span>
-      <span>階層制 Hierarchical ▶</span>
-    </div>
-  </div>`;
 }
 
 function resultsMarkup() {
-  const r = state.round;
-  const values = Object.values(state.results || {});
-  const current = values.length ? Math.round(values.reduce((sum, r) => sum + r.tension, 0) / values.length * 10) / 10 : null;
-  const reduction = current === null ? 0 : Math.round((state.round.baseline - current) * 10) / 10;
-  const isGoodOutcome = state.worldState?.['r' + (state.roundIndex + 1)] === 'good';
+  const geoRound = GEO_ROUNDS_DATA[state.roundIndex] || GEO_ROUNDS_DATA[0];
+  const target = geoRound.target;
+  const targetTop = 100 - target.y;
 
-  const leaderGroup = state.groups.slice().sort((a, b) => (b.cq ?? 100) - (a.cq ?? 100))[0];
-  const kingRes = state.persuasionKingResult;
-  const isKingFailed = Boolean(kingRes?.isKingFailed);
+  // 整理 5 組的落點座標與距離計分
+  const fallbackCoords = { A: { x: 25, y: 75 }, B: { x: 75, y: 75 }, C: { x: 25, y: 25 }, D: { x: 75, y: 25 }, X: { x: 50, y: 15 } };
+  const groupEvaluations = state.groups.map(g => {
+    const res = state.results?.[g.id];
+    const customPin = groupPins[`${state.roundIndex}_${g.id}`];
+    const pickedOpt = state.distribution?.find(o => o.id === res?.id);
+    const optCoord = pickedOpt?.result?.quadrant || fallbackCoords[res?.id];
+    const hasSubmitted = Boolean(customPin || res?.id);
 
-  return `
-    <!-- 頂部極簡揭曉橫幅（說服王狀態與全班連鎖負面衝擊提示） -->
-    <div class="reveal-top-strip ${isKingFailed ? 'is-bad' : 'is-good'}" style="${isKingFailed ? 'background:#fee2e2; border-color:#ef4444; color:#991b1b;' : ''}">
-      <div class="reveal-strip-left">
-        <span class="topic-badge">ROUND ${String(state.roundIndex + 1).padStart(2, '0')} · ${r.dimension}</span>
-        <strong>
-          ${kingRes?.message || `🏆 【誰是文化王】第 ${leaderGroup?.id || '—'} 組（累計 ${leaderGroup?.cq ?? 100} 分）領先！`}
-        </strong>
-      </div>
-      <div class="reveal-strip-right">
-        <span>全班對齊：<strong>方案 ${state.finalDecision || '—'}</strong></span>
-        <span class="pill ${isKingFailed ? 'negative' : 'positive'}">
-          ${isKingFailed ? '⚠️ 全班下輪研討 -30s' : '🎉 說服王引領共贏'}
-        </span>
-      </div>
-    </div>
+    if (!hasSubmitted) {
+      return { id: g.id, submitted: false, dist: null, cqDelta: 0, tier: '未提交', accuracy: 0, totalCq: g.cq ?? 100 };
+    }
 
-    <!-- 主體雙欄佈局：左窄 (36% 象限與5組戰況) / 右寬 (64% 題目解釋與文化盲點主舞台) -->
-    <div class="results-focus-grid">
-      
-      <!-- 左欄：2x2 象限圖 + 5 組單行極簡戰況表 -->
-      <div class="results-side-col">
-        <section class="card side-matrix-card">
-          ${quadrantMatrixMarkup()}
-        </section>
+    const offset = (g.id - 3) * 3;
+    const gx = customPin ? customPin.x : Math.max(8, Math.min(92, (optCoord?.x ?? 50) + offset));
+    const gy = customPin ? customPin.y : Math.max(8, Math.min(92, (optCoord?.y ?? 50) - offset));
+    const scoreInfo = calcGeoScore(gx, gy, target.x, target.y);
 
-        <section class="card side-scoreboard-card">
-          <div class="side-score-head">
-            <h2>👑 誰是文化王 · 本輪排行榜</h2>
-            <span>四方共識：<strong>方案 ${state.finalDecision || '—'}</strong></span>
-          </div>
-          <div class="compact-score-list">
-            ${state.groups.slice().sort((a, b) => (b.cq ?? 100) - (a.cq ?? 100)).map((g, idx) => {
-              const res = state.results?.[g.id];
-              const delta = res?.actualDelta ?? 0;
-              const isKing = idx === 0 && (g.cq ?? 100) > 0;
-              const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
-              return `
-                <div class="compact-score-row ${isKing ? 'is-nav' : ''}">
-                  <div class="c-group">
-                    <span style="font-size:14px; margin-right:4px;">${medals[idx]}</span>
-                    <strong>第 ${g.id} 組</strong>
-                    ${isKing ? '<span class="navigator-crown-pill" style="background:#fef3c7; color:#b45309; border:1px solid #f59e0b;">👑 文化王</span>' : ''}
-                  </div>
-                  <div class="c-badges">
-                    <span class="score-pill ${res?.isLiteratureOptimal ? 'initial' : 'negative'}" style="${!res?.isLiteratureOptimal ? 'background:#fee2e2; color:#991b1b;' : ''}">
-                      ${res?.isLiteratureOptimal ? '🎯 最佳實踐 (+15)' : '初選踩雷 (' + (res?.id || '—') + ') (-10)'}
-                    </span>
-                    ${(res?.synergyBonus ?? 0) > 0 ? `<span class="score-pill synergy">說服 +${res.synergyBonus}</span>` : ''}
-                  </div>
-                  <div class="c-total">
-                    <span class="c-delta ${delta >= 0 ? 'positive-text' : 'negative-text'}" style="${delta < 0 ? 'color:#dc2626; font-weight:700;' : ''}">
-                      ${delta > 0 ? '+' : ''}${delta}
-                    </span>
-                    <strong class="c-cq">${g.cq ?? 100} <small>分</small></strong>
-                  </div>
-                </div>
-              `;
-            }).join('')}
-          </div>
-        </section>
-      </div>
-
-      <!-- 右欄（64% 主視覺焦點）：看見文化盲點 ＆ 題目深度解釋 -->
-      <section class="card results-main-review">
-        <div class="review-main-header">
-          <div>
-            <div class="eyebrow">CULTURAL BLINDSPOT & CASE DEBRIEF</div>
-            <h2>看見文化盲點（題目深度解析）</h2>
-          </div>
-          <span class="review-hint-text">點擊下方方案切換解析</span>
-        </div>
-
-        <!-- 單行緊湊型方案切換 Tabs -->
-        <div class="review-tabs-compact" role="tablist" aria-label="方案覆盤">
-          ${state.distribution.map(o => {
-            const isFinal = state.finalDecision === o.id;
-            const isBest = (o.result?.cq ?? 0) > 0;
-            return `
-              <button class="review-tab-btn ${selectedReview === o.id ? 'active' : ''} ${isBest ? 'is-best-tab' : ''}" role="tab" data-review="${o.id}" aria-selected="${selectedReview === o.id}">
-                <span class="tab-letter">${o.id === 'X' ? '破局' : '方案 ' + o.id}</span>
-                <span class="tab-title">${esc(o.result?.shortTitle || o.title.slice(0, 6))}</span>
-                <span class="tab-count">${o.count}組</span>
-                ${isFinal ? '<span class="tab-final-crown" title="全班最終拍板方案">👑</span>' : ''}
-              </button>
-            `;
-          }).join('')}
-        </div>
-
-        <!-- 題目解釋與深層盲點主要內容區 -->
-        <div id="review-content" class="review-main-body" role="tabpanel" aria-live="polite"></div>
-      </section>
-
-    </div>
-  `;
-}
-
-function renderReview() {
-  const entry = state.distribution?.find(o => o.id === selectedReview) || state.distribution?.[0];
-  if (!entry) return;
-  selectedReview = entry.id;
-  const r = entry.result;
-
-  document.querySelectorAll('[data-review]').forEach(el => {
-    const isSelected = el.dataset.review === selectedReview;
-    el.setAttribute('aria-selected', String(isSelected));
-    el.classList.toggle('is-active-point', isSelected);
-    el.classList.toggle('active', isSelected);
+    return {
+      id: g.id,
+      submitted: true,
+      x: gx,
+      y: gy,
+      top: 100 - gy,
+      ...scoreInfo,
+      totalCq: g.cq ?? 100
+    };
   });
 
-  const q = r.quadrant;
-  const contentEl = $('#review-content');
-  if (!contentEl) return;
+  // 繪製每組旗幟到真實靶心的虛線
+  const svgLines = groupEvaluations.filter(g => g.submitted).map(n => `
+    <line x1="${n.x}%" y1="${n.top}%" x2="${target.x}%" y2="${targetTop}%"
+      stroke="${n.cqDelta > 0 ? '#16a34a' : n.cqDelta === 0 ? '#d97706' : '#dc2626'}"
+      stroke-width="2.5" stroke-dasharray="5 4" opacity="0.85" />
+  `).join('');
 
-  const pickedGroups = [1, 2, 3, 4, 5].filter(gid => state.results?.[gid]?.id === entry.id);
+  // 繪製 5 組的插旗位置
+  const flagsHtml = groupEvaluations.filter(g => g.submitted).map(n => `
+    <div class="geo-group-flag" style="left:${n.x}%; top:${n.top}%; z-index:9;" title="第 ${n.id} 組 (${n.x}, ${n.y}) · 距離誤差 ${n.dist}">
+      <span class="flag-badge" style="background:${n.cqDelta > 0 ? '#15803d' : n.cqDelta === 0 ? '#b45309' : '#b91c1c'}; color:#fff; border-color:#fff;">
+        G${n.id} <small>(${n.x}, ${n.y})</small>
+      </span>
+    </div>
+  `).join('');
 
-  contentEl.innerHTML = `
-    <!-- 1. 方案標題與決策成效指標列 -->
-    <div class="debrief-hero-box ${(r.cq ?? 0) > 0 ? 'is-optimal' : 'is-risk'}">
-      <div class="debrief-meta-row">
-        <div class="debrief-badges">
-          <span class="debrief-opt-tag">${entry.id === 'X' ? '談判破局' : '方案 ' + entry.id + '：' + esc(entry.title)}</span>
-          ${q ? `<span class="review-zone-badge">📍 象限落點：${esc(q.zone)}</span>` : ''}
-          ${pickedGroups.length ? `<span class="picked-groups-tag">初投選擇：第 ${pickedGroups.join('、')} 組</span>` : '<span class="picked-groups-tag muted">無組別初投此項</span>'}
-        </div>
-        <div class="debrief-metrics">
-          <span class="pill ${r.reduction > 0 ? 'positive' : 'negative'}">
-            ${r.reduction > 0 ? '↓ 張力降 ' + r.reduction + ' 點' : r.reduction < 0 ? '↑ 張力升 ' + Math.abs(r.reduction) + ' 點' : '張力持平'}
-          </span>
-          <span class="pill ${r.cq > 0 ? 'positive' : 'negative'}">
-            方案基礎 ${r.cq > 0 ? '+' + r.cq : r.cq} CQ
-          </span>
-        </div>
+  return `
+    <!-- 頂部揭曉橫條 -->
+    <div class="reveal-top-strip is-good" style="background:#fffbeb; border-color:#f59e0b; color:#78350f; padding:12px 20px;">
+      <div class="reveal-strip-left">
+        <span class="topic-badge" style="background:#d97706; color:#fff; padding:4px 8px;">ROUND 0${state.roundIndex + 1} 座標揭曉</span>
+        <strong style="margin-left:10px;">真實最佳文化靶心：(${target.x}, ${target.y}) — ${esc(target.zone)}</strong>
       </div>
-
-      <!-- 2. 核心診斷結論與題目情境解釋（字體放大、行距寬鬆） -->
-      <h3 class="debrief-verdict-title">${esc(r.verdict)}</h3>
-      <p class="debrief-analysis-text">${esc(r.analysis)}</p>
+      <div class="reveal-strip-right">
+        <span>依歐幾里得距離誤差換算 CQ 積分</span>
+      </div>
     </div>
 
-    <!-- 3. 下半部雙欄並排：深層文化盲點 ＋ 內部極密情報解密 -->
-    <div class="debrief-bottom-grid ${state.hiddenIntel ? 'has-intel' : ''}">
-      <div class="debrief-blindspot-card">
-        <div class="eyebrow">💡 BEYOND THE WORDS · 深層文化盲點與管理啟示</div>
-        <p class="debrief-blindspot-text">${esc(r.blindspot)}</p>
+    <!-- 左右雙欄：左欄 (44% 雷達開獎地圖 + 5組距離計分榜) / 右欄 (56% 題目解釋與文獻盲點拆解) -->
+    <div class="results-focus-grid" style="grid-template-columns: 44% 1fr; gap: 16px;">
+      
+      <!-- 左欄：四象限落點雷達圖 + 5 組距離同時計分榜 -->
+      <div class="results-side-col">
+        <section class="card side-matrix-card" style="padding:14px 16px !important;">
+          <div class="section-heading" style="margin-bottom:6px;">
+            <h2>各組落點 vs. 真實答案位置</h2>
+            <span style="font-weight:700; color:#15803d;">靶心：(${target.x}, ${target.y})</span>
+          </div>
+          <div class="quadrant-axis-header">▲ 共識型決策 Consensual (100)</div>
+          <div class="quadrant-board" style="height:clamp(200px, 26vh, 260px) !important; position:relative;">
+            <div class="q-cell q-tl"><span class="q-zone-name">共識 × 平等區</span></div>
+            <div class="q-cell q-tr"><span class="q-zone-name">共識 × 階層區</span></div>
+            <div class="q-cell q-bl"><span class="q-zone-name">由上而下 × 平等區</span></div>
+            <div class="q-cell q-br"><span class="q-zone-name">由上而下 × 階層區</span></div>
+            <div class="q-axis-h"></div>
+            <div class="q-axis-v"></div>
+
+            <!-- 誤差連線 SVG -->
+            <svg style="position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:3;">
+              ${svgLines}
+            </svg>
+
+            <!-- 真實答案黃金靶心 -->
+            <div class="matrix-point is-best" style="left:${target.x}%; top:${targetTop}%; z-index:10; transform:translate(-50%,-50%) scale(1.1); border:2.5px solid #15803d; box-shadow:0 0 0 6px rgba(22,163,74,0.25);">
+              <span class="matrix-node-letter" style="background:#15803d; color:#fff;">正</span>
+              <span class="matrix-node-title" style="color:#14532d; font-weight:900;">(${target.x}, ${target.y})</span>
+            </div>
+
+            <!-- 5 組插旗位置 -->
+            ${flagsHtml}
+          </div>
+          <div class="quadrant-axis-footer">
+            <span>◀ 平等主義 (0)</span>
+            <span>▼ 由上而下 (0)</span>
+            <span>階層制 (100) ▶</span>
+          </div>
+        </section>
+
+        <!-- 5 組距離與同時計分明細榜 -->
+        <section class="card side-scoreboard-card" style="padding:14px 16px;">
+          <div class="side-score-head" style="margin-bottom:8px;">
+            <h2>5 組落點距離與得分榜</h2>
+            <span>依距離誤差 $d$ 計分</span>
+          </div>
+          <div class="compact-score-list">
+            ${groupEvaluations
+              .slice()
+              .sort((a, b) => (a.dist ?? 999) - (b.dist ?? 999))
+              .map((g, idx) => `
+                <div class="compact-score-row ${idx === 0 && g.submitted ? 'is-nav' : ''}" style="padding:6px 10px;">
+                  <div class="c-group">
+                    <strong>第 ${g.id} 組</strong>
+                    ${g.submitted ? `<small class="muted">(${g.x}, ${g.y})</small>` : '<small class="muted">未插旗</small>'}
+                  </div>
+                  <div class="c-badges">
+                    ${g.submitted ? `<span class="score-pill initial" style="font-size:11px;">誤差 ${g.dist}</span>` : ''}
+                    <span class="score-pill ${g.cqDelta > 0 ? 'synergy' : g.cqDelta === 0 ? 'rescue' : 'negative'}" style="font-size:11px;">${g.tier}</span>
+                  </div>
+                  <div class="c-total">
+                    <span class="c-delta ${g.cqDelta > 0 ? 'positive-text' : g.cqDelta < 0 ? 'negative-text' : ''}">
+                      ${g.cqDelta > 0 ? '+' : ''}${g.cqDelta} CQ
+                    </span>
+                  </div>
+                </div>
+              `).join('')}
+          </div>
+        </section>
       </div>
 
-      ${state.hiddenIntel ? `
-        <div class="debrief-intel-card">
-          <div class="debrief-intel-head">
-            <span class="eyebrow">📂 CLASSIFIED INTEL · 關鍵內幕解密</span>
-            <span class="intel-mini-stamp">已解密公開</span>
+      <!-- 右欄：題目深度解釋與文獻盲點拆解 -->
+      <section class="card results-main-review" style="padding:22px 26px !important;">
+        <div class="review-main-header">
+          <div>
+            <div class="eyebrow">CASE DEBRIEF · 文獻理論與行為線索解析</div>
+            <h2 style="font-size:20px; margin:4px 0 0;">為什麼真實座標落在「${esc(target.zone)}」？</h2>
           </div>
-          <h4>${esc(state.hiddenIntel.title)}</h4>
-          <p>${esc(state.hiddenIntel.text)}</p>
         </div>
-      ` : ''}
+
+        <div class="review-main-body" style="display:flex; flex-direction:column; gap:14px; margin-top:12px;">
+          <div class="debrief-hero-box is-optimal" style="padding:16px 20px; border-radius:14px; background:#f0fdf4; border:1.5px solid #86efac;">
+            <div class="debrief-meta-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+              <span class="debrief-opt-tag" style="background:#15803d; color:#fff; font-size:12px; font-weight:800; padding:3px 8px; border-radius:6px;">正解座標：(${target.x}, ${target.y})</span>
+              <span class="review-zone-badge" style="font-size:12px; font-weight:700; color:#166534;">${esc(target.zone)}</span>
+            </div>
+            <h3 class="debrief-verdict-title" style="font-size:16px; font-weight:800; color:#14532d; margin:0 0 6px;">${esc(geoRound.verdict)}</h3>
+            <p class="debrief-analysis-text" style="font-size:14px; line-height:1.75; color:#166534; margin:0;">${esc(geoRound.analysis)}</p>
+          </div>
+
+          <div class="debrief-blindspot-card" style="padding:16px 20px; border-radius:14px; background:#fffbeb; border:1.5px solid #f59e0b;">
+            <div class="eyebrow" style="font-size:11px; font-weight:800; color:#b45309; margin-bottom:6px;">為什麼這題容易選錯？（表象陷阱 vs. 文化底層邏輯）</div>
+            <p class="debrief-blindspot-text" style="font-size:14px; line-height:1.75; color:#78350f; font-weight:600; margin:0;">${esc(geoRound.blindspot)}</p>
+          </div>
+        </div>
+      </section>
+
     </div>
   `;
 }
@@ -548,7 +520,7 @@ async function hostAction(action, extra = {}) {
         await refresh();
       }
       broadcastSync('host_action', { action: 'jump', roundIndex: target });
-      toast(`已切換至第 ${target + 1} 回合研討 ✓`);
+      toast(`已切換至第 ${target + 1} 回合討論 ✓`);
     } catch (e) {
       toast(e.message);
       await refresh();
@@ -577,7 +549,7 @@ async function hostAction(action, extra = {}) {
         await refresh();
       }
       broadcastSync('host_action', { action: 'jump', roundIndex: extra.roundIndex });
-      toast(`已切換至第 ${extra.roundIndex + 1} 回合研討 ✓`);
+      toast(`已切換至第 ${extra.roundIndex + 1} 回合討論 ✓`);
     } catch (e) {
       toast(e.message);
       await refresh();
@@ -606,7 +578,7 @@ async function hostAction(action, extra = {}) {
         lastSignature = JSON.stringify({ ...latest, serverTime: 0, clockOffset: 0 });
         render();
         broadcastSync('host_action', { action: 'next', roundIndex: latest.roundIndex });
-        toast(latest.phase === 'finished' ? '四回合已全部完成！' : `已進入第 ${latest.roundIndex + 1} 回合研討 ✓`);
+        toast(latest.phase === 'finished' ? '四回合已全部完成！' : `已進入第 ${latest.roundIndex + 1} 回合討論 ✓`);
       } else {
         lastSignature = '';
         await refresh();
@@ -632,7 +604,7 @@ async function hostAction(action, extra = {}) {
     }
     busy = false;
     if (state.completed < 5) {
-      if (!await ask('仍有組別正在討論', `目前 ${state.completed} / 5 組已提交初投。現在揭曉會結束本回合初投與說服，確定要進行揭曉嗎？`, '結束並揭曉')) return;
+      if (!await ask('仍有組別正在討論', `目前 ${state.completed} / 5 組已鎖定座標。現在揭曉會結束本回合插旗，確定要進行揭曉嗎？`, '結束並揭曉')) return;
       extra.confirmIncomplete = true;
     }
   }
@@ -670,9 +642,8 @@ async function refresh() {
     const next = await api('state', undefined, 'host');
     if (!next || typeof next !== 'object') return;
 
-    // 【核心防護】檢查 epoch（課堂世代）與 roundIndex，防止 Serverless 節點冷啟動閃退回舊回合
+    // 單調防回合倒退鎖
     if (next.epoch && next.epoch !== highestEpoch) {
-      // 若當前已是 cq-reset-... 世代，絕不接受冷啟動節點的預設 cq-room-v1 世代！
       if (highestEpoch.startsWith('cq-reset-') && next.epoch === 'cq-room-v1') {
         return;
       }
@@ -682,7 +653,6 @@ async function refresh() {
       setSyncRoundLock(highestRoundIndex, highestEpoch);
     } else if (next.epoch === highestEpoch) {
       if (typeof next.roundIndex === 'number' && next.roundIndex < highestRoundIndex) {
-        // 攔截到舊回合封包，直接丟棄，絕不倒退回前一回合！
         return;
       }
       if (typeof next.roundIndex === 'number' && next.roundIndex > highestRoundIndex) {
@@ -692,6 +662,15 @@ async function refresh() {
       if (typeof next.revision === 'number' && next.revision > highestRevision) {
         highestRevision = next.revision;
       }
+    }
+
+    // 收集服務端返回的 pins
+    if (Array.isArray(next.pins)) {
+      next.pins.forEach(p => {
+        if (p.pinX !== null && p.pinY !== null && p.pinX !== undefined && p.pinY !== undefined) {
+          groupPins[`${next.roundIndex}_${p.id}`] = { x: Number(p.pinX), y: Number(p.pinY) };
+        }
+      });
     }
 
     next.clockOffset = next.serverTime - Date.now();
@@ -731,7 +710,7 @@ $('#copy-url').addEventListener('click', async () => {
 
 $('#sound-toggle')?.addEventListener('click', () => {
   const on = toggleSound();
-  $('#sound-toggle').textContent = on ? '🔊 音效' : '🔇 靜音';
+  $('#sound-toggle').textContent = on ? '音效：開' : '音效：關';
   toast(on ? '倒數心跳與揭曉音效已開啟 ✓' : '大螢幕音效已靜音');
 });
 
@@ -786,9 +765,13 @@ $('#reset').addEventListener('click', async () => {
 listenSync(packet => {
   if (!packet || !state) return;
   if (packet.type === 'group_vote') {
-    if (packet.roundIndex === state.roundIndex) {
-      const gid = Number(packet.group);
-      if (gid >= 1 && gid <= 5) {
+    const rIdx = packet.roundIndex ?? state.roundIndex;
+    const gid = Number(packet.group);
+    if (gid >= 1 && gid <= 5) {
+      if (packet.pinX !== undefined && packet.pinY !== undefined) {
+        groupPins[`${rIdx}_${gid}`] = { x: Number(packet.pinX), y: Number(packet.pinY) };
+      }
+      if (rIdx === state.roundIndex) {
         const g = state.groups?.find(grp => grp.id === gid);
         if (g) {
           g.submitted = true;
@@ -813,6 +796,5 @@ async function poll() {
   setTimeout(poll, document.hidden ? 5000 : 1500);
 }
 
-window.addEventListener('pitch-ended', () => { render(); });
 startClock(() => state, { enableAudio: true });
 poll();

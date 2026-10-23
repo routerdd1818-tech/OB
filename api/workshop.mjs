@@ -269,6 +269,11 @@ function hostView(state, req) {
 
   if (revealed) {
     result.results = state.results[state.round];
+    result.pins = state.groups.map(g => ({
+      id: g.id,
+      pinX: votes[g.id]?.pinX ?? null,
+      pinY: votes[g.id]?.pinY ?? null
+    }));
     result.finalDecision = state.finalDecisions?.[state.round] || null;
     result.hiddenIntel = rounds[state.round].hiddenIntel;
     result.distribution = [...rounds[state.round].options, ...(state.round === 3 ? [rounds[3].breakdown] : [])].map(o => ({
@@ -518,6 +523,7 @@ export default async function handler(req, res) {
           proposal: body.choice,
           submittedBy: user.id,
           votedAt: Date.now(),
+          ...(typeof body.pinX === 'number' && typeof body.pinY === 'number' ? { pinX: body.pinX, pinY: body.pinY } : {}),
           ...(state.round === 3 ? { consensus: body.consensus } : {})
         };
 
