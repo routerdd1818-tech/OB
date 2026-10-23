@@ -129,22 +129,7 @@ export function computeNavigator(state, roundIdx = 0) {
 }
 
 export function calcRoundSeconds(state, roundIdx = 0) {
-  let roundSeconds = rounds[roundIdx]?.seconds || (roundIdx === 3 ? 60 : 180);
-  if (roundIdx === 1) {
-    if (state.worldState?.r1 === 'bad') roundSeconds = Math.max(30, roundSeconds - 30);
-  } else if (roundIdx === 2) {
-    if (state.worldState?.r2 === 'bad') roundSeconds = Math.max(30, roundSeconds - 30);
-  } else if (roundIdx === 3) {
-    if (state.worldState?.r3 === 'bad') {
-      roundSeconds = 45;
-    } else if (state.worldState?.r3 === 'good') {
-      const goodCount = [state.worldState?.r1, state.worldState?.r2, state.worldState?.r3].filter(s => s === 'good').length;
-      roundSeconds = goodCount >= 2 ? 75 : 60;
-    } else {
-      roundSeconds = 60;
-    }
-  }
-  return roundSeconds;
+  return 180; // 每回合小組研討時間統一為 3 分鐘 (180 秒)
 }
 
 function shared(state, options) {
@@ -325,21 +310,11 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       let state = await readState();
 
-      // 【Serverless 跨實例自動前向同步】僅允許講師主控端 (host) 自動對齊世代或回合，學員輪詢絕不可篡改課堂進度
+      // 【Serverless 跨實例自動對齊世代】僅在冷啟動節點落後於重設世代時對齊，GET 請求純唯讀、絕不篡改 round
       const needsEpochSync = Boolean(syncEpochHeader && syncEpochHeader !== state.epoch && state.epoch === 'cq-room-v1' && syncEpochHeader.startsWith('cq-reset-'));
-      const needsRoundSync = Boolean(role === 'host' && Number.isInteger(clientSyncRound) && clientSyncRound > state.round && clientSyncRound <= 3 && (!syncEpochHeader || syncEpochHeader === state.epoch));
-      if (needsEpochSync || needsRoundSync) {
+      if (needsEpochSync) {
         await mutate(s => {
-          if (needsEpochSync) {
-            s.epoch = syncEpochHeader;
-          }
-          if (needsRoundSync) {
-            s.round = clientSyncRound;
-            if (s.phase === 'ready' || s.phase === 'waiting' || s.phase === 'revealed') {
-              s.phase = 'voting';
-              s.deadline = Date.now() + calcRoundSeconds(s, s.round) * 1000;
-            }
-          }
+          s.epoch = syncEpochHeader;
         });
         state = await readState();
       }

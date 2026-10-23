@@ -36,9 +36,6 @@ export async function api(action = 'state', body, role = 'member') {
   if (token) headers['Authorization'] = `Bearer ${token}`;
 
   if (typeof window !== 'undefined' && window.__cq_sync) {
-    if (typeof window.__cq_sync.round === 'number' && window.__cq_sync.round >= 0) {
-      headers['x-sync-round'] = String(window.__cq_sync.round);
-    }
     if (window.__cq_sync.epoch) {
       headers['x-sync-epoch'] = String(window.__cq_sync.epoch);
     }
@@ -277,12 +274,13 @@ export function broadcastSync(type, data = {}) {
 export function listenSync(onMessage) {
   try {
     if (typeof EventSource === 'undefined') return null;
-    const es = new EventSource(`https://ntfy.sh/${SYNC_TOPIC}/sse`);
+    const es = new EventSource(`https://ntfy.sh/${SYNC_TOPIC}/sse?since=now`);
     es.onmessage = e => {
       try {
         const payload = JSON.parse(e.data);
         if (payload.event === 'message' && payload.message) {
           const packet = JSON.parse(payload.message);
+          if (packet.timestamp && Math.abs(Date.now() - packet.timestamp) > 8000) return;
           onMessage(packet);
         }
       } catch (err) {}

@@ -265,9 +265,9 @@ test('bad outcome in round 2 causes full penalty, no rescue, and shared conseque
   await host('start', {});
   const r4State = (await host()).data;
   assert.equal(r4State.roundIndex, 3);
-  // Compressed to 45 seconds due to bad previous round!
-  assert.ok(r4State.deadline - Date.now() <= 45000);
-  assert.ok(r4State.deadline - Date.now() > 42000);
+  // All rounds have 180 seconds (3 minutes) discussion time!
+  assert.ok(r4State.deadline - Date.now() <= 180000);
+  assert.ok(r4State.deadline - Date.now() > 170000);
 });
 
 test('fourth round requires three actual decisions for consensus', async () => {
@@ -406,13 +406,19 @@ test('atomic next with autoStart advances round and phase in single request; syn
   assert.equal(state.phase, 'voting');
   assert.ok(state.deadline > Date.now());
 
-  // Test forward-sync header on GET: if client reports round 3, server auto-syncs
+  // GET is idempotent and read-only: client headers MUST NOT mutate round
   const syncGet = await fetch(`${base}/api/workshop?action=state&role=host`, {
     headers: { 'x-sync-round': '3' }
   });
   const syncData = await syncGet.json();
-  assert.equal(syncData.roundIndex, 3);
-  assert.equal(syncData.phase, 'voting');
+  assert.equal(syncData.roundIndex, 2);
+
+  // Calling next advances strictly to round 3
+  const nextRes3 = await host('next', { force: true, autoStart: true });
+  assert.equal(nextRes3.status, 200);
+  state = (await host()).data;
+  assert.equal(state.roundIndex, 3);
+  assert.equal(state.phase, 'voting');
 
   // Host jumps back to Round 0
   const jumpBackRes = await host('jump', { roundIndex: 0, autoStart: true });
