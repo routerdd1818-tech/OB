@@ -1,4 +1,4 @@
-import { $, esc, api, toast, status, scene, roundNav, tensionCard, dialogue, startClock, broadcastSync, listenSync, playRevealDrum, toggleSound, isSoundEnabled } from './common.js';
+import { $, esc, api, toast, status, scene, roundNav, tensionCard, dialogue, startClock, broadcastSync, listenSync, playRevealDrum, toggleSound, isSoundEnabled, setSyncRoundLock, resetSyncRoundLock } from './common.js';
 import { renderRpgScene, renderCharacterBust, renderRpgDialogueBox, renderWorldStateHud, renderQrJoinDock } from './rpg-assets.js';
 
 const PRODUCTION_JOIN_URL = 'https://my00-rt-bf0f.vercel.app/';
@@ -25,6 +25,11 @@ function paintQr(target, url, cellSize = 4, margin = 8) {
 }
 
 let state = null, lastSignature = '', selectedReview = 'B', busy = false, previousReveal = '', confirmResolve;
+
+// 防回合倒退單調鎖：記錄最高 epoch 與 roundIndex，徹底防範多 Lambda 容器冷啟動造成的舊回合閃退
+let highestEpoch = '';
+let highestRoundIndex = 0;
+let highestRevision = 0;
 
 function ask(title, text, label = '確認') {
   const modal = $('#confirm-dialog');
@@ -528,12 +533,21 @@ async function hostAction(action, extra = {}) {
     busy = true;
     document.querySelectorAll('[data-host-action]').forEach(el => el.disabled = true);
     try {
-      const target = Math.min(3, state.roundIndex + 1);
-      await api('jump', { roundIndex: target }, 'host');
-      await api('start', {}, 'host').catch(() => {});
+      const target = Math.min(3, (state?.roundIndex ?? 0) + 1);
+      highestRoundIndex = target;
+      setSyncRoundLock(highestRoundIndex, highestEpoch);
+      const res = await api('jump', { roundIndex: target, autoStart: true }, 'host');
+      if (res && res.roundIndex !== undefined) {
+        if (res.epoch) highestEpoch = res.epoch;
+        res.clockOffset = (res.serverTime || Date.now()) - Date.now();
+        state = res;
+        lastSignature = JSON.stringify({ ...res, serverTime: 0, clockOffset: 0 });
+        render();
+      } else {
+        lastSignature = '';
+        await refresh();
+      }
       broadcastSync('host_action', { action: 'jump', roundIndex: target });
-      lastSignature = '';
-      await refresh();
       toast(`已切換至第 ${target + 1} 回合研討 ✓`);
     } catch (e) {
       toast(e.message);
@@ -549,11 +563,20 @@ async function hostAction(action, extra = {}) {
     busy = true;
     document.querySelectorAll('[data-host-action]').forEach(el => el.disabled = true);
     try {
-      await api('jump', { roundIndex: extra.roundIndex }, 'host');
-      await api('start', {}, 'host').catch(() => {});
+      highestRoundIndex = extra.roundIndex;
+      setSyncRoundLock(highestRoundIndex, highestEpoch);
+      const res = await api('jump', { roundIndex: extra.roundIndex, autoStart: true }, 'host');
+      if (res && res.roundIndex !== undefined) {
+        if (res.epoch) highestEpoch = res.epoch;
+        res.clockOffset = (res.serverTime || Date.now()) - Date.now();
+        state = res;
+        lastSignature = JSON.stringify({ ...res, serverTime: 0, clockOffset: 0 });
+        render();
+      } else {
+        lastSignature = '';
+        await refresh();
+      }
       broadcastSync('host_action', { action: 'jump', roundIndex: extra.roundIndex });
-      lastSignature = '';
-      await refresh();
       toast(`已切換至第 ${extra.roundIndex + 1} 回合研討 ✓`);
     } catch (e) {
       toast(e.message);
@@ -571,14 +594,13 @@ async function hostAction(action, extra = {}) {
       if (el.dataset.hostAction === 'next') el.textContent = '正在切換下一回合…';
     });
     try {
-      let latest = await api('next', { force: true, ...extra }, 'host');
+      const targetRound = Math.min(3, (state?.roundIndex ?? 0) + 1);
+      highestRoundIndex = targetRound;
+      setSyncRoundLock(highestRoundIndex, highestEpoch);
+      const latest = await api('next', { force: true, autoStart: true, ...extra }, 'host');
       if (latest && latest.roundIndex !== undefined) {
-        if (latest.roundIndex <= 3 && latest.phase !== 'finished') {
-          try {
-            const started = await api('start', {}, 'host');
-            if (started && started.roundIndex !== undefined) latest = started;
-          } catch (err) {}
-        }
+        if (latest.epoch) highestEpoch = latest.epoch;
+        if (latest.roundIndex > highestRoundIndex) highestRoundIndex = latest.roundIndex;
         latest.clockOffset = (latest.serverTime || Date.now()) - Date.now();
         state = latest;
         lastSignature = JSON.stringify({ ...latest, serverTime: 0, clockOffset: 0 });
@@ -586,14 +608,8 @@ async function hostAction(action, extra = {}) {
         broadcastSync('host_action', { action: 'next', roundIndex: latest.roundIndex });
         toast(latest.phase === 'finished' ? '四回合已全部完成！' : `已進入第 ${latest.roundIndex + 1} 回合研討 ✓`);
       } else {
-        const polled = await api('state', undefined, 'host');
-        if (polled.roundIndex <= 3 && polled.phase !== 'finished') {
-          try { await api('start', {}, 'host'); } catch (err) {}
-        }
-        broadcastSync('host_action', { action: 'next', roundIndex: polled.roundIndex });
         lastSignature = '';
         await refresh();
-        toast(polled.phase === 'finished' ? '四回合已全部完成！' : `已進入第 ${polled.roundIndex + 1} 回合研討 ✓`);
       }
     } catch (e) {
       toast(e.message);
@@ -624,6 +640,12 @@ async function hostAction(action, extra = {}) {
   document.querySelectorAll('[data-host-action]').forEach(el => el.disabled = true);
   try {
     const res = await api(action, extra, 'host');
+    if (action === 'reset' && res?.epoch) {
+      highestEpoch = res.epoch;
+      highestRoundIndex = 0;
+      highestRevision = res.revision || 0;
+      resetSyncRoundLock(res.epoch);
+    }
     broadcastSync('host_action', { action, roundIndex: state?.roundIndex });
     if (res && res.roundIndex !== undefined) {
       res.clockOffset = (res.serverTime || Date.now()) - Date.now();
@@ -646,6 +668,32 @@ async function hostAction(action, extra = {}) {
 async function refresh() {
   try {
     const next = await api('state', undefined, 'host');
+    if (!next || typeof next !== 'object') return;
+
+    // 【核心防護】檢查 epoch（課堂世代）與 roundIndex，防止 Serverless 節點冷啟動閃退回舊回合
+    if (next.epoch && next.epoch !== highestEpoch) {
+      // 若當前已是 cq-reset-... 世代，絕不接受冷啟動節點的預設 cq-room-v1 世代！
+      if (highestEpoch.startsWith('cq-reset-') && next.epoch === 'cq-room-v1') {
+        return;
+      }
+      highestEpoch = next.epoch;
+      highestRevision = typeof next.revision === 'number' ? next.revision : 0;
+      highestRoundIndex = typeof next.roundIndex === 'number' ? next.roundIndex : 0;
+      setSyncRoundLock(highestRoundIndex, highestEpoch);
+    } else if (next.epoch === highestEpoch) {
+      if (typeof next.roundIndex === 'number' && next.roundIndex < highestRoundIndex) {
+        // 攔截到舊回合封包，直接丟棄，絕不倒退回前一回合！
+        return;
+      }
+      if (typeof next.roundIndex === 'number' && next.roundIndex > highestRoundIndex) {
+        highestRoundIndex = next.roundIndex;
+        setSyncRoundLock(highestRoundIndex, highestEpoch);
+      }
+      if (typeof next.revision === 'number' && next.revision > highestRevision) {
+        highestRevision = next.revision;
+      }
+    }
+
     next.clockOffset = next.serverTime - Date.now();
     const signature = JSON.stringify({ ...next, serverTime: 0, clockOffset: 0 });
     state = next;
@@ -727,6 +775,10 @@ $('#manage-open').addEventListener('click', openManage);
 $('#reset').addEventListener('click', async () => {
   if (await ask('重新開始這堂課？', '將清除全部成員、投票、回合結果與 CQ，學員需要重新加入。此操作無法復原。', '清除並重新開始')) {
     $('#manage-dialog').close();
+    highestEpoch = '';
+    highestRoundIndex = 0;
+    highestRevision = 0;
+    resetSyncRoundLock();
     await hostAction('reset', { confirm: 'RESET' });
   }
 });
@@ -748,6 +800,10 @@ listenSync(packet => {
   } else if (packet.type === 'pitch_update') {
     state.pitch = packet.pitch;
   } else if (packet.type === 'host_action') {
+    if (typeof packet.roundIndex === 'number' && packet.roundIndex > highestRoundIndex) {
+      highestRoundIndex = packet.roundIndex;
+      setSyncRoundLock(highestRoundIndex, highestEpoch);
+    }
     refresh();
   }
 });

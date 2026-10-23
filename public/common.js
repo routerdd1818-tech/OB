@@ -1,12 +1,37 @@
 export const $ = selector => document.querySelector(selector);
 export const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
+export function setSyncRoundLock(round, epoch) {
+  if (typeof window === 'undefined') return;
+  if (!window.__cq_sync) window.__cq_sync = { round: -1, epoch: '' };
+  if (typeof round === 'number' && round > window.__cq_sync.round) {
+    window.__cq_sync.round = round;
+  }
+  if (epoch) {
+    window.__cq_sync.epoch = epoch;
+  }
+}
+
+export function resetSyncRoundLock(newEpoch = '') {
+  if (typeof window === 'undefined') return;
+  window.__cq_sync = { round: 0, epoch: newEpoch };
+}
+
 export async function api(action = 'state', body, role = 'member') {
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 10000);
   const token = (typeof localStorage !== 'undefined' && role === 'member') ? localStorage.getItem('cq_member_token') : null;
   const headers = body ? { 'Content-Type': 'application/json' } : {};
   if (token) headers['Authorization'] = `Bearer ${token}`;
+
+  if (typeof window !== 'undefined' && window.__cq_sync) {
+    if (typeof window.__cq_sync.round === 'number' && window.__cq_sync.round >= 0) {
+      headers['x-sync-round'] = String(window.__cq_sync.round);
+    }
+    if (window.__cq_sync.epoch) {
+      headers['x-sync-epoch'] = String(window.__cq_sync.epoch);
+    }
+  }
   try {
     const response = await fetch(`/api/workshop?action=${action}&role=${role}`, {
       method: body ? 'POST' : 'GET',

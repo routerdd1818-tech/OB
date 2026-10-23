@@ -128,6 +128,25 @@ export function computeNavigator(state, roundIdx = 0) {
   return { chiefNavigator, persuasionBoard, totalAllocated };
 }
 
+export function calcRoundSeconds(state, roundIdx = 0) {
+  let roundSeconds = rounds[roundIdx]?.seconds || (roundIdx === 3 ? 60 : 180);
+  if (roundIdx === 1) {
+    if (state.worldState?.r1 === 'bad') roundSeconds = Math.max(30, roundSeconds - 30);
+  } else if (roundIdx === 2) {
+    if (state.worldState?.r2 === 'bad') roundSeconds = Math.max(30, roundSeconds - 30);
+  } else if (roundIdx === 3) {
+    if (state.worldState?.r3 === 'bad') {
+      roundSeconds = 45;
+    } else if (state.worldState?.r3 === 'good') {
+      const goodCount = [state.worldState?.r1, state.worldState?.r2, state.worldState?.r3].filter(s => s === 'good').length;
+      roundSeconds = goodCount >= 2 ? 75 : 60;
+    } else {
+      roundSeconds = 60;
+    }
+  }
+  return roundSeconds;
+}
+
 function shared(state, options) {
   return {
     epoch: state.epoch,
@@ -294,8 +313,32 @@ export default async function handler(req, res) {
     const action = url.searchParams.get('action') || 'state';
     const role = url.searchParams.get('role') === 'host' ? 'host' : 'member';
 
+    const syncRoundHeader = req.headers['x-sync-round'] || url.searchParams.get('syncRound');
+    const syncEpochHeader = req.headers['x-sync-epoch'] || url.searchParams.get('syncEpoch');
+    const clientSyncRound = Number(syncRoundHeader);
+
     if (req.method === 'GET') {
-      const state = await readState();
+      let state = await readState();
+
+      // 【Serverless 跨實例自動前向同步】若此冷啟動 Lambda 節點落後於客戶端已確認的世代或回合，自動對齊
+      const needsEpochSync = Boolean(syncEpochHeader && syncEpochHeader !== state.epoch && state.epoch === 'cq-room-v1' && syncEpochHeader.startsWith('cq-reset-'));
+      const needsRoundSync = Boolean(Number.isInteger(clientSyncRound) && clientSyncRound > state.round && clientSyncRound <= 3 && (!syncEpochHeader || syncEpochHeader === state.epoch));
+      if (needsEpochSync || needsRoundSync) {
+        await mutate(s => {
+          if (needsEpochSync) {
+            s.epoch = syncEpochHeader;
+          }
+          if (needsRoundSync) {
+            s.round = clientSyncRound;
+            if (s.phase === 'ready' || s.phase === 'waiting' || s.phase === 'revealed') {
+              s.phase = 'voting';
+              s.deadline = Date.now() + calcRoundSeconds(s, s.round) * 1000;
+            }
+          }
+        });
+        state = await readState();
+      }
+
       let user = null;
       try {
         user = session(req, state, role);
@@ -389,10 +432,19 @@ export default async function handler(req, res) {
       finalState = state;
       const user = session(req, state, role);
 
-      // 【關鍵防護】若此 Serverless 實例的 state.round 落後於前端傳來的 roundIndex，自動對齊最新回合，防止閃退回第一回合
-      if (typeof body.roundIndex === 'number' && body.roundIndex > state.round && body.roundIndex <= 3) {
-        state.round = body.roundIndex;
-        if (state.phase === 'revealed') state.phase = 'voting';
+      // 【關鍵防護】若此 Serverless 實例的 state.round 落後於前端傳來的 roundIndex / syncRound，自動對齊最新回合，防止閃退回第一回合
+      if (action !== 'reset') {
+        if (syncEpochHeader && syncEpochHeader.startsWith('cq-reset-') && state.epoch === 'cq-room-v1') {
+          state.epoch = syncEpochHeader;
+        }
+        const targetRound = typeof body.roundIndex === 'number' ? body.roundIndex : (Number.isInteger(clientSyncRound) ? clientSyncRound : null);
+        if (targetRound !== null && targetRound > state.round && targetRound <= 3) {
+          state.round = targetRound;
+          if (state.phase === 'revealed' || state.phase === 'ready' || state.phase === 'waiting') {
+            state.phase = 'voting';
+            state.deadline = Date.now() + calcRoundSeconds(state, targetRound) * 1000;
+          }
+        }
       }
 
       if (role === 'member') {
@@ -484,21 +536,7 @@ export default async function handler(req, res) {
 
       if (action === 'start') {
         if (!['waiting', 'ready', 'voting'].includes(state.phase)) fail('本回合已揭曉或已結束', 409);
-        let roundSeconds = rounds[state.round].seconds || (state.round === 3 ? 60 : 180);
-        if (state.round === 1) {
-          if (state.worldState?.r1 === 'bad') roundSeconds = Math.max(30, roundSeconds - 30);
-        } else if (state.round === 2) {
-          if (state.worldState?.r2 === 'bad') roundSeconds = Math.max(30, roundSeconds - 30);
-        } else if (state.round === 3) {
-          if (state.worldState?.r3 === 'bad') {
-            roundSeconds = 45;
-          } else if (state.worldState?.r3 === 'good') {
-            const goodCount = [state.worldState?.r1, state.worldState?.r2, state.worldState?.r3].filter(s => s === 'good').length;
-            roundSeconds = goodCount >= 2 ? 75 : 60;
-          } else {
-            roundSeconds = 60;
-          }
-        }
+        const roundSeconds = calcRoundSeconds(state, state.round);
         state.phase = 'voting';
         state.deadline = Date.now() + roundSeconds * 1000;
         state.remaining = null;
@@ -644,16 +682,29 @@ export default async function handler(req, res) {
         if (state.round === 3) state.phase = 'finished';
         else {
           state.round++;
-          state.phase = 'ready';
+          if (body?.autoStart) {
+            const roundSeconds = calcRoundSeconds(state, state.round);
+            state.phase = 'voting';
+            state.deadline = Date.now() + roundSeconds * 1000;
+            state.remaining = null;
+          } else {
+            state.phase = 'ready';
+          }
         }
       } else if (action === 'jump') {
         const target = Number(body.roundIndex);
         if (!Number.isInteger(target) || target < 0 || target > 3) fail('無效的回合', 400);
         state.round = target;
-        state.phase = 'ready';
         state.pitch = null;
-        state.deadline = null;
         state.remaining = null;
+        if (body?.autoStart) {
+          const roundSeconds = calcRoundSeconds(state, target);
+          state.phase = 'voting';
+          state.deadline = Date.now() + roundSeconds * 1000;
+        } else {
+          state.phase = 'ready';
+          state.deadline = null;
+        }
       } else if (action === 'representative') {
         const member = Object.values(state.participants).find(p => p.id === body.memberId && p.expires > Date.now());
         if (!member) fail('找不到此成員');
@@ -666,7 +717,7 @@ export default async function handler(req, res) {
         Object.assign(state, fresh);
       } else fail('未知操作', 404);
     });
-    res.end(JSON.stringify({ ok: true, ...(role === 'host' && finalState ? hostView(finalState, req) : {}) }));
+    res.end(JSON.stringify({ ok: true, epoch: finalState?.epoch, revision: finalState?.revision, ...(role === 'host' && finalState ? hostView(finalState, req) : {}) }));
   } catch (error) {
     res.statusCode = error.status || 503;
     res.end(

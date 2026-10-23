@@ -1,4 +1,4 @@
-import { $, esc, api, toast, status, startClock, broadcastSync, listenSync } from './common.js';
+import { $, esc, api, toast, status, startClock, broadcastSync, listenSync, setSyncRoundLock, resetSyncRoundLock } from './common.js';
 
 let state = null;
 let lastSignature = '';
@@ -650,19 +650,22 @@ async function refresh() {
     // 【核心防護】檢查 epoch（課堂世代）、revision 與 roundIndex：
     // 只要不是主持人按了 RESET（產生新 epoch），任何因為 Serverless 節點冷啟動而落後的舊回合 / 舊 revision 一律丟棄！
     if (next.epoch && next.epoch !== highestEpoch) {
+      // 若前端已在 cq-reset-... 世代，絕不接受來自冷啟動節點的預設 cq-room-v1 世代！
+      if (highestEpoch.startsWith('cq-reset-') && next.epoch === 'cq-room-v1') {
+        return;
+      }
       highestEpoch = next.epoch;
       highestRevision = typeof next.revision === 'number' ? next.revision : 0;
       highestRoundIndex = typeof next.roundIndex === 'number' ? next.roundIndex : 0;
+      setSyncRoundLock(highestRoundIndex, highestEpoch);
     } else if (next.epoch === highestEpoch) {
       if (typeof next.roundIndex === 'number' && next.roundIndex < highestRoundIndex) {
         // 攔截到舊回合封包，直接忽略，絕不閃退回第一回合！
         return;
       }
-      if (typeof next.revision === 'number' && next.revision < highestRevision && next.roundIndex === highestRoundIndex) {
-        return;
-      }
       if (typeof next.roundIndex === 'number' && next.roundIndex > highestRoundIndex) {
         highestRoundIndex = next.roundIndex;
+        setSyncRoundLock(highestRoundIndex, highestEpoch);
       }
       if (typeof next.revision === 'number' && next.revision > highestRevision) {
         highestRevision = next.revision;
@@ -747,6 +750,7 @@ async function refresh() {
       highestEpoch = '';
       highestRevision = -1;
       highestRoundIndex = -1;
+      resetSyncRoundLock();
       if (!gate.open) gate.showModal();
       $('#app').innerHTML = '<div class="loading">請先填寫姓名與組別入席…</div>';
       return;
@@ -839,6 +843,7 @@ listenSync(packet => {
     // 若主持人廣播了最新的 roundIndex，立即更新最高回合鎖
     if (typeof packet.roundIndex === 'number' && packet.roundIndex > highestRoundIndex) {
       highestRoundIndex = packet.roundIndex;
+      setSyncRoundLock(highestRoundIndex, highestEpoch);
     }
     refresh();
   } else if (packet.type === 'pitch_update') {

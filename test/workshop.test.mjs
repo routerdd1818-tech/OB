@@ -388,3 +388,34 @@ test('host can jump directly to any round and force next without reveal', async 
   state = (await host()).data;
   assert.equal(state.roundIndex, 0);
 });
+
+test('atomic next with autoStart advances round and phase in single request; sync headers forward-sync state', async () => {
+  // Reset first
+  await host('reset', { confirm: 'RESET' });
+  let state = (await host()).data;
+  assert.equal(state.roundIndex, 0);
+
+  // Jump to 1 with autoStart
+  const jumpRes = await host('jump', { roundIndex: 1, autoStart: true });
+  assert.equal(jumpRes.status, 200);
+  state = (await host()).data;
+  assert.equal(state.roundIndex, 1);
+  assert.equal(state.phase, 'voting');
+  assert.ok(state.deadline > Date.now());
+
+  // Atomic next with autoStart
+  const nextRes = await host('next', { force: true, autoStart: true });
+  assert.equal(nextRes.status, 200);
+  state = (await host()).data;
+  assert.equal(state.roundIndex, 2);
+  assert.equal(state.phase, 'voting');
+  assert.ok(state.deadline > Date.now());
+
+  // Test forward-sync header on GET: if client reports round 3, server auto-syncs
+  const syncGet = await fetch(`${base}/api/workshop?action=state&role=host`, {
+    headers: { 'x-sync-round': '3' }
+  });
+  const syncData = await syncGet.json();
+  assert.equal(syncData.roundIndex, 3);
+  assert.equal(syncData.phase, 'voting');
+});
