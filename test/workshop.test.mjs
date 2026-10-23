@@ -413,4 +413,21 @@ test('atomic next with autoStart advances round and phase in single request; syn
   const syncData = await syncGet.json();
   assert.equal(syncData.roundIndex, 3);
   assert.equal(syncData.phase, 'voting');
+
+  // Host jumps back to Round 0
+  const jumpBackRes = await host('jump', { roundIndex: 0, autoStart: true });
+  assert.equal(jumpBackRes.status, 200);
+  state = (await host()).data;
+  assert.equal(state.roundIndex, 0);
+
+  // Participant sending stale x-sync-round: 3 MUST NOT drag the server back to round 3
+  const memberGet = await fetch(`${base}/api/workshop?action=state&role=member`, {
+    headers: { 'x-sync-round': '3' }
+  });
+  const memberData = await memberGet.json();
+  assert.equal(memberData.roundIndex, 0);
+
+  // Server state remains on round 0
+  state = (await host()).data;
+  assert.equal(state.roundIndex, 0);
 });

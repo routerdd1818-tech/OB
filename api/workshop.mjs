@@ -325,9 +325,9 @@ export default async function handler(req, res) {
     if (req.method === 'GET') {
       let state = await readState();
 
-      // 【Serverless 跨實例自動前向同步】若此冷啟動 Lambda 節點落後於客戶端已確認的世代或回合，自動對齊
+      // 【Serverless 跨實例自動前向同步】僅允許講師主控端 (host) 自動對齊世代或回合，學員輪詢絕不可篡改課堂進度
       const needsEpochSync = Boolean(syncEpochHeader && syncEpochHeader !== state.epoch && state.epoch === 'cq-room-v1' && syncEpochHeader.startsWith('cq-reset-'));
-      const needsRoundSync = Boolean(Number.isInteger(clientSyncRound) && clientSyncRound > state.round && clientSyncRound <= 3 && (!syncEpochHeader || syncEpochHeader === state.epoch));
+      const needsRoundSync = Boolean(role === 'host' && Number.isInteger(clientSyncRound) && clientSyncRound > state.round && clientSyncRound <= 3 && (!syncEpochHeader || syncEpochHeader === state.epoch));
       if (needsEpochSync || needsRoundSync) {
         await mutate(s => {
           if (needsEpochSync) {

@@ -1,4 +1,4 @@
-import { $, esc, api, toast, status, startClock, broadcastSync, listenSync, setSyncRoundLock } from './common.js';
+import { $, esc, api, toast, status, startClock, broadcastSync, listenSync, setSyncRoundLock, forceSyncRound } from './common.js';
 
 // 對應四個不同象限的手機端精簡關鍵題目
 const MOBILE_QUESTIONS = [
@@ -25,6 +25,7 @@ let recoveringSession = false;
 let pin = null;
 let selection = null;
 let localVotedRoundKey = '';
+let lastKnownRevision = 0, lastKnownEpoch = '';
 
 const gate = $('#onboarding');
 // 防止按 Esc 關閉（除非已存有本地身份）
@@ -368,7 +369,13 @@ async function refresh() {
     next.clockOffset = next.serverTime - Date.now();
     const savedJoin = getSavedJoin();
 
-    if (typeof next.roundIndex === 'number' && next.epoch) {
+    if (next.epoch && (next.epoch !== lastKnownEpoch || (typeof next.revision === 'number' && next.revision > lastKnownRevision))) {
+      lastKnownEpoch = next.epoch;
+      if (typeof next.revision === 'number') lastKnownRevision = next.revision;
+      if (typeof next.roundIndex === 'number') {
+        forceSyncRound(next.roundIndex, next.epoch);
+      }
+    } else if (typeof next.roundIndex === 'number' && next.epoch) {
       setSyncRoundLock(next.roundIndex, next.epoch);
     }
 
@@ -518,6 +525,9 @@ $('#join-form').addEventListener('submit', async e => {
 listenSync(packet => {
   if (!packet || !state) return;
   if (packet.type === 'host_action') {
+    if (typeof packet.roundIndex === 'number') {
+      forceSyncRound(packet.roundIndex, packet.epoch || state?.epoch || '');
+    }
     refresh();
   } else if (packet.type === 'group_vote' && Number(packet.group) === Number(state.member?.group) && packet.roundIndex === state.roundIndex) {
     if (packet.pinX !== undefined && packet.pinY !== undefined) {

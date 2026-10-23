@@ -1,4 +1,4 @@
-import { $, esc, api, toast, status, scene, roundNav, tensionCard, dialogue, startClock, broadcastSync, listenSync, playRevealDrum, toggleSound, isSoundEnabled, setSyncRoundLock, resetSyncRoundLock } from './common.js';
+import { $, esc, api, toast, status, scene, roundNav, tensionCard, dialogue, startClock, broadcastSync, listenSync, playRevealDrum, toggleSound, isSoundEnabled, setSyncRoundLock, resetSyncRoundLock, forceSyncRound } from './common.js';
 
 const PRODUCTION_JOIN_URL = 'https://my00-rt-bf0f.vercel.app/';
 
@@ -505,10 +505,13 @@ async function hostAction(action, extra = {}) {
     try {
       const target = Math.min(3, (state?.roundIndex ?? 0) + 1);
       highestRoundIndex = target;
-      setSyncRoundLock(highestRoundIndex, highestEpoch);
+      forceSyncRound(highestRoundIndex, highestEpoch);
       const res = await api('jump', { roundIndex: target, autoStart: true }, 'host');
       if (res && res.roundIndex !== undefined) {
         if (res.epoch) highestEpoch = res.epoch;
+        if (typeof res.revision === 'number') highestRevision = res.revision;
+        highestRoundIndex = res.roundIndex;
+        forceSyncRound(highestRoundIndex, highestEpoch);
         res.clockOffset = (res.serverTime || Date.now()) - Date.now();
         state = res;
         lastSignature = JSON.stringify({ ...res, serverTime: 0, clockOffset: 0 });
@@ -517,7 +520,7 @@ async function hostAction(action, extra = {}) {
         lastSignature = '';
         await refresh();
       }
-      broadcastSync('host_action', { action: 'jump', roundIndex: target });
+      broadcastSync('host_action', { action: 'jump', roundIndex: target, epoch: highestEpoch });
       toast(`已切換至第 ${target + 1} 回合討論 ✓`);
     } catch (e) {
       toast(e.message);
@@ -534,10 +537,13 @@ async function hostAction(action, extra = {}) {
     document.querySelectorAll('[data-host-action]').forEach(el => el.disabled = true);
     try {
       highestRoundIndex = extra.roundIndex;
-      setSyncRoundLock(highestRoundIndex, highestEpoch);
+      forceSyncRound(highestRoundIndex, highestEpoch);
       const res = await api('jump', { roundIndex: extra.roundIndex, autoStart: true }, 'host');
       if (res && res.roundIndex !== undefined) {
         if (res.epoch) highestEpoch = res.epoch;
+        if (typeof res.revision === 'number') highestRevision = res.revision;
+        highestRoundIndex = res.roundIndex;
+        forceSyncRound(highestRoundIndex, highestEpoch);
         res.clockOffset = (res.serverTime || Date.now()) - Date.now();
         state = res;
         lastSignature = JSON.stringify({ ...res, serverTime: 0, clockOffset: 0 });
@@ -546,7 +552,7 @@ async function hostAction(action, extra = {}) {
         lastSignature = '';
         await refresh();
       }
-      broadcastSync('host_action', { action: 'jump', roundIndex: extra.roundIndex });
+      broadcastSync('host_action', { action: 'jump', roundIndex: extra.roundIndex, epoch: highestEpoch });
       toast(`已切換至第 ${extra.roundIndex + 1} 回合討論 ✓`);
     } catch (e) {
       toast(e.message);
@@ -648,17 +654,17 @@ async function refresh() {
       highestEpoch = next.epoch;
       highestRevision = typeof next.revision === 'number' ? next.revision : 0;
       highestRoundIndex = typeof next.roundIndex === 'number' ? next.roundIndex : 0;
-      setSyncRoundLock(highestRoundIndex, highestEpoch);
+      forceSyncRound(highestRoundIndex, highestEpoch);
     } else if (next.epoch === highestEpoch) {
-      if (typeof next.roundIndex === 'number' && next.roundIndex < highestRoundIndex) {
-        return;
-      }
-      if (typeof next.roundIndex === 'number' && next.roundIndex > highestRoundIndex) {
-        highestRoundIndex = next.roundIndex;
-        setSyncRoundLock(highestRoundIndex, highestEpoch);
-      }
       if (typeof next.revision === 'number' && next.revision > highestRevision) {
         highestRevision = next.revision;
+        highestRoundIndex = typeof next.roundIndex === 'number' ? next.roundIndex : highestRoundIndex;
+        forceSyncRound(highestRoundIndex, highestEpoch);
+      } else if (typeof next.roundIndex === 'number' && next.roundIndex < highestRoundIndex) {
+        return;
+      } else if (typeof next.roundIndex === 'number' && next.roundIndex > highestRoundIndex) {
+        highestRoundIndex = next.roundIndex;
+        setSyncRoundLock(highestRoundIndex, highestEpoch);
       }
     }
 
@@ -781,9 +787,9 @@ listenSync(packet => {
   } else if (packet.type === 'pitch_update') {
     state.pitch = packet.pitch;
   } else if (packet.type === 'host_action') {
-    if (typeof packet.roundIndex === 'number' && packet.roundIndex > highestRoundIndex) {
+    if (typeof packet.roundIndex === 'number') {
       highestRoundIndex = packet.roundIndex;
-      setSyncRoundLock(highestRoundIndex, highestEpoch);
+      forceSyncRound(highestRoundIndex, packet.epoch || highestEpoch);
     }
     refresh();
   }
