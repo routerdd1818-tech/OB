@@ -144,7 +144,7 @@ function shared(state, options) {
 function memberView(state, member) {
   const group = state.groups[member.group - 1];
   const revealed = ['revealed', 'finished'].includes(state.phase);
-  const cqVal = group.cq ?? 0;
+  const cqVal = group.cq ?? 100;
   const navInfo = computeNavigator(state, state.round);
   const chiefNavigator = navInfo.chiefNavigator;
   const cascade = state.round >= 1 ? computeCascade(state.round, state.worldState) : null;
@@ -159,7 +159,7 @@ function memberView(state, member) {
     const r = state.results[state.round]?.[g.id];
     return {
       id: g.id,
-      cq: g.cq ?? 0,
+      cq: g.cq ?? 100,
       optionId: r?.id || null,
       optionTitle: r?.title || null,
       baseDelta: r?.baseDelta ?? 0,
@@ -168,6 +168,7 @@ function memberView(state, member) {
       actualDelta: r?.actualDelta ?? 0,
       peerPersuasionPts: r?.peerPersuasionPts ?? 0,
       isLiteratureOptimal: r?.isLiteratureOptimal ?? false,
+      isKingFailed: r?.isKingFailed ?? false,
       rank: r?.rank ?? 1,
       isCultureKing: r?.isCultureKing ?? false,
       isNavigator: g.id === chiefNavigator
@@ -205,6 +206,7 @@ function memberView(state, member) {
     finalDecision,
     pitch: state.pitch || null,
     publicBoard,
+    persuasionKingResult: state.persuasionKingResult || null,
     result: revealed ? (state.results[state.round]?.[group.id] || null) : null,
     ...(revealed ? { results: state.results[state.round] } : {})
   };
@@ -220,7 +222,7 @@ function hostView(state, req) {
   const hasFinalDecision = Boolean(state.finalDecisions?.[state.round]);
 
   const groups = state.groups.map(g => {
-    const gCq = g.cq ?? 0;
+    const gCq = g.cq ?? 100;
     return {
       ...g,
       cq: gCq,
@@ -242,6 +244,7 @@ function hostView(state, req) {
     worldState: state.worldState || { r1: 'idle', r2: 'idle', r3: 'idle', r4: 'idle' },
     pitch: state.pitch || null,
     groups,
+    persuasionKingResult: state.persuasionKingResult || null,
     joinUrl: process.env.PUBLIC_URL ? new URL('/', process.env.PUBLIC_URL).href : `${process.env.VERCEL ? 'https' : 'http'}://${req.headers.host}/`
   };
 
@@ -556,9 +559,33 @@ export default async function handler(req, res) {
 
         const finalOutcome = outcome(state.round, { choice: finalChoice });
         const isBestFinal = (finalOutcome?.cq ?? 0) > 0;
+
+        // 說服王初選判定
+        const kingVote = state.votes[state.round]?.[navId];
+        const kingOutcome = kingVote ? outcome(state.round, kingVote) : null;
+        const isKingOptimal = kingOutcome ? ((kingOutcome.cq ?? 0) > 0) : false;
+        const hasKing = Boolean(navId && kingVote);
+        // 若說服王選到錯的答案，則增加全班負面效果
+        const isKingFailed = hasKing ? !isKingOptimal : !isBestFinal;
+
         const rKey = 'r' + (state.round + 1);
         if (!state.worldState) state.worldState = { r1: 'idle', r2: 'idle', r3: 'idle', r4: 'idle' };
-        state.worldState[rKey] = isBestFinal ? 'good' : 'bad';
+        state.worldState[rKey] = isKingFailed ? 'bad' : 'good';
+
+        state.persuasionKingResult = {
+          kingId: navId,
+          hasKing,
+          isKingOptimal,
+          isKingFailed,
+          isBestFinal,
+          message: isKingFailed
+            ? (hasKing
+                ? `⚠️ 說服王（第 ${navId} 組）初選踩雷！帶偏全班決策，觸發全班負面連鎖（下一回合研討時間縮減 30 秒）！`
+                : `⚠️ 全班最終決策踩雷！觸發全班連鎖負面衝擊（下一回合研討時間縮減 30 秒）！`)
+            : (hasKing
+                ? `🎉 說服王（第 ${navId} 組）初選精準命中文獻最佳實踐！引領全班邁向跨文化共贏！`
+                : `🎉 全班最終決策命中最佳實踐！達成跨文化深度共識！`)
+        };
 
         // 統計各組收到的說服點數
         const persuasionPointsMap = {};
@@ -571,21 +598,21 @@ export default async function handler(req, res) {
           if (!vote) continue;
           const result = outcome(state.round, vote);
           if (result) {
-            const before = group.cq ?? 0;
-            // 判斷初選是否命中「文獻理論最佳實踐」
+            const before = group.cq ?? 100;
+            // 判斷初選是否命中「文獻理論最佳實踐」：選對加 15 分，選錯扣 10 分！
             const isLiteratureOptimal = (result.cq ?? 0) > 0;
-            const insightBonus = isLiteratureOptimal ? 10 : 0; // 命中 +10 分，未命中 0 分（零扣分！）
+            const insightDelta = isLiteratureOptimal ? 15 : -10;
             const peerPts = persuasionPointsMap[group.id] || 0;
             const persuasionScore = peerPts * 5; // 每獲得 1 點同儕說服認同 = +5 分
-            const totalDelta = insightBonus + persuasionScore;
-            const after = before + totalDelta;
+            const totalDelta = insightDelta + persuasionScore;
+            const after = Math.max(0, before + totalDelta);
             group.cq = after;
 
             state.results[state.round][group.id] = {
               ...result,
               cqBefore: before,
               cqAfter: after,
-              baseDelta: insightBonus, // 學理觀念得分 (10 或 0)
+              baseDelta: insightDelta, // 選對 +15，選錯 -10
               rescueBonus: 0,
               synergyBonus: persuasionScore, // 同儕說服得分 (peerPts * 5)
               actualDelta: totalDelta, // 本輪總得點
@@ -593,18 +620,19 @@ export default async function handler(req, res) {
               isLiteratureOptimal,
               finalChoice,
               isBestFinal,
-              isNavigator: group.id === navId
+              isNavigator: group.id === navId,
+              isKingFailed
             };
           }
         }
 
         // 依累計文化總分由高至低嚴格排序，產生「誰是文化王排行榜」
-        const ranking = state.groups.slice().sort((a, b) => (b.cq ?? 0) - (a.cq ?? 0));
+        const ranking = state.groups.slice().sort((a, b) => (b.cq ?? 100) - (a.cq ?? 100));
         for (let idx = 0; idx < ranking.length; idx++) {
           const gid = ranking[idx].id;
           if (state.results[state.round]?.[gid]) {
             state.results[state.round][gid].rank = idx + 1;
-            state.results[state.round][gid].isCultureKing = (idx === 0 && (ranking[0].cq ?? 0) > 0);
+            state.results[state.round][gid].isCultureKing = (idx === 0);
           }
         }
         state.phase = 'revealed';

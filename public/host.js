@@ -58,26 +58,43 @@ function render() {
 
   const hudHtml = renderWorldStateHud(state.worldState || {});
 
-  const sortedByScore = state.groups.slice().sort((a, b) => (b.cq ?? 0) - (a.cq ?? 0));
-  const kingGid = (sortedByScore[0]?.cq ?? 0) > 0 ? sortedByScore[0]?.id : null;
+  const sortedByScore = state.groups.slice().sort((a, b) => (b.cq ?? 100) - (a.cq ?? 100));
+  const kingGid = (sortedByScore[0]?.cq ?? 100) > 0 ? sortedByScore[0]?.id : null;
 
   const cqStripHtml = state.groups.map(g => {
-    const pts = g.cq ?? 0;
-    const res = state.results?.[g.id];
-    const delta = res?.actualDelta;
-    const isKing = g.id === kingGid;
-    const kingBadge = isKing ? '<span class="navigator-crown-pill" style="background:#fef3c7; color:#b45309; border:1px solid #f59e0b;">👑 文化王</span>' : '';
-    const animClass = animate && delta !== undefined ? (delta > 0 ? 'cq-heal-glow' : '') : '';
-    return `<div class="cq-group card ${isKing ? 'is-navigator' : ''} ${animClass}">
-      <div class="cq-group-head">
-        <span class="group-label">第 ${g.id} 組 ${kingBadge}</span>
-        <div class="cq-value">${pts}<small style="font-size:11px; margin-left:3px; color:#92400e; font-weight:700;">分</small></div>
-      </div>
-      <div class="health-track" role="progressbar" aria-label="第 ${g.id} 組文化積分" aria-valuenow="${pts}" aria-valuemin="0" aria-valuemax="100">
-        <div class="health-fill" style="width:${Math.min(100, Math.round((pts / 80) * 100))}%; background:#d97706;"></div>
-      </div>
-      ${animate && delta !== undefined ? `<span class="cq-float">${delta > 0 ? '+' : ''}${delta} 分</span>` : ''}
-    </div>`;
+    if (revealed) {
+      const pts = g.cq ?? 100;
+      const res = state.results?.[g.id];
+      const delta = res?.actualDelta;
+      const isKing = g.id === kingGid;
+      const kingBadge = isKing ? '<span class="navigator-crown-pill" style="background:#fef3c7; color:#b45309; border:1px solid #f59e0b;">👑 文化王</span>' : '';
+      const animClass = animate && delta !== undefined ? (delta > 0 ? 'cq-heal-glow' : delta < 0 ? 'cq-damage-shake' : '') : '';
+      return `<div class="cq-group card ${isKing ? 'is-navigator' : ''} ${animClass}">
+        <div class="cq-group-head">
+          <span class="group-label">第 ${g.id} 組 ${kingBadge}</span>
+          <div class="cq-value">${pts}<small style="font-size:11px; margin-left:3px; color:#92400e; font-weight:700;">分</small></div>
+        </div>
+        <div class="health-track" role="progressbar" aria-label="第 ${g.id} 組文化積分" aria-valuenow="${pts}" aria-valuemin="0" aria-valuemax="160">
+          <div class="health-fill" style="width:${Math.min(100, Math.round((pts / 160) * 100))}%; background:#d97706;"></div>
+        </div>
+        ${animate && delta !== undefined ? `<span class="cq-float ${delta < 0 ? 'loss' : ''}">${delta > 0 ? '+' : ''}${delta} 分</span>` : ''}
+      </div>`;
+    } else {
+      // 未揭曉階段：隱藏即時分數與文化王，僅展示研討與初投鎖定狀態，防止從眾效應！
+      const isDone = Boolean(g.submitted);
+      return `<div class="cq-group card">
+        <div class="cq-group-head">
+          <span class="group-label">第 ${g.id} 組</span>
+          <span class="status-pill ${isDone ? 'done' : 'pending'}" style="${isDone ? 'background:#ecfdf5; color:#065f46;' : 'background:#fef3c7; color:#92400e;'} font-size:11px; font-weight:700; padding:2px 8px; border-radius:6px;">
+            ${isDone ? '初投已鎖定 ✓' : '研討中 💬'}
+          </span>
+        </div>
+        <div style="font-size:12px; color:#78716c; margin-top:6px; display:flex; justify-content:space-between; align-items:center;">
+          <span>小組席位</span>
+          <strong style="color:#44403c;">${g.count || 0} 人在線</strong>
+        </div>
+      </div>`;
+    }
   }).join('');
 
   $('#app').innerHTML = `
@@ -223,18 +240,6 @@ function scenarioMarkup() {
     `;
   }).join('');
 
-  const sortedGroups = state.groups.slice().sort((a, b) => (b.cq ?? 0) - (a.cq ?? 0));
-  const rankedRows = sortedGroups.map((g, idx) => {
-    const isKing = idx === 0 && (g.cq ?? 0) > 0;
-    const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
-    return `
-      <div class="ck-rank-row ${isKing ? 'is-king' : ''}">
-        <span class="ck-rank-badge">${medals[idx]} 第 ${g.id} 組 ${isKing ? '👑' : ''}</span>
-        <strong class="ck-rank-score">${g.cq ?? 0} 分</strong>
-      </div>
-    `;
-  }).join('');
-
   return `
     <div class="unified-stage-container">
       <!-- 完整滿版 JRPG 舞台（含圍坐桌旁的小人、立繪與底部對話框） -->
@@ -287,14 +292,17 @@ function scenarioMarkup() {
           </div>
         </div>
 
-        <!-- 3. 誰是文化王即時榜 -->
+        <!-- 3. 說服王引領機制與連鎖衝擊說明（無即時計分榜，防從眾效應） -->
         <div class="hud-glass-card">
           <div class="hud-row-between" style="margin-bottom:6px;">
-            <span class="eyebrow">STEP 3 · 👑 誰是文化王即時榜</span>
-            <small style="color:#b45309; font-weight:700;">累積積分</small>
+            <span class="eyebrow">STEP 3 · 👑 說服王引領機制</span>
+            <small style="color:#b45309; font-weight:700;">共贏 vs 連鎖負面</small>
           </div>
-          <div class="culture-king-mini-board">
-            ${rankedRows}
+          <div style="font-size:12px; color:#44403c; line-height:1.6; background:#fdfbf7; border:1px solid rgba(60,50,40,0.1); border-radius:8px; padding:8px 10px;">
+            獲得最高說服票之組別為<strong>【說服王】</strong>。<br>
+            • 說服王初選命中最佳實踐：引領全班共贏！<br>
+            • <strong style="color:#b91c1c;">說服王若初選踩雷：全班下輪研討時間強制扣減 30 秒！</strong><br>
+            <span style="font-size:11px; color:#78716c; margin-top:3px; display:inline-block;">（為防從眾效應，全班積分與排行榜於揭曉時統一公布）</span>
           </div>
         </div>
       </aside>
@@ -348,21 +356,23 @@ function resultsMarkup() {
   const reduction = current === null ? 0 : Math.round((state.round.baseline - current) * 10) / 10;
   const isGoodOutcome = state.worldState?.['r' + (state.roundIndex + 1)] === 'good';
 
-  const leaderGroup = state.groups.slice().sort((a, b) => (b.cq ?? 0) - (a.cq ?? 0))[0];
+  const leaderGroup = state.groups.slice().sort((a, b) => (b.cq ?? 100) - (a.cq ?? 100))[0];
+  const kingRes = state.persuasionKingResult;
+  const isKingFailed = Boolean(kingRes?.isKingFailed);
 
   return `
-    <!-- 頂部極簡揭曉橫幅（合併世界狀態與張力變化，省下垂直高度） -->
-    <div class="reveal-top-strip is-good">
+    <!-- 頂部極簡揭曉橫幅（說服王狀態與全班連鎖負面衝擊提示） -->
+    <div class="reveal-top-strip ${isKingFailed ? 'is-bad' : 'is-good'}" style="${isKingFailed ? 'background:#fee2e2; border-color:#ef4444; color:#991b1b;' : ''}">
       <div class="reveal-strip-left">
         <span class="topic-badge">ROUND ${String(state.roundIndex + 1).padStart(2, '0')} · ${r.dimension}</span>
         <strong>
-          🏆 【誰是文化王】第 ${leaderGroup?.id || '—'} 組（累計 ${leaderGroup?.cq ?? 0} 分）領先！全員透過跨文化觀點交流累積智慧
+          ${kingRes?.message || `🏆 【誰是文化王】第 ${leaderGroup?.id || '—'} 組（累計 ${leaderGroup?.cq ?? 100} 分）領先！`}
         </strong>
       </div>
       <div class="reveal-strip-right">
         <span>全班對齊：<strong>方案 ${state.finalDecision || '—'}</strong></span>
-        <span class="pill positive">
-          ${isGoodOutcome ? '🎯 命中文化地圖最佳實踐' : '💡 多元觀點碰撞覆盤中'}
+        <span class="pill ${isKingFailed ? 'negative' : 'positive'}">
+          ${isKingFailed ? '⚠️ 全班下輪研討 -30s' : '🎉 說服王引領共贏'}
         </span>
       </div>
     </div>
@@ -382,10 +392,10 @@ function resultsMarkup() {
             <span>四方共識：<strong>方案 ${state.finalDecision || '—'}</strong></span>
           </div>
           <div class="compact-score-list">
-            ${state.groups.slice().sort((a, b) => (b.cq ?? 0) - (a.cq ?? 0)).map((g, idx) => {
+            ${state.groups.slice().sort((a, b) => (b.cq ?? 100) - (a.cq ?? 100)).map((g, idx) => {
               const res = state.results?.[g.id];
               const delta = res?.actualDelta ?? 0;
-              const isKing = idx === 0 && (g.cq ?? 0) > 0;
+              const isKing = idx === 0 && (g.cq ?? 100) > 0;
               const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
               return `
                 <div class="compact-score-row ${isKing ? 'is-nav' : ''}">
@@ -395,14 +405,16 @@ function resultsMarkup() {
                     ${isKing ? '<span class="navigator-crown-pill" style="background:#fef3c7; color:#b45309; border:1px solid #f59e0b;">👑 文化王</span>' : ''}
                   </div>
                   <div class="c-badges">
-                    <span class="score-pill initial">${res?.isLiteratureOptimal ? '🎯 文獻最佳實踐 (+10)' : '初選方案 ' + (res?.id || '—') + ' (+0)'}</span>
+                    <span class="score-pill ${res?.isLiteratureOptimal ? 'initial' : 'negative'}" style="${!res?.isLiteratureOptimal ? 'background:#fee2e2; color:#991b1b;' : ''}">
+                      ${res?.isLiteratureOptimal ? '🎯 最佳實踐 (+15)' : '初選踩雷 (' + (res?.id || '—') + ') (-10)'}
+                    </span>
                     ${(res?.synergyBonus ?? 0) > 0 ? `<span class="score-pill synergy">說服 +${res.synergyBonus}</span>` : ''}
                   </div>
                   <div class="c-total">
-                    <span class="c-delta positive-text">
-                      +${delta}
+                    <span class="c-delta ${delta >= 0 ? 'positive-text' : 'negative-text'}" style="${delta < 0 ? 'color:#dc2626; font-weight:700;' : ''}">
+                      ${delta > 0 ? '+' : ''}${delta}
                     </span>
-                    <strong class="c-cq">${g.cq ?? 0} <small>分</small></strong>
+                    <strong class="c-cq">${g.cq ?? 100} <small>分</small></strong>
                   </div>
                 </div>
               `;

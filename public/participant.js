@@ -471,13 +471,16 @@ function resultMarkup() {
   const isKing = res.isCultureKing;
   const medals = ['🥇', '🥈', '🥉', '4️⃣', '5️⃣'];
 
+  const kingRes = state.persuasionKingResult;
+  const isKingFailed = Boolean(kingRes?.isKingFailed);
+
   return `
-    <div class="card" style="border:2px solid #f59e0b; background:#fef3c7; margin-bottom:14px; padding:14px 16px;">
-      <strong style="color:#92400e; font-size:15px;">
-        🏆 【誰是文化王】本輪結算公布！
+    <div class="card" style="border:2px solid ${isKingFailed ? '#ef4444' : '#f59e0b'}; background:${isKingFailed ? '#fef2f2' : '#fef3c7'}; margin-bottom:14px; padding:14px 16px;">
+      <strong style="color:${isKingFailed ? '#991b1b' : '#92400e'}; font-size:15px;">
+        ${isKingFailed ? '⚠️ 【全班連帶負面衝擊】說服王初選踩雷！' : '🏆 【誰是文化王】本輪結算公布！'}
       </strong>
-      <p style="margin:4px 0 0; font-size:12.5px; color:#78350f; line-height:1.5;">
-        聆聽不同視角、校準文化座標。透過文獻理論分析與同儕說服交流累積智慧！
+      <p style="margin:4px 0 0; font-size:12.5px; color:${isKingFailed ? '#7f1d1d' : '#78350f'}; line-height:1.5;">
+        ${kingRes?.message || '聆聽不同視角、校準文化座標。透過文獻理論分析與同儕說服交流累積智慧！'}
       </p>
     </div>
 
@@ -489,8 +492,8 @@ function resultMarkup() {
       <div style="display:flex; flex-direction:column; gap:8px;">
         <div style="display:flex; justify-content:space-between; font-size:13.5px; padding:6px 0; border-bottom:1px solid var(--line);">
           <span>初選方案 ${esc(res.id || '—')}</span>
-          <strong class="${res.baseDelta > 0 ? 'positive-text' : ''}">
-            ${res.isLiteratureOptimal ? '🎯 命中最佳實踐 (+10 分)' : '探索性策略 (+0 分)'}
+          <strong class="${res.baseDelta > 0 ? 'positive-text' : 'negative-text'}" style="${res.baseDelta < 0 ? 'color:#dc2626;' : ''}">
+            ${res.isLiteratureOptimal ? '🎯 命中最佳實踐 (+15 分)' : '初選策略踩雷 (-10 分)'}
           </strong>
         </div>
         <div style="display:flex; justify-content:space-between; font-size:13.5px; padding:6px 0; border-bottom:1px solid var(--line);">
@@ -502,7 +505,7 @@ function resultMarkup() {
         <div style="display:flex; justify-content:space-between; font-size:14.5px; font-weight:800; padding:8px 0 0;">
           <span>本輪總得點 / 累計總分</span>
           <span>
-            +${res.actualDelta ?? 0} 分 ｜ <strong style="color:var(--accent);">${state.group?.cq ?? 0} 分</strong>
+            ${res.actualDelta > 0 ? '+' : ''}${res.actualDelta ?? 0} 分 ｜ <strong style="color:var(--accent);">${state.group?.cq ?? 100} 分</strong>
           </span>
         </div>
         <div style="font-size:13px; color:#b45309; font-weight:700; margin-top:4px;">
