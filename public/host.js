@@ -27,47 +27,95 @@ function paintQr(target, url, cellSize = 4, margin = 8) {
 const GEO_ROUNDS_DATA = [
   {
     // ROUND 1 -> 第一象限（右上：X=78, Y=82）
-    location: '海外併購 · Alpha 精密研發中心',
+    location: '海外併購 · 精密研發中心',
+    comic: 'case1_alpha.png',
     target: { x: 78, y: 82, zone: '第一象限（右上）：共識型決策 × 階層制' },
     title: '沉默的正式會議與消失的測試數據',
-    context: '併購 Alpha 晶圓封裝廠的第三週，你在週一全體正式會議上提出「縮短高溫老練測試 20% 工時」的新方案。會議中你詢問有無異議，在場 12 位當地主管與資深技師全數低頭抄筆記，資深總工僅微笑點頭說：「我們會盡力研究。」然而到了週三早上，產線一動也沒動；同時你經過茶水間時，聽見資深總工正嚴厲斥責一位昨晚直接寫信給你提供修改建議的年輕工程師「不懂規矩、破壞團隊程序」。',
-    prompt: '請根據組織行為線索判斷對方文化類型，並由組長在四象限中釘出最契合的領導座標。',
-    verdict: '第一象限（右上）：高權力距離（階層制）× 高共識校準（Consensual）',
-    analysis: '依據 HBR〈Being the Boss〉跨文化領導矩陣，此組織兼具「嚴明的職級尊卑（高 X）」與「全員共識決策（高 Y）」。資深總工斥責越級報告的年輕工程師，體現了對正式階層秩序的維護；而正式會議上全員沉默、會後卻未執行，則是因為在該文化中，正式會議僅是最終「蓋章確認」的儀式，真正的決策必須在會前依循職級序列，逐一與各部門幹部進行非正式的私下溝通與校準（即日本組織的「根回 Nemawashi」與「稟議制」）。',
+    context: '併購精密研發中心第三週，你在週一全體正式會議上提出「縮短高溫老練測試兩成工時」新方案。詢問有無異議時，在場十二位當地主管與資深技師全數低頭抄筆記，資深總工僅微笑點頭說：「我們會盡力研究。」然而到了週三早上，產線一動也沒動；同時你經過茶水間時，聽見資深總工正嚴厲斥責一位昨晚私信向你提建議的年輕工程師「不懂規矩、破壞團隊程序」。',
+    prompt: '面對表面和諧、實則嚴守階層與私下共識的團隊，你的領導決策座標在哪裡？',
+    dialogues: [
+      { tag: '會議現場', text: '主管詢問縮短老練工時兩成有無異議，全場低頭抄筆記，一片沉默。' },
+      { tag: '資深總工', text: '總工微笑：「我們會盡力研究。」' },
+      { tag: '週三清晨', text: '來到產線，測試爐工時仍為百分之百，產線完全沒動！' },
+      { tag: '茶水間外', text: '總工嚴斥昨晚私信給你的年輕人：「不懂規矩！破壞團隊程序！」' }
+    ],
+    verdict: '第一象限（右上）：階層制 × 共識型決策',
+    bullets: {
+      feat: '兼具嚴明的職級尊卑與全員深度共識，重視循序漸進的組織倫理與事前校準。',
+      blindspot: '誤以為大會能直接討論拍板；在該文化中大會僅為用印儀式，未經會前私下摸底強推必遭消極抗命。',
+      action: '尊重既有職級序列，會前透過資深幹部由下而上私下溝通、全員完成確認後再開會拍板。'
+    },
+    analysis: '此組織兼具「嚴明的職級尊卑（高 X）」與「全員共識決策（高 Y）」。資深總工斥責越級報告的年輕工程師，體現了對正式階層秩序的維護；而正式會議上全員沉默、會後卻未執行，則是因為在該文化中，正式會議僅是最終「蓋章確認」的儀式，真正的決策必須在會前依循職級序列，逐一與各部門幹部進行非正式的私下溝通與校準（即「根回」與「稟議制」）。',
     blindspot: '第一象限的關鍵管理原則：領導者必須尊重既有職級結構，先透過資深主管在會前由下而上凝聚各部門共識，待全員校準完成後再召開正式會議拍板，方能確保決策徹底落實。'
   },
   {
     // ROUND 2 -> 第四象限（右下：X=84, Y=18）
-    location: '海外量產 · Beta 核心試產基地',
+    location: '海外量產 · 核心試產基地',
+    comic: 'case2_beta.png',
     target: { x: 84, y: 18, zone: '第四象限（右下）：由上而下速決 × 階層制' },
     title: '良率暴跌夜的群組風暴',
-    context: 'Beta 廠夜班試產發生塗佈異常，良率瞬間掉到 48%。資深廠長主張立刻停線洗機，但試產組的幾位工程師在工作群組裡激烈爭辯，雙方在群組裡互相指責誰該為交貨延誤負全責。產線領班站在機台旁不知所措，私訊問你：「現在到底該聽誰的？請給我們一個明確的裁示，否則沒人敢動手！」',
-    prompt: '面對倒數 4 小時的交貨危機與團隊對權責歸屬的焦慮，組長應將決策模式釘在哪個座標？',
-    verdict: '第四象限（右下）：高權力距離（階層制）× 由上而下速決（Top-Down）',
-    analysis: '依據 HBR 跨文化矩陣，此情境屬於典型的「第四象限（右下：階層制 × 由上而下）」。從團隊爭執「誰該負全責」以及領班請求「給出明確裁示，否則沒人敢動手」的線索可知，在高度階層化且強調由上而下指令的組織中，基層員工在危機時刻仰賴最高領導者展現權威、直接下達明確指令（Director 模式），並由領導者一肩扛起決策成敗的最終責任。',
+    context: '核心試產基地夜班發生塗佈異常，良率瞬間掉到四成八。資深廠長主張立刻停線洗機，但試產組工程師在工作群組裡激烈爭辯，雙方互相指責誰該為延誤負全責。產線領班站在機台旁不知所措，私訊問你：「現在到底該聽誰的？請給我們一個明確的裁示，否則沒人敢動手！」',
+    prompt: '距離交貨剩四小時，團隊恐懼承擔責任，你的領導決策座標應落在哪裡？',
+    dialogues: [
+      { tag: '夜班兩點十分', text: '塗佈機良率暴跌至百分之四十八！產線領班大驚失色。' },
+      { tag: '現場下令', text: '資深廠長：「立刻停線，把機台洗乾淨！」機台強制按下停機。' },
+      { tag: '群組爭吵', text: '工程師在群組內激烈甩鍋：「是塗佈液的問題！」「延誤你們扛！」' },
+      { tag: '領班求救', text: '領班私訊：「現在到底該聽誰的？請給我們明確裁示，否則沒人敢動手！」' }
+    ],
+    verdict: '第四象限（右下）：階層制 × 由上而下速決',
+    bullets: {
+      feat: '導演式指揮模式，高度重視階級秩序，危機時刻基層仰賴最高主管明確指令。',
+      blindspot: '在危機時刻若尋求民主討論凝聚共識，會被基層視為軟弱、無能且推卸責任。',
+      action: '主管迅速聽取關鍵資訊後果斷拍板，下達清晰執行步驟，並由最高主管親自扛起成敗責任。'
+    },
+    analysis: '此情境屬於典型的「第四象限（右下：階層制 × 由上而下）」。從團隊爭執「誰該負全責」以及領班請求「給出明確裁示，否則沒人敢動手」的線索可知，在高度階層化且強調由上而下指令的組織中，基層員工在危機時刻仰賴最高領導者展現權威、直接下達明確指令（指揮官模式），並由領導者一肩扛起決策成敗的最終責任。',
     blindspot: '第四象限的關鍵管理原則：在高度權力距離與速決導向的環境中，最高主管應快速聽取關鍵資訊後果斷拍板、明確劃分執行步驟並親自承擔風險，才能迅速穩定軍心。'
   },
   {
     // ROUND 3 -> 第三象限（左下：X=22, Y=24）
-    location: '新創研發 · Gamma 高速運算實驗室',
+    location: '新創研發 · 高速運算實驗室',
+    comic: 'case3_gamma.png',
     target: { x: 22, y: 24, zone: '第三象限（左下）：由上而下速決 × 平等主義' },
     title: '被工程師直接推翻的封版時程',
-    context: '距離雲端晶片韌體封版只剩 36 小時，Gamma 實驗室的一名年輕核心工程師在站立會議（Stand-up Meeting）上直接對你說：「你昨天定的架構太保守了，我昨晚自己寫了一個非正式的新演算法原型，雖然還有 15% 的邊界條件沒測完，但效能可以提升兩倍！我們現在就先推上線試跑，有問題明天再動態修補（Hotfix）！」在場其他成員紛紛附和說值得賭一把，但品保主管則看向你等待最終定奪。',
-    prompt: '面對扁平直接、崇尚快速試錯的團隊文化，組長應將此刻的領導決策模式釘在哪個座標？',
-    verdict: '第三象限（左下）：低權力距離（平等主義）× 由上而下敏捷速決（小 d Top-Down）',
-    analysis: '依據 HBR 跨文化矩陣，此組織展現了「第三象限（左下：平等主義 × 由上而下速決）」的典型特徵（文獻原型如美國矽谷與英國團隊）。年輕工程師敢在會議上直接挑戰主管並自發開發原型，反映出極低的權力距離（低 X）；而團隊習慣「先快速拍板上線、事後再根據市場反應動態修正」，正是文獻中定義的「小 d（little-d）由上而下速決模式」（低 Y）。',
-    blindspot: '第三象限的關鍵管理原則：在扁平且講究速度的文化中，領導者應鼓勵成員平等發言，但無須耗時追求全員 100% 共識；領導者或授權負責人應迅速做出「小 d」裁決並保留後續敏捷修正的彈性。'
+    context: '距離晶片韌體封版只剩三十六小時，高速運算實驗室的一名年輕核心工程師在站立會議上直接對你說：「你昨天定的架構太保守了，我昨晚自己寫了一個新演算法原型，雖然還有一成五邊界條件沒測完，但效能可以提升兩倍！我們現在就先推上線試跑，有問題明天再動態修補！」其他成員紛紛附和值得賭一把，品保主管則看向你等待定奪。',
+    prompt: '面對扁平直接、崇尚速度勝於完美的團隊，你的決策座標落點在哪裡？',
+    dialogues: [
+      { tag: '封版倒數三十六小時', text: '站立會議上，年輕核心工程師直接對主管說：「你昨天定的架構太保守了！」' },
+      { tag: '激進提案', text: '他拿出私下寫的新演算法原型：「效能提升兩倍！現在就推上線，有問題明天再線上修補！」（邊界條件一成五未測）' },
+      { tag: '全員起鬨', text: '團隊成員紛紛附和：「值得賭一把！」「先上了再說！」' },
+      { tag: '品保沉默', text: '品保主管面色凝重，沉默看向主管等待定奪。' }
+    ],
+    verdict: '第三象限（左下）：平等主義 × 由上而下速決',
+    bullets: {
+      feat: '敏捷試錯模式，組織極度扁平，決策採小速決快速推進與動態修補。',
+      blindspot: '若開馬拉松會議追求完美共識，會被視為官僚、保守且缺乏魄力與市場速度。',
+      action: '肯定創新熱情並迅速拍板小規模試跑，保留後續動態修補彈性。'
+    },
+    analysis: '此組織展現了「第三象限（左下：平等主義 × 由上而下速決）」的典型特徵。年輕工程師敢在會議上直接挑戰主管並自發開發原型，反映出極低的權力距離（低 X）；而團隊習慣「先快速拍板上線、事後再根據市場反應動態修正」，正是「小速決模式」（低 Y）。',
+    blindspot: '第三象限的關鍵管理原則：在扁平且講究速度的文化中，領導者應鼓勵成員平等發言，但無須耗時追求全員共識；領導者應迅速做出小速決裁決並保留後續敏捷修正的彈性。'
   },
   {
     // ROUND 4 -> 第二象限（左上：X=18, Y=85）
-    location: '全球首發 · Delta 戰略客戶攤牌現場',
+    location: '全球首發 · 戰略客戶攤牌現場',
+    comic: 'case4_delta.png',
     target: { x: 18, y: 85, zone: '第二象限（左上）：共識型決策 × 平等主義' },
     title: '首發登台前兩小時的極限攤牌',
-    context: '全球發表會倒數兩小時，最大客戶端技術長帶著兩名年輕的基層測試員直接走進後台休息室，將一份剛測出的「極端低溫環境訊號衰減報告」放在桌上。客戶方的年輕基層測試員直接看著你說：「在我們的團隊裡，每一位技術人員都有權為安全把關。我們不在乎你的職銜高低或商業賠償金，這份數據如果不由雙方所有工程師坐下來公開透明共同審核並達成一致協議，我們不會簽署放行。」',
-    prompt: '面對基層專業人員擁有同等發言權且堅持全員透明共審的團隊，組長應將領導落點釘在哪裡？',
-    verdict: '第二象限（左上）：極低權力距離（平等主義）× 全員透明共識（Consensual）',
-    analysis: '依據 HBR 跨文化矩陣，此情境屬於「第二象限（左上：平等主義 × 共識型決策）」（文獻原型為荷蘭 Polder Model 與北歐組織）。基層測試員能與技術長平起平坐並直接主導談判，證明職級頭銜在此文化中毫無特權（極低 X）；而堅持「所有相關人員公開透明共同審核並達成一致協議」，則體現了高度共識導向（極高 Y）。',
-    blindspot: '第二象限的關鍵管理原則：面對高平等、高共識文化，威權命令或私下與高層妥協皆無效；領導者必須轉化為「促進者（Facilitator）」，讓各層級利害關係人平起平坐、公開透明地共同制定解決方案。'
+    context: '全球發表會倒數兩小時，最大客戶技術長帶著兩名年輕測試員直接走進後台休息室，將一份剛測出的極端低溫環境訊號衰減報告放在桌上。客戶方的年輕測試員直接看著你說：「在我們的團隊裡，每一位技術人員都有權為安全把關。我們不在乎你的職銜高低或商業賠償金，這份數據如果不由雙方所有工程師坐下來公開透明共同審核並達成一致協議，我們不會簽署放行。」',
+    prompt: '面對基層擁有完全否決權、堅持透明共審的團隊，你的領導決策座標應落在哪裡？',
+    dialogues: [
+      { tag: '後台突發', text: '全球發表會倒數兩小時，最大客戶技術長帶著兩名年輕測試員突然直接走進後台。' },
+      { tag: '報告攤牌', text: '測試員將「極端低溫環境訊號衰減報告」拍在桌上！' },
+      { tag: '基層聲明', text: '年輕測試員：「在我們團隊裡，每位技術員都有權為安全把關，我們不在乎你的職銜或賠償金。」' },
+      { tag: '拒絕妥協', text: '「若非雙方工程師公開透明共同審核並達成一致協議，我們絕不簽署放行同意書！」' }
+    ],
+    verdict: '第二象限（左上）：平等主義 × 共識型決策',
+    bullets: {
+      feat: '低地協商模式，基層工程師擁有一票否決權，追求刻在石碑上的神聖大承諾。',
+      blindspot: '試圖透過職級施壓或私下利益妥協，會被視為踐踏專業誠信與違背團隊共識。',
+      action: '主管轉化為中立協調促進者，召集雙方技術人員公開數據、透明共審，凝聚神聖共識。'
+    },
+    analysis: '此情境屬於「第二象限（左上：平等主義 × 共識型決策）」。基層測試員能與技術長平起平坐並直接主導談判，證明職級頭銜在此文化中毫無特權（極低 X）；而堅持「所有相關人員公開透明共同審核並達成一致協議」，則體現了高度共識導向（極高 Y）。',
+    blindspot: '第二象限的關鍵管理原則：面對高平等、高共識文化，威權命令或私下與高層妥協皆無效；領導者必須轉化為「促進者」，讓各層級利害關係人平起平坐、公開透明地共同制定解決方案。'
   }
 ];
 
@@ -244,33 +292,41 @@ function scenarioMarkup() {
 
   return `
     <div class="voting-stage-grid" style="grid-template-columns: 1.4fr 1fr; gap: 20px;">
-      <!-- 左欄：大字聚焦題目與去國籍化真實情境 -->
+      <!-- 左欄：漫畫與精簡情境對白呈現 -->
       <div class="voting-left-col">
-        <section class="card" style="padding:28px 32px; height:100%; display:flex; flex-direction:column; justify-content:space-between;">
+        <section class="card" style="padding:22px 26px; height:100%; display:flex; flex-direction:column; justify-content:space-between;">
           <div>
-            <div class="topic-row" style="margin-bottom:14px; justify-content:space-between;">
+            <div class="topic-row" style="margin-bottom:12px; justify-content:space-between;">
               <div style="display:flex; align-items:center; gap:10px;">
-                <span class="topic-badge">ROUND 0${state.roundIndex + 1} / 04</span>
+                <span class="topic-badge">第 0${state.roundIndex + 1} 回合 / 共 4 回合</span>
                 <span class="topic-location" style="font-size:13px; font-weight:700; color:var(--ink);">${esc(geoRound.location)}</span>
               </div>
               <span class="pill" style="background:var(--oat); color:var(--muted);">小組討論與座標盲測</span>
             </div>
 
-            <h1 style="font-size:clamp(26px, 2.5vw, 36px); line-height:1.3; font-weight:850; margin:0 0 16px; color:#1c1917;">
+            <h1 style="font-size:clamp(22px, 2vw, 30px); line-height:1.3; font-weight:850; margin:0 0 14px; color:#1c1917;">
               ${esc(geoRound.title)}
             </h1>
 
-            <div style="background:#faf8f5; border:1.5px solid var(--line); border-radius:16px; padding:22px 26px; margin-bottom:20px;">
-              <div class="eyebrow" style="margin-bottom:8px;">CASE SCENARIO · 現場實況描述</div>
-              <p style="font-size:clamp(17px, 1.45vw, 20.5px); line-height:1.8; color:#1c1917; font-weight:500; margin:0;">
-                ${esc(geoRound.context)}
-              </p>
+            <!-- 漫畫與精簡情境對白並列呈現 -->
+            <div style="display:flex; gap:16px; margin-bottom:14px; align-items:stretch;">
+              <div style="width:250px; flex-shrink:0; background:#fff; border:1.5px solid var(--line); border-radius:14px; padding:6px; box-shadow:0 4px 12px rgba(0,0,0,0.05); display:flex; align-items:center; justify-content:center;">
+                <img src="/comics/${geoRound.comic}" alt="情境漫畫" style="width:100%; height:auto; border-radius:10px; display:block;" />
+              </div>
+              <div style="flex:1; display:flex; flex-direction:column; justify-content:space-between; gap:8px;">
+                ${geoRound.dialogues.map(d => `
+                  <div style="background:#faf8f5; border:1px solid var(--line); border-left:4px solid #d97706; border-radius:10px; padding:8px 12px;">
+                    <span style="display:inline-block; font-size:11.5px; font-weight:800; color:#b45309; margin-bottom:2px;">${esc(d.tag)}</span>
+                    <div style="font-size:13.5px; font-weight:600; line-height:1.5; color:#1c1917;">${esc(d.text)}</div>
+                  </div>
+                `).join('')}
+              </div>
             </div>
           </div>
 
-          <div class="question-prompt" style="margin:0 !important; background:#fffbeb; border:1.5px solid #f59e0b; border-left:6px solid #d97706; padding:18px 22px; border-radius:14px;">
+          <div class="question-prompt" style="margin:0 !important; background:#fffbeb; border:1.5px solid #f59e0b; border-left:6px solid #d97706; padding:14px 18px; border-radius:12px;">
             <span class="prompt-badge" style="background:#d97706; color:#fff; font-size:12px; font-weight:800; padding:4px 8px; border-radius:6px; margin-right:8px;">決策課題</span>
-            <span class="prompt-text" style="font-size:16.5px; font-weight:700; color:#451a03;">${esc(geoRound.prompt)}</span>
+            <span class="prompt-text" style="font-size:15px; font-weight:700; color:#451a03;">${esc(geoRound.prompt)}</span>
           </div>
         </section>
       </div>
@@ -280,13 +336,13 @@ function scenarioMarkup() {
         <section class="card" style="padding:18px 20px; flex:1; display:flex; flex-direction:column; justify-content:space-between;">
           <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
             <div>
-              <div class="eyebrow">CULTURAL GEOGUESSR RADAR</div>
+              <div class="eyebrow">四象限落點盲測雷達</div>
               <h2 style="font-size:18px; font-weight:800; margin:2px 0 0;">四象限領導落點雷達</h2>
             </div>
             <div id="stage-qr-code" class="qr-mini-box" title="點擊放大 QR Code 掃碼入席" onclick="document.getElementById('qr-open')?.click()"></div>
           </div>
 
-          <div class="quadrant-axis-header">▲ 共識型決策 Consensual (Y: 100)</div>
+          <div class="quadrant-axis-header">▲ 共識型決策 (縱軸: 100)</div>
           <div class="quadrant-board" style="flex:1; min-height:210px; position:relative;">
             <div class="q-cell q-tl"><span class="q-zone-name">左上：共識 × 平等</span></div>
             <div class="q-cell q-tr"><span class="q-zone-name">右上：共識 × 階層</span></div>
@@ -302,9 +358,9 @@ function scenarioMarkup() {
             </div>
           </div>
           <div class="quadrant-axis-footer">
-            <span>◀ 平等主義 Egalitarian (X: 0)</span>
-            <span>▼ 由上而下 Top-Down (Y: 0)</span>
-            <span>階層制 Hierarchical (X: 100) ▶</span>
+            <span>◀ 平等主義 (橫軸: 0)</span>
+            <span>▼ 由上而下 (縱軸: 0)</span>
+            <span>階層制 (橫軸: 100) ▶</span>
           </div>
         </section>
 
@@ -405,7 +461,7 @@ function resultsMarkup() {
             <h2>各組落點 vs. 真實答案位置</h2>
             <span style="font-weight:700; color:#15803d;">靶心：(${target.x}, ${target.y})</span>
           </div>
-          <div class="quadrant-axis-header">▲ 共識型決策 Consensual (100)</div>
+          <div class="quadrant-axis-header">▲ 共識型決策 (縱軸: 100)</div>
           <div class="quadrant-board" style="height:clamp(200px, 26vh, 260px) !important; position:relative;">
             <div class="q-cell q-tl"><span class="q-zone-name">共識 × 平等區</span></div>
             <div class="q-cell q-tr"><span class="q-zone-name">共識 × 階層區</span></div>
@@ -466,28 +522,52 @@ function resultsMarkup() {
         </section>
       </div>
 
-      <!-- 右欄：題目深度解釋與文獻盲點拆解 -->
-      <section class="card results-main-review" style="padding:22px 26px !important;">
+      <!-- 右欄：Image 5 樣式的三大列點原因卡片 -->
+      <section class="card results-main-review" style="padding:22px 26px !important; display:flex; flex-direction:column; justify-content:space-between;">
         <div class="review-main-header">
-          <div>
-            <div class="eyebrow">CASE DEBRIEF · 文獻理論與行為線索解析</div>
-            <h2 style="font-size:20px; margin:4px 0 0;">為什麼真實座標落在「${esc(target.zone)}」？</h2>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
+            <div class="eyebrow" style="color:#15803d; font-weight:800;">答案解析 · 列點式原因拆解</div>
+            <span style="background:#15803d; color:#fff; font-size:12px; font-weight:800; padding:4px 10px; border-radius:99px;">
+              正解座標：(${target.x}, ${target.y})
+            </span>
           </div>
+          <h2 style="font-size:21px; font-weight:900; color:#0f172a; margin:4px 0 0;">
+            ${esc(geoRound.verdict)}
+          </h2>
         </div>
 
-        <div class="review-main-body" style="display:flex; flex-direction:column; gap:14px; margin-top:12px;">
-          <div class="debrief-hero-box is-optimal" style="padding:16px 20px; border-radius:14px; background:#f0fdf4; border:1.5px solid #86efac;">
-            <div class="debrief-meta-row" style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-              <span class="debrief-opt-tag" style="background:#15803d; color:#fff; font-size:12px; font-weight:800; padding:3px 8px; border-radius:6px;">正解座標：(${target.x}, ${target.y})</span>
-              <span class="review-zone-badge" style="font-size:12px; font-weight:700; color:#166534;">${esc(target.zone)}</span>
+        <div class="review-main-body" style="display:flex; flex-direction:column; gap:12px; margin-top:12px;">
+          <!-- 列點 1：文化特徵 -->
+          <div style="background:#f8fafc; border:1.5px solid #e2e8f0; border-left:5px solid #1e3a8a; border-radius:12px; padding:14px 18px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+              <span style="background:#1e3a8a; color:#fff; font-size:11.5px; font-weight:800; padding:3px 8px; border-radius:6px;">文化特徵</span>
+              <strong style="font-size:14.5px; color:#1e293b;">組織行為與文化底蘊</strong>
             </div>
-            <h3 class="debrief-verdict-title" style="font-size:16px; font-weight:800; color:#14532d; margin:0 0 6px;">${esc(geoRound.verdict)}</h3>
-            <p class="debrief-analysis-text" style="font-size:14px; line-height:1.75; color:#166534; margin:0;">${esc(geoRound.analysis)}</p>
+            <p style="font-size:13.5px; line-height:1.65; color:#334155; margin:0; font-weight:600;">
+              ${esc(geoRound.bullets.feat)}
+            </p>
           </div>
 
-          <div class="debrief-blindspot-card" style="padding:16px 20px; border-radius:14px; background:#fffbeb; border:1.5px solid #f59e0b;">
-            <div class="eyebrow" style="font-size:11px; font-weight:800; color:#b45309; margin-bottom:6px;">該象限關鍵管理原則（文獻理論依據）</div>
-            <p class="debrief-blindspot-text" style="font-size:14px; line-height:1.75; color:#78350f; font-weight:600; margin:0;">${esc(geoRound.blindspot)}</p>
+          <!-- 列點 2：管理盲點 -->
+          <div style="background:#fffbeb; border:1.5px solid #fef3c7; border-left:5px solid #d97706; border-radius:12px; padding:14px 18px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+              <span style="background:#d97706; color:#fff; font-size:11.5px; font-weight:800; padding:3px 8px; border-radius:6px;">管理盲點</span>
+              <strong style="font-size:14.5px; color:#78350f;">常見誤區與溝通地雷</strong>
+            </div>
+            <p style="font-size:13.5px; line-height:1.65; color:#78350f; margin:0; font-weight:600;">
+              ${esc(geoRound.bullets.blindspot)}
+            </p>
+          </div>
+
+          <!-- 列點 3：正確對策 -->
+          <div style="background:#f0fdf4; border:1.5px solid #bbf7d0; border-left:5px solid #16a34a; border-radius:12px; padding:14px 18px;">
+            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
+              <span style="background:#16a34a; color:#fff; font-size:11.5px; font-weight:800; padding:3px 8px; border-radius:6px;">正確對策</span>
+              <strong style="font-size:14.5px; color:#14532d;">卓越跨文化領導解方</strong>
+            </div>
+            <p style="font-size:13.5px; line-height:1.65; color:#14532d; margin:0; font-weight:600;">
+              ${esc(geoRound.bullets.action)}
+            </p>
           </div>
         </div>
       </section>

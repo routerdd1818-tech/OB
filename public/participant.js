@@ -1,22 +1,66 @@
 import { $, esc, api, toast, status, startClock, broadcastSync, listenSync, setSyncRoundLock, forceSyncRound } from './common.js';
 
-// 對應四個不同象限的手機端精簡關鍵題目
+// 對應四個不同象限的手機端精簡關鍵題目與情境對白
 const MOBILE_QUESTIONS = [
   {
-    code: 'CASE 01 · Alpha 精密研發中心',
-    prompt: '週一正式會議上無人反對新方案，資深總工卻在會後嚴懲越級寫信給你的年輕工程師，且產線至今毫無動靜。請判斷對方文化類型，並在四象限中釘出你的領導座標。'
+    code: '案例一 · 精密研發中心',
+    prompt: '面對表面和諧、實則嚴守階層與私下共識的團隊，你的領導決策座標在哪裡？',
+    dialogues: [
+      { tag: '會議現場', text: '主管詢問縮短老練工時兩成有無異議，全場低頭抄筆記，一片沉默。' },
+      { tag: '資深總工', text: '總工微笑：「我們會盡力研究。」' },
+      { tag: '週三清晨', text: '來到產線，測試爐工時仍為百分之百，產線完全沒動！' },
+      { tag: '茶水間外', text: '總工嚴斥昨晚私信給你的年輕人：「不懂規矩！破壞團隊程序！」' }
+    ],
+    bullets: {
+      feat: '兼具嚴明的職級尊卑與全員深度共識，重視循序漸進的組織倫理與事前校準。',
+      blindspot: '誤以為大會能直接討論拍板；在該文化中大會僅為用印儀式，未經會前私下摸底強推必遭消極抗命。',
+      action: '尊重既有職級序列，會前透過資深幹部由下而上私下溝通、全員完成確認後再開會拍板。'
+    }
   },
   {
-    code: 'CASE 02 · Beta 核心試產基地',
-    prompt: '夜班良率暴跌至 48%，群組內爭執誰該為延誤負全責，領班私訊請求你「給出明確裁示，否則沒人敢動手」。距離交貨剩 4 小時，你的決策模式應落在哪個座標？'
+    code: '案例二 · 核心試產基地',
+    prompt: '距離交貨剩四小時，團隊恐懼承擔責任，你的領導決策座標應落在哪裡？',
+    dialogues: [
+      { tag: '夜班兩點十分', text: '塗佈機良率暴跌至百分之四十八！產線領班大驚失色。' },
+      { tag: '現場下令', text: '資深廠長：「立刻停線，把機台洗乾淨！」機台強制按下停機。' },
+      { tag: '群組爭吵', text: '工程師在群組內激烈甩鍋：「是塗佈液的問題！」「延誤你們扛！」' },
+      { tag: '領班求救', text: '領班私訊：「現在到底該聽誰的？請給我們明確裁示，否則沒人敢動手！」' }
+    ],
+    bullets: {
+      feat: '導演式指揮模式，高度重視階級秩序，危機時刻基層仰賴最高主管明確指令。',
+      blindspot: '在危機時刻若尋求民主討論凝聚共識，會被基層視為軟弱、無能且推卸責任。',
+      action: '主管迅速聽取關鍵資訊後果斷拍板，下達清晰執行步驟，並由最高主管親自扛起成敗責任。'
+    }
   },
   {
-    code: 'CASE 03 · Gamma 高速運算實驗室',
-    prompt: '封版前 36 小時，年輕工程師在會議上直接挑戰你的架構，提議先推他昨晚寫的新原型上線、有問題明天再動態修補。面對扁平且崇尚速度的團隊，你的領導落點為何？'
+    code: '案例三 · 高速運算實驗室',
+    prompt: '面對扁平直接、崇尚速度勝於完美的團隊，你的決策座標落點在哪裡？',
+    dialogues: [
+      { tag: '封版倒數三十六小時', text: '站立會議上，年輕核心工程師直接對主管說：「你昨天定的架構太保守了！」' },
+      { tag: '激進提案', text: '他拿出私下寫的新演算法原型：「效能提升兩倍！現在就推上線，有問題明天再線上修補！」（邊界條件一成五未測）' },
+      { tag: '全員起鬨', text: '團隊成員紛紛附和：「值得賭一把！」「先上了再說！」' },
+      { tag: '品保沉默', text: '品保主管面色凝重，沉默看向主管等待定奪。' }
+    ],
+    bullets: {
+      feat: '敏捷試錯模式，組織極度扁平，決策採小速決快速推進與動態修補。',
+      blindspot: '若開馬拉松會議追求完美共識，會被視為官僚、保守且缺乏魄力與市場速度。',
+      action: '肯定創新熱情並迅速拍板小規模試跑，保留後續動態修補彈性。'
+    }
   },
   {
-    code: 'CASE 04 · Delta 戰略客戶攤牌現場',
-    prompt: '發表會前兩小時，客戶技術長與基層測試員拿著異常報告要求公開透明共審，基層測試員更直言「不在乎你的職銜或賠償金，全員達成共識才放行」。你的領導落點為何？'
+    code: '案例四 · 戰略客戶攤牌現場',
+    prompt: '面對基層擁有完全否決權、堅持透明共審的團隊，你的領導決策座標應落在哪裡？',
+    dialogues: [
+      { tag: '後台突發', text: '全球發表會倒數兩小時，最大客戶技術長帶著兩名年輕測試員突然直接走進後台。' },
+      { tag: '報告攤牌', text: '測試員將「極端低溫環境訊號衰減報告」拍在桌上！' },
+      { tag: '基層聲明', text: '年輕測試員：「在我們團隊裡，每位技術員都有權為安全把關，我們不在乎你的職銜或賠償金。」' },
+      { tag: '拒絕妥協', text: '「若非雙方工程師公開透明共同審核並達成一致協議，我們絕不簽署放行同意書！」' }
+    ],
+    bullets: {
+      feat: '低地協商模式，基層工程師擁有一票否決權，追求刻在石碑上的神聖大承諾。',
+      blindspot: '試圖透過職級施壓或私下利益妥協，會被視為踐踏專業誠信與違背團隊共識。',
+      action: '主管轉化為中立協調促進者，召集雙方技術人員公開數據、透明共審，凝聚神聖共識。'
+    }
   }
 ];
 
@@ -153,13 +197,30 @@ function render() {
     </div>
   `;
 
+  const scenarioDialogueBox = revealed ? '' : `
+    <section class="card" style="padding:14px 16px; margin-bottom:12px; background:#ffffff; border:1.5px solid var(--line);">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span class="topic-badge" style="background:#1e3a8a; color:#fff;">現場情境對白</span>
+        <span style="font-size:11.5px; color:#475569; font-weight:700;">${esc(qData.code)}</span>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:8px;">
+        ${(qData.dialogues || []).map(d => `
+          <div style="background:#faf8f5; border-left:3.5px solid #d97706; border-radius:8px; padding:7px 10px;">
+            <span style="font-size:11px; font-weight:800; color:#b45309; display:block; margin-bottom:2px;">${esc(d.tag)}</span>
+            <div style="font-size:13.5px; font-weight:600; line-height:1.45; color:#1c1917;">${esc(d.text)}</div>
+          </div>
+        `).join('')}
+      </div>
+    </section>
+  `;
+
   const keyQuestionBox = `
-    <section class="card" style="padding:16px 18px; margin-bottom:12px; border:2px solid #f59e0b; border-left:6px solid #d97706; background:#fffbeb;">
+    <section class="card" style="padding:14px 16px; margin-bottom:12px; border:2px solid #f59e0b; border-left:6px solid #d97706; background:#fffbeb;">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-        <span class="topic-badge" style="background:#d97706; color:#fff;">ROUND 0${state.roundIndex + 1} · 關鍵決策題目</span>
+        <span class="topic-badge" style="background:#d97706; color:#fff;">第 0${state.roundIndex + 1} 回合 · 決策課題</span>
         <span style="font-size:11.5px; color:#92400e; font-weight:700;">${esc(qData.code)}</span>
       </div>
-      <h1 style="font-size:16.5px; line-height:1.6; font-weight:800; color:#1c1917; margin:0;">
+      <h1 style="font-size:15px; line-height:1.5; font-weight:800; color:#1c1917; margin:0;">
         🎯 ${esc(qData.prompt)}
       </h1>
     </section>
@@ -168,8 +229,7 @@ function render() {
   $('#app').innerHTML = `
     ${identityBar}
     ${state.phase === 'finished' ? '<div class="finished-banner">四回合探索完成！感謝參與！</div>' : ''}
-    ${keyQuestionBox}
-    ${revealed ? resultMarkup() : quadrantSelectMarkup()}
+    ${revealed ? resultMarkup() : `${scenarioDialogueBox}${keyQuestionBox}${quadrantSelectMarkup()}`}
   `;
 
   document.querySelector('.mobile-action')?.remove();
@@ -226,15 +286,15 @@ function quadrantSelectMarkup() {
     </div>
 
     <section class="card" style="padding:16px; margin-bottom:24px;">
-      <div class="eyebrow">QUADRANT PIN-DROP · 文化類型判斷</div>
+      <div class="eyebrow">文化類型判斷</div>
       <h2 style="font-size:16px; margin:2px 0 4px;">
         ${isLeader ? '👑 你是組長：請點擊你們決定的象限座標' : '請先判斷對方文化類型，由組長點擊象限插旗'}
       </h2>
       <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">
-        橫軸（X）：平等主義 (0) ↔ 階層制 (100) ｜ 縱軸（Y）：由上而下 (0) ↔ 共識決策 (100)
+        橫軸：平等主義 (0) ↔ 階層制 (100) ｜ 縱軸：由上而下 (0) ↔ 共識決策 (100)
       </p>
 
-      <div class="quadrant-axis-header">▲ 共識型決策 Consensual (Y: 100)</div>
+      <div class="quadrant-axis-header">▲ 共識型決策 (縱軸: 100)</div>
       <div id="geo-pin-board" class="quadrant-board geo-interactive-board" style="height:285px; cursor:crosshair; position:relative; user-select:none;">
         <div class="q-cell q-tl">
           <span class="q-zone-name">第二象限（左上）</span>
@@ -260,9 +320,9 @@ function quadrantSelectMarkup() {
         </div>
       </div>
       <div class="quadrant-axis-footer">
-        <span>◀ 平等主義 Egalitarian (0)</span>
-        <span>▼ 由上而下 Top-Down (0)</span>
-        <span>階層制 Hierarchical (100) ▶</span>
+        <span>◀ 平等主義 (0)</span>
+        <span>▼ 由上而下 (0)</span>
+        <span>階層制 (100) ▶</span>
       </div>
 
       <div id="pin-coord-readout" style="margin-top:12px; padding:10px 12px; background:#f8fafc; border:1px solid var(--line); border-radius:10px; font-size:13px; text-align:center;">
@@ -278,11 +338,13 @@ function resultMarkup() {
   const myScore = state.group?.cq ?? 0;
   const roundGain = res?.actualDelta ?? res?.roundScore ?? 0;
   const dist = res?.dist !== undefined ? res.dist : null;
+  const qData = MOBILE_QUESTIONS[state.roundIndex] || MOBILE_QUESTIONS[0];
+
   return `
-    <section class="card" style="padding:22px 18px; margin-bottom:20px; text-align:center;">
-      <div class="eyebrow">ROUND REVEALED · 座標揭曉</div>
+    <section class="card" style="padding:20px 18px; margin-bottom:14px; text-align:center;">
+      <div class="eyebrow">第 0${state.roundIndex + 1} 回合 · 座標揭曉</div>
       <h2 style="font-size:19px; margin:6px 0 8px;">第 ${myGroup} 組結果已公布</h2>
-      <div style="margin:16px 0; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
+      <div style="margin:14px 0; display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
         ${dist !== null ? `<div style="padding:10px 14px; background:#faf8f5; border:1px solid var(--line); border-radius:12px;">
           <div style="font-size:11px; color:var(--muted); font-weight:700;">落點誤差</div>
           <div style="font-size:20px; font-weight:900; color:#451a03;">${dist} 格</div>
@@ -296,9 +358,28 @@ function resultMarkup() {
           <div style="font-size:20px; font-weight:900; color:#b45309;">${myScore} 分</div>
         </div>
       </div>
-      <p style="font-size:13.5px; color:var(--muted); margin:0;">
-        請抬頭看大螢幕，檢視各組旗幟與真實答案靶心的距離及象限理論解析。
+      <p style="font-size:13px; color:var(--muted); margin:0;">
+        請抬頭看大螢幕，檢視各組旗幟與真實答案靶心距離。
       </p>
+    </section>
+
+    <!-- 列點式原因呈現 -->
+    <section class="card" style="padding:16px 18px; margin-bottom:20px; text-align:left; background:#ffffff; border:1.5px solid var(--line);">
+      <div class="eyebrow" style="margin-bottom:10px; color:#15803d; font-weight:800;">答案解析 · 列點式原因拆解</div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-left:4px solid #1e3a8a; border-radius:10px; padding:10px 12px;">
+          <span style="display:inline-block; font-size:11.5px; font-weight:800; color:#1e3a8a; margin-bottom:3px;">文化特徵</span>
+          <div style="font-size:13px; line-height:1.5; color:#334155; font-weight:600;">${esc(qData.bullets.feat)}</div>
+        </div>
+        <div style="background:#fffbeb; border:1px solid #fef3c7; border-left:4px solid #d97706; border-radius:10px; padding:10px 12px;">
+          <span style="display:inline-block; font-size:11.5px; font-weight:800; color:#d97706; margin-bottom:3px;">管理盲點</span>
+          <div style="font-size:13px; line-height:1.5; color:#78350f; font-weight:600;">${esc(qData.bullets.blindspot)}</div>
+        </div>
+        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-left:4px solid #16a34a; border-radius:10px; padding:10px 12px;">
+          <span style="display:inline-block; font-size:11.5px; font-weight:800; color:#16a34a; margin-bottom:3px;">正確對策</span>
+          <div style="font-size:13px; line-height:1.5; color:#14532d; font-weight:600;">${esc(qData.bullets.action)}</div>
+        </div>
+      </div>
     </section>
   `;
 }
