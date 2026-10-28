@@ -1099,7 +1099,7 @@ export function renderCharacterBust(roundIndex = 0, mood = 'normal') {
 
   if (idx === 0) {
     bustSvg = renderBustTakahashiSvg(mood);
-    roleTitle = '東京總工 · 高橋';
+    roleTitle = '東京技術主管 · 高橋';
   } else if (idx === 1) {
     bustSvg = renderBustLaoChenSvg(mood);
     roleTitle = '杭州廠長 · 老陳';
@@ -1199,7 +1199,7 @@ export function renderRpgDialogueBox({
   const bustHtml = renderCharacterBust(roundIndex, mood);
   const defaultSpeaker =
     roundIndex === 0
-      ? '東京總工 · 高橋'
+      ? '東京技術主管 · 高橋'
       : roundIndex === 1
       ? '杭州廠長 · 老陳'
       : roundIndex === 2

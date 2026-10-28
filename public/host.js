@@ -31,13 +31,13 @@ const GEO_ROUNDS_DATA = [
     comic: 'case1_alpha.png',
     target: { x: 78, y: 82, zone: '第一象限（右上）：共識型決策 × 階層制' },
     title: '沉默的正式會議與消失的測試數據',
-    context: '併購精密研發中心第三週，你在週一全體正式會議上提出「縮短高溫老練測試兩成工時」新方案。詢問有無異議時，在場十二位當地主管與資深技師全數低頭抄筆記，資深總工僅微笑點頭說：「我們會盡力研究。」然而到了週三早上，產線一動也沒動；同時你經過茶水間時，聽見資深總工正嚴厲斥責一位昨晚私信向你提建議的年輕工程師「不懂規矩、破壞團隊程序」。',
+    context: '併購精密研發中心第三週，你在週一全體正式會議上提出「縮短高溫測試兩成工時」新方案。詢問有無異議時，在場十二位主管與工程師全數低頭抄筆記，技術主管僅微笑點頭說：「我們會盡力研究。」然而到了週三早上，產線完全沒改動；同時你經過茶水間時，聽見技術主管正嚴厲斥責一位昨晚私信向你提建議的年輕工程師「不懂規矩、破壞團隊程序」。',
     prompt: '面對表面和諧、實則嚴守階層與私下共識的團隊，你的領導決策座標在哪裡？',
     dialogues: [
-      { tag: '會議現場', text: '主管詢問縮短老練工時兩成有無異議，全場低頭抄筆記，一片沉默。' },
-      { tag: '資深總工', text: '總工微笑：「我們會盡力研究。」' },
-      { tag: '週三清晨', text: '來到產線，測試爐工時仍為百分之百，產線完全沒動！' },
-      { tag: '茶水間外', text: '總工嚴斥昨晚私信給你的年輕人：「不懂規矩！破壞團隊程序！」' }
+      { tag: '週一全體大會', text: '你提議縮短高溫測試工時兩成，詢問有無異議；全場低頭抄筆記，一片沉默。' },
+      { tag: '技術主管態度', text: '技術主管微笑回應：「我們會盡力研究。」' },
+      { tag: '週三產線現場', text: '來到產線發現測試工時完全沒改，依舊按照原案跑，產線完全沒動！' },
+      { tag: '茶水間外衝突', text: '技術主管嚴厲斥責昨晚私信向你提建議的年輕工程師：「不懂規矩，破壞團隊程序！」' }
     ],
     verdict: '第一象限（右上）：階層制 × 共識型決策',
     bullets: {
@@ -45,7 +45,7 @@ const GEO_ROUNDS_DATA = [
       blindspot: '誤以為大會能直接討論拍板；在該文化中大會僅為用印儀式，未經會前私下摸底強推必遭消極抗命。',
       action: '尊重既有職級序列，會前透過資深幹部由下而上私下溝通、全員完成確認後再開會拍板。'
     },
-    analysis: '此組織兼具「嚴明的職級尊卑（高 X）」與「全員共識決策（高 Y）」。資深總工斥責越級報告的年輕工程師，體現了對正式階層秩序的維護；而正式會議上全員沉默、會後卻未執行，則是因為在該文化中，正式會議僅是最終「蓋章確認」的儀式，真正的決策必須在會前依循職級序列，逐一與各部門幹部進行非正式的私下溝通與校準（即「根回」與「稟議制」）。',
+    analysis: '此組織兼具「嚴明的職級尊卑（高 X）」與「全員共識決策（高 Y）」。技術主管斥責越級報告的年輕工程師，體現了對正式階層秩序的維護；而正式會議上全員沉默、會後卻未執行，則是因為在該文化中，正式會議僅是最終「蓋章確認」的儀式，真正的決策必須在會前依循職級序列，逐一與各部門幹部進行非正式的私下溝通與校準（即「根回」與「稟議制」）。',
     blindspot: '第一象限的關鍵管理原則：領導者必須尊重既有職級結構，先透過資深主管在會前由下而上凝聚各部門共識，待全員校準完成後再召開正式會議拍板，方能確保決策徹底落實。'
   },
   {
@@ -57,10 +57,10 @@ const GEO_ROUNDS_DATA = [
     context: '核心試產基地夜班發生塗佈異常，良率瞬間掉到四成八。資深廠長主張立刻停線洗機，但試產組工程師在工作群組裡激烈爭辯，雙方互相指責誰該為延誤負全責。產線領班站在機台旁不知所措，私訊問你：「現在到底該聽誰的？請給我們一個明確的裁示，否則沒人敢動手！」',
     prompt: '距離交貨剩四小時，團隊恐懼承擔責任，你的領導決策座標應落在哪裡？',
     dialogues: [
-      { tag: '夜班兩點十分', text: '塗佈機良率暴跌至百分之四十八！產線領班大驚失色。' },
-      { tag: '現場下令', text: '資深廠長：「立刻停線，把機台洗乾淨！」機台強制按下停機。' },
-      { tag: '群組爭吵', text: '工程師在群組內激烈甩鍋：「是塗佈液的問題！」「延誤你們扛！」' },
-      { tag: '領班求救', text: '領班私訊：「現在到底該聽誰的？請給我們明確裁示，否則沒人敢動手！」' }
+      { tag: '凌晨兩點十分', text: '塗佈機良率雪崩跌至四成八！產線領班大驚失色。' },
+      { tag: '廠長強制停機', text: '廠長下令立刻停機洗線，但群組內工程師激烈互推責任，無人敢扛延誤。' },
+      { tag: '產線領班求救', text: '領班私訊主管：「現在到底該聽誰的？請給我們明確裁示，否則沒人敢動手！」' },
+      { tag: '交貨倒數危機', text: '距離清晨交貨只剩四小時，全體基層等待最高主管下達直接指令並扛起成敗。' }
     ],
     verdict: '第四象限（右下）：階層制 × 由上而下速決',
     bullets: {
@@ -80,10 +80,10 @@ const GEO_ROUNDS_DATA = [
     context: '距離晶片韌體封版只剩三十六小時，高速運算實驗室的一名年輕核心工程師在站立會議上直接對你說：「你昨天定的架構太保守了，我昨晚自己寫了一個新演算法原型，雖然還有一成五邊界條件沒測完，但效能可以提升兩倍！我們現在就先推上線試跑，有問題明天再動態修補！」其他成員紛紛附和值得賭一把，品保主管則看向你等待定奪。',
     prompt: '面對扁平直接、崇尚速度勝於完美的團隊，你的決策座標落點在哪裡？',
     dialogues: [
-      { tag: '封版倒數三十六小時', text: '站立會議上，年輕核心工程師直接對主管說：「你昨天定的架構太保守了！」' },
-      { tag: '激進提案', text: '他拿出私下寫的新演算法原型：「效能提升兩倍！現在就推上線，有問題明天再線上修補！」（邊界條件一成五未測）' },
-      { tag: '全員起鬨', text: '團隊成員紛紛附和：「值得賭一把！」「先上了再說！」' },
-      { tag: '品保沉默', text: '品保主管面色凝重，沉默看向主管等待定奪。' }
+      { tag: '站立會議爭鋒', text: '早會上，年輕核心工程師直接直言：「主管你昨天定的架構太保守了！」' },
+      { tag: '大膽自發提案', text: '他拿出私下寫的新程式原型：「效能提升兩倍！現在就推上線試跑，有問題明天再線上修補！」' },
+      { tag: '團隊起鬨求快', text: '其他工程師紛紛附和先推上線再說，崇尚快速試錯。' },
+      { tag: '品保主管提醒', text: '品保主管提醒還有一成五極端條件未測，面色凝重轉向你等待最終定奪。' }
     ],
     verdict: '第三象限（左下）：平等主義 × 由上而下速決',
     bullets: {
@@ -103,10 +103,10 @@ const GEO_ROUNDS_DATA = [
     context: '全球發表會倒數兩小時，最大客戶技術長帶著兩名年輕測試員直接走進後台休息室，將一份剛測出的極端低溫環境訊號衰減報告放在桌上。客戶方的年輕測試員直接看著你說：「在我們的團隊裡，每一位技術人員都有權為安全把關。我們不在乎你的職銜高低或商業賠償金，這份數據如果不由雙方所有工程師坐下來公開透明共同審核並達成一致協議，我們不會簽署放行。」',
     prompt: '面對基層擁有完全否決權、堅持透明共審的團隊，你的領導決策座標應落在哪裡？',
     dialogues: [
-      { tag: '後台突發', text: '全球發表會倒數兩小時，最大客戶技術長帶著兩名年輕測試員突然直接走進後台。' },
-      { tag: '報告攤牌', text: '測試員將「極端低溫環境訊號衰減報告」拍在桌上！' },
-      { tag: '基層聲明', text: '年輕測試員：「在我們團隊裡，每位技術員都有權為安全把關，我們不在乎你的職銜或賠償金。」' },
-      { tag: '拒絕妥協', text: '「若非雙方工程師公開透明共同審核並達成一致協議，我們絕不簽署放行同意書！」' }
+      { tag: '後台突發攤牌', text: '全球發表會倒數兩小時，大客戶技術長帶著兩名年輕測試員突然直奔後台休息室。' },
+      { tag: '拍出異常數據', text: '測試員將極端低溫訊號衰減報告拍在桌上，要求公開審核。' },
+      { tag: '基層堅持權限', text: '年輕測試員：「在我們團隊，每位技術人員都有權為安全把關，我們不在乎你的頭銜或賠償金。」' },
+      { tag: '全員共識底線', text: '「若非雙方所有技術人員公開透明共同審核並達成一致協議，我們絕不簽署放行！」' }
     ],
     verdict: '第二象限（左上）：平等主義 × 共識型決策',
     bullets: {
@@ -488,52 +488,41 @@ function resultsMarkup() {
         </section>
       </div>
 
-      <!-- 右欄：Image 5 樣式的三大列點原因卡片 -->
+      <!-- 右欄：Image 5 樣式的三大列點原因卡片（全新大器排版） -->
       <section class="card results-main-review" style="padding:22px 26px !important; display:flex; flex-direction:column; justify-content:space-between;">
-        <div class="review-main-header">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px;">
-            <div class="eyebrow" style="color:#15803d; font-weight:800;">答案解析 · 列點式原因拆解</div>
-            <span style="background:#15803d; color:#fff; font-size:12px; font-weight:800; padding:4px 10px; border-radius:99px;">
-              正解座標：(${target.x}, ${target.y})
-            </span>
+        <div style="margin-bottom:14px;">
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
+            <span class="topic-badge" style="background:#15803d; color:#fff; padding:4px 10px; font-size:12px; font-weight:800; border-radius:6px;">正解落點：(${target.x}, ${target.y})</span>
+            <span class="pill" style="background:#f0fdf4; color:#166534; font-weight:700; font-size:12px; border:1px solid #bbf7d0;">答案解析與文獻依據</span>
           </div>
-          <h2 style="font-size:21px; font-weight:900; color:#0f172a; margin:4px 0 0;">
+          <h2 style="font-size:22px; font-weight:900; color:#0f172a; margin:4px 0 0; line-height:1.35;">
             ${esc(geoRound.verdict)}
           </h2>
         </div>
 
-        <div class="review-main-body" style="display:flex; flex-direction:column; gap:12px; margin-top:12px;">
+        <div style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:16px; padding:18px 20px; display:flex; flex-direction:column; gap:16px; flex:1; justify-content:space-around;">
           <!-- 列點 1：文化特徵 -->
-          <div style="background:#f8fafc; border:1.5px solid #e2e8f0; border-left:5px solid #1e3a8a; border-radius:12px; padding:14px 18px;">
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-              <span style="background:#1e3a8a; color:#fff; font-size:11.5px; font-weight:800; padding:3px 8px; border-radius:6px;">文化特徵</span>
-              <strong style="font-size:14.5px; color:#1e293b;">組織行為與文化底蘊</strong>
-            </div>
-            <p style="font-size:13.5px; line-height:1.65; color:#334155; margin:0; font-weight:600;">
+          <div style="display:flex; align-items:flex-start; gap:12px;">
+            <span style="background:#1e3a8a; color:#fff; font-size:12.5px; font-weight:800; padding:4px 10px; border-radius:8px; flex-shrink:0; margin-top:2px;">文化特徵</span>
+            <div style="font-size:15px; line-height:1.65; color:#1e293b; font-weight:600;">
               ${esc(geoRound.bullets.feat)}
-            </p>
+            </div>
           </div>
 
           <!-- 列點 2：管理盲點 -->
-          <div style="background:#fffbeb; border:1.5px solid #fef3c7; border-left:5px solid #d97706; border-radius:12px; padding:14px 18px;">
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-              <span style="background:#d97706; color:#fff; font-size:11.5px; font-weight:800; padding:3px 8px; border-radius:6px;">管理盲點</span>
-              <strong style="font-size:14.5px; color:#78350f;">常見誤區與溝通地雷</strong>
-            </div>
-            <p style="font-size:13.5px; line-height:1.65; color:#78350f; margin:0; font-weight:600;">
+          <div style="display:flex; align-items:flex-start; gap:12px;">
+            <span style="background:#d97706; color:#fff; font-size:12.5px; font-weight:800; padding:4px 10px; border-radius:8px; flex-shrink:0; margin-top:2px;">管理盲點</span>
+            <div style="font-size:15px; line-height:1.65; color:#78350f; font-weight:600;">
               ${esc(geoRound.bullets.blindspot)}
-            </p>
+            </div>
           </div>
 
           <!-- 列點 3：正確對策 -->
-          <div style="background:#f0fdf4; border:1.5px solid #bbf7d0; border-left:5px solid #16a34a; border-radius:12px; padding:14px 18px;">
-            <div style="display:flex; align-items:center; gap:8px; margin-bottom:4px;">
-              <span style="background:#16a34a; color:#fff; font-size:11.5px; font-weight:800; padding:3px 8px; border-radius:6px;">正確對策</span>
-              <strong style="font-size:14.5px; color:#14532d;">卓越跨文化領導解方</strong>
-            </div>
-            <p style="font-size:13.5px; line-height:1.65; color:#14532d; margin:0; font-weight:600;">
+          <div style="display:flex; align-items:flex-start; gap:12px;">
+            <span style="background:#16a34a; color:#fff; font-size:12.5px; font-weight:800; padding:4px 10px; border-radius:8px; flex-shrink:0; margin-top:2px;">正確對策</span>
+            <div style="font-size:15px; line-height:1.65; color:#14532d; font-weight:600;">
               ${esc(geoRound.bullets.action)}
-            </p>
+            </div>
           </div>
         </div>
       </section>

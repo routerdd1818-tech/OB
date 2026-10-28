@@ -4,12 +4,13 @@ import { $, esc, api, toast, status, startClock, broadcastSync, listenSync, setS
 const MOBILE_QUESTIONS = [
   {
     code: '案例一 · 精密研發中心',
+    lead: '你剛接管精密研發中心，提議縮短高溫測試工時，會議上無人反對，事後卻完全無人執行。',
     prompt: '面對表面和諧、實則嚴守階層與私下共識的團隊，你的領導決策座標在哪裡？',
     dialogues: [
-      { tag: '會議現場', text: '主管詢問縮短老練工時兩成有無異議，全場低頭抄筆記，一片沉默。' },
-      { tag: '資深總工', text: '總工微笑：「我們會盡力研究。」' },
-      { tag: '週三清晨', text: '來到產線，測試爐工時仍為百分之百，產線完全沒動！' },
-      { tag: '茶水間外', text: '總工嚴斥昨晚私信給你的年輕人：「不懂規矩！破壞團隊程序！」' }
+      { tag: '週一全體大會', text: '你提議縮短高溫測試工時兩成，詢問有無異議；全場低頭抄筆記，一片沉默。' },
+      { tag: '技術主管態度', text: '技術主管微笑回應：「我們會盡力研究。」' },
+      { tag: '週三產線現場', text: '來到產線發現測試工時完全沒改，依舊按照原案跑，產線完全沒動！' },
+      { tag: '茶水間外衝突', text: '技術主管嚴厲斥責昨晚私信向你提建議的年輕工程師：「不懂規矩，破壞團隊程序！」' }
     ],
     bullets: {
       feat: '兼具嚴明的職級尊卑與全員深度共識，重視循序漸進的組織倫理與事前校準。',
@@ -19,12 +20,13 @@ const MOBILE_QUESTIONS = [
   },
   {
     code: '案例二 · 核心試產基地',
+    lead: '交貨只剩四小時，半夜產線突然發生重大良率異常，基層工程師慌亂甩鍋不敢決定。',
     prompt: '距離交貨剩四小時，團隊恐懼承擔責任，你的領導決策座標應落在哪裡？',
     dialogues: [
       { tag: '夜班兩點十分', text: '塗佈機良率暴跌至百分之四十八！產線領班大驚失色。' },
-      { tag: '現場下令', text: '資深廠長：「立刻停線，把機台洗乾淨！」機台強制按下停機。' },
-      { tag: '群組爭吵', text: '工程師在群組內激烈甩鍋：「是塗佈液的問題！」「延誤你們扛！」' },
-      { tag: '領班求救', text: '領班私訊：「現在到底該聽誰的？請給我們明確裁示，否則沒人敢動手！」' }
+      { tag: '現場緊急下令', text: '資深廠長：「立刻停線，把機台洗乾淨！」機台強制按下停機。' },
+      { tag: '工程群組爭吵', text: '工程師在群組內激烈甩鍋：「是塗佈液的問題！」「延誤你們扛！」' },
+      { tag: '領班私訊求救', text: '領班私訊：「現在到底該聽誰的？請給我們明確裁示，否則沒人敢動手！」' }
     ],
     bullets: {
       feat: '導演式指揮模式，高度重視階級秩序，危機時刻基層仰賴最高主管明確指令。',
@@ -34,12 +36,13 @@ const MOBILE_QUESTIONS = [
   },
   {
     code: '案例三 · 高速運算實驗室',
+    lead: '新產品發表在即，年輕工程師在全員站立會議上直接挑戰你的保守決策，提出激進改動。',
     prompt: '面對扁平直接、崇尚速度勝於完美的團隊，你的決策座標落點在哪裡？',
     dialogues: [
-      { tag: '封版倒數三十六小時', text: '站立會議上，年輕核心工程師直接對主管說：「你昨天定的架構太保守了！」' },
-      { tag: '激進提案', text: '他拿出私下寫的新演算法原型：「效能提升兩倍！現在就推上線，有問題明天再線上修補！」（邊界條件一成五未測）' },
-      { tag: '全員起鬨', text: '團隊成員紛紛附和：「值得賭一把！」「先上了再說！」' },
-      { tag: '品保沉默', text: '品保主管面色凝重，沉默看向主管等待定奪。' }
+      { tag: '封版倒數時刻', text: '站立會議上，年輕核心工程師直接對你說：「你昨天定的架構太保守了！」' },
+      { tag: '提出激進架構', text: '他拿出私下寫的新演算法原型：「效能提升兩倍！現在就推上線，有問題明天再修！」' },
+      { tag: '團隊全員附和', text: '團隊成員紛紛附和起鬨：「值得賭一把！」「直接上了再說！」' },
+      { tag: '品保主管沉默', text: '品保主管面色凝重，沉默看向你等待定奪。' }
     ],
     bullets: {
       feat: '敏捷試錯模式，組織極度扁平，決策採小速決快速推進與動態修補。',
@@ -49,12 +52,13 @@ const MOBILE_QUESTIONS = [
   },
   {
     code: '案例四 · 戰略客戶攤牌現場',
+    lead: '全球發表會前夕，戰略客戶直接帶著基層測試人員闖進後台，要求公開透明審查瑕疵。',
     prompt: '面對基層擁有完全否決權、堅持透明共審的團隊，你的領導決策座標應落在哪裡？',
     dialogues: [
-      { tag: '後台突發', text: '全球發表會倒數兩小時，最大客戶技術長帶著兩名年輕測試員突然直接走進後台。' },
-      { tag: '報告攤牌', text: '測試員將「極端低溫環境訊號衰減報告」拍在桌上！' },
-      { tag: '基層聲明', text: '年輕測試員：「在我們團隊裡，每位技術員都有權為安全把關，我們不在乎你的職銜或賠償金。」' },
-      { tag: '拒絕妥協', text: '「若非雙方工程師公開透明共同審核並達成一致協議，我們絕不簽署放行同意書！」' }
+      { tag: '客戶後台突發', text: '全球發表會倒數兩小時，戰略客戶技術長帶著兩名年輕測試員突然走進後台。' },
+      { tag: '攤牌數據報告', text: '測試員將「極端低溫環境訊號衰減報告」拍在桌上！' },
+      { tag: '基層堅持把關', text: '年輕測試員：「在我們團隊裡，每位技術員都有權為安全把關，我們不在乎職銜。」' },
+      { tag: '堅持全體共審', text: '「若非雙方工程師公開透明共同審核並達成一致協議，我們絕不簽署放行同意書！」' }
     ],
     bullets: {
       feat: '低地協商模式，基層工程師擁有一票否決權，追求刻在石碑上的神聖大承諾。',
@@ -200,9 +204,14 @@ function render() {
   const scenarioDialogueBox = revealed ? '' : `
     <section class="card" style="padding:14px 16px; margin-bottom:12px; background:#ffffff; border:1.5px solid var(--line);">
       <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-        <span class="topic-badge" style="background:#1e3a8a; color:#fff;">現場情境對白</span>
+        <span class="topic-badge" style="background:#1e3a8a; color:#fff;">現場情境背景</span>
         <span style="font-size:11.5px; color:#475569; font-weight:700;">${esc(qData.code)}</span>
       </div>
+      ${qData.lead ? `
+        <div style="font-size:13.5px; font-weight:700; color:#1e293b; line-height:1.55; margin-bottom:10px; padding:9px 12px; background:#f1f5f9; border-left:4px solid #3b82f6; border-radius:8px;">
+          ${esc(qData.lead)}
+        </div>
+      ` : ''}
       <div style="display:flex; flex-direction:column; gap:8px;">
         ${(qData.dialogues || []).map(d => `
           <div style="background:#faf8f5; border-left:3.5px solid #d97706; border-radius:8px; padding:7px 10px;">
