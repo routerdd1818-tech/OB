@@ -80,10 +80,10 @@ def build_presentation():
     def draw_quadrant(slide, l, t, size, target_x=None, target_y=None, highlight_zone=None):
         half = size / 2.0
         cells = [
-            ("第二象限（左上）\n共識決策 × 平等主義", l, t, half, half, C_INDIGO_LIGHT if highlight_zone == 'Q2' else RGBColor(248, 250, 252)),
-            ("第一象限（右上）\n共識決策 × 階層制", l + half, t, half, half, C_AMBER_LIGHT if highlight_zone == 'Q1' else RGBColor(248, 250, 252)),
-            ("第三象限（左下）\n由上而下 × 平等主義", l, t + half, half, half, C_GREEN_LIGHT if highlight_zone == 'Q3' else RGBColor(248, 250, 252)),
-            ("第四象限（右下）\n由上而下 × 階層制", l + half, t + half, half, half, C_BLUE_LIGHT if highlight_zone == 'Q4' else RGBColor(248, 250, 252)),
+            ("左上象限\n平等 × 由上而下\n（美國、英國）", l, t, half, half, C_INDIGO_LIGHT if highlight_zone in ['Q_TL', 'TL', '左上', 'Q3'] else RGBColor(248, 250, 252)),
+            ("右上象限\n階級 × 由上而下\n（中國、法國）", l + half, t, half, half, C_AMBER_LIGHT if highlight_zone in ['Q_TR', 'TR', '右上', 'Q2'] else RGBColor(248, 250, 252)),
+            ("左下象限\n平等 × 共識\n（丹麥、荷蘭）", l, t + half, half, half, C_GREEN_LIGHT if highlight_zone in ['Q_BL', 'BL', '左下', 'Q4'] else RGBColor(248, 250, 252)),
+            ("右下象限\n階級 × 共識\n（德國、日本）", l + half, t + half, half, half, C_BLUE_LIGHT if highlight_zone in ['Q_BR', 'BR', '右下', 'Q1'] else RGBColor(248, 250, 252)),
         ]
         for name, cl, ct, cw, ch, col in cells:
             shape = slide.shapes.add_shape(MSO_SHAPE.ROUNDED_RECTANGLE, cl, ct, cw, ch)
@@ -102,12 +102,12 @@ def build_presentation():
             p.font.bold = True
             p.font.color.rgb = C_SLATE_DARK
             p.alignment = PP_ALIGN.CENTER
-            if len(lines) > 1:
-                p2 = tf.add_paragraph()
-                p2.text = lines[1]
-                p2.font.size = Pt(9)
-                p2.font.color.rgb = C_SLATE_MID
-                p2.alignment = PP_ALIGN.CENTER
+            for extra_line in lines[1:]:
+                p_extra = tf.add_paragraph()
+                p_extra.text = extra_line
+                p_extra.font.size = Pt(8.5)
+                p_extra.font.color.rgb = C_SLATE_MID
+                p_extra.alignment = PP_ALIGN.CENTER
 
         # 目標座標靶心
         if target_x is not None and target_y is not None:
@@ -440,10 +440,10 @@ def build_presentation():
 
     right_w = Inches(6.0)
     cards_info = [
-        ("第一象限（右上）：共識型決策 × 階層制", "【日本、德國】嚴明職級尊重與全員共識並存。正式會議僅為形式用印，真正的決策必須在會前依職級序列由下而上完成「會前私下摸底（根回）」。", C_AMBER_LIGHT, C_AMBER),
-        ("第二象限（左上）：共識型決策 × 平等主義", "【丹麥、荷蘭】基層與主管平起平坐，人人皆有一票否決權。領導者為「促進者」，追求刻在石碑上的神聖大承諾。", C_INDIGO_LIGHT, C_INDIGO),
-        ("第三象限（左下）：由上而下速決 × 平等主義", "【美國、英國】扁平極客文化，鼓勵直抒己見甚至挑戰主管；但決策採「小速決」模式，先試跑、後續動態修補。", C_GREEN_LIGHT, C_GREEN),
-        ("第四象限（右下）：由上而下速決 × 階層制", "【中國、法國】強調最高主管威權指揮（最高指揮官模式）。危機時刻基層渴望明確指令，領導者必須一肩扛起成敗責任。", C_BLUE_LIGHT, C_BLUE),
+        ("左上象限：平等 × 由上而下", "【美國、英國】扁平極客文化，鼓勵直抒己見甚至挑戰主管；但決策採「小速決」模式，由主管快速拍板，先試跑再動態修補。", C_INDIGO_LIGHT, C_INDIGO),
+        ("右上象限：階級 × 由上而下", "【中國、法國】強調最高主管威權指揮（最高指揮官模式）。危機時刻基層渴望明確指令，領導者必須一肩扛起成敗責任。", C_AMBER_LIGHT, C_AMBER),
+        ("左下象限：平等 × 共識", "【丹麥、荷蘭】基層與主管平起平坐，人人皆有一票否決權。領導者為「促進者」，追求刻在石碑上的神聖大承諾。", C_GREEN_LIGHT, C_GREEN),
+        ("右下象限：階級 × 共識", "【德國、日本】嚴明職級尊重與全員共識並存。正式會議僅為形式用印，真正的決策必須在會前依職級序列由下而上完成「會前私下摸底（根回）」。", C_BLUE_LIGHT, C_BLUE),
     ]
 
     for i, (title, text, bg, border) in enumerate(cards_info):
@@ -544,19 +544,19 @@ def build_presentation():
     # SLIDE 6: 案例一 答案揭曉（Image 5 精緻列點樣式）
     # =========================================================================
     add_reveal_slide_image5(
-        slide_title="案例一 答案揭曉 · 第一象限（右上：橫軸 78，縱軸 82）",
+        slide_title="案例一 答案揭曉 · 右下象限（右下：橫軸 78，縱軸 18）",
         eyebrow="第一回合 · 答案揭曉與文獻深度解析",
-        zone_pos="右上",
-        zone_title="第一象限",
-        zone_sub="階層制 × 共識型決策",
+        zone_pos="右下",
+        zone_title="右下象限",
+        zone_sub="階級 × 共識",
         target_x=78,
-        target_y=82,
-        target_quadrant="Q1",
-        culture_feat="日本根回與稟議模式，兼具嚴明的職級尊卑與全員深度共識。",
+        target_y=18,
+        target_quadrant="右下",
+        culture_feat="兼具嚴明的職級尊卑與全員深度共識，重視循序漸進的組織倫理與事前校準。",
         blindspot="誤以為大會能直接討論拍板；在該文化中大會僅為用印儀式，未經會前私下摸底（根回）強推必遭消極抗命。",
         correct_action="尊重既有職級序列，會前透過資深幹部由下而上私下溝通、全員完成會簽後再開會確認。",
-        notes_text="【計分引導】靶心座標為 (78, 82)。請計算距離 d = √[(X-78)² + (Y-82)²]，得分為 100 - d。",
-        countries="日本、德國"
+        notes_text="【計分引導】靶心座標為 (78, 18)。請計算距離 d = √[(X-78)² + (Y-18)²]，得分為 100 - d。",
+        countries="德國、日本"
     )
 
     # =========================================================================
@@ -581,18 +581,18 @@ def build_presentation():
     # SLIDE 8: 案例二 答案揭曉（Image 5 精緻列點樣式）
     # =========================================================================
     add_reveal_slide_image5(
-        slide_title="案例二 答案揭曉 · 第四象限（右下：橫軸 84，縱軸 18）",
+        slide_title="案例二 答案揭曉 · 右上象限（右上：橫軸 84，縱軸 82）",
         eyebrow="第二回合 · 答案揭曉與文獻深度解析",
-        zone_pos="右下",
-        zone_title="第四象限",
-        zone_sub="階層制 × 由上而下速決",
+        zone_pos="右上",
+        zone_title="右上象限",
+        zone_sub="階級 × 由上而下",
         target_x=84,
-        target_y=18,
-        target_quadrant="Q4",
+        target_y=82,
+        target_quadrant="右上",
         culture_feat="導演式指揮模式，高度重視階級秩序，危機時刻基層仰賴最高主管明確指令。",
         blindspot="在危機時刻若尋求民主討論凝聚共識，會被基層視為軟弱、無能且推卸責任。",
         correct_action="主管迅速聽取關鍵資訊後果斷拍板，下達清晰執行步驟，並由最高主管親自扛起成敗責任。",
-        notes_text="【計分引導】靶心座標為 (84, 18)。交期只剩四小時的危機中，尋求共識會被視為卸責。",
+        notes_text="【計分引導】靶心座標為 (84, 82)。交期只剩四小時的危機中，尋求共識會被視為卸責。",
         countries="中國、法國"
     )
 
@@ -618,18 +618,18 @@ def build_presentation():
     # SLIDE 10: 案例三 答案揭曉（Image 5 精緻列點樣式）
     # =========================================================================
     add_reveal_slide_image5(
-        slide_title="案例三 答案揭曉 · 第三象限（左下：橫軸 22，縱軸 24）",
+        slide_title="案例三 答案揭曉 · 左上象限（左上：橫軸 22，縱軸 76）",
         eyebrow="第三回合 · 答案揭曉與文獻深度解析",
-        zone_pos="左下",
-        zone_title="第三象限",
-        zone_sub="平等主義 × 由上而下速決",
+        zone_pos="左上",
+        zone_title="左上象限",
+        zone_sub="平等 × 由上而下",
         target_x=22,
-        target_y=24,
-        target_quadrant="Q3",
-        culture_feat="矽谷敏捷試錯模式，組織極度扁平，決策採快速推進與動態修補。",
+        target_y=76,
+        target_quadrant="左上",
+        culture_feat="敏捷試錯模式，組織極度扁平，決策採小速決快速推進與動態修補。",
         blindspot="若開馬拉松會議追求完美共識，會被視為官僚、保守且缺乏魄力與市場速度。",
         correct_action="肯定創新熱情並迅速拍板小規模試跑（如灰度發布），保留後續動態修補彈性。",
-        notes_text="【計分引導】靶心座標為 (22, 24)。引導學員理解敏捷文化中的小速決思維。",
+        notes_text="【計分引導】靶心座標為 (22, 76)。引導學員理解敏捷文化中的小速決思維。",
         countries="美國、英國"
     )
 
@@ -655,18 +655,18 @@ def build_presentation():
     # SLIDE 12: 案例四 答案揭曉（Image 5 精緻列點樣式）
     # =========================================================================
     add_reveal_slide_image5(
-        slide_title="案例四 答案揭曉 · 第二象限（左上：橫軸 18，縱軸 85）",
+        slide_title="案例四 答案揭曉 · 左下象限（左下：橫軸 18，縱軸 15）",
         eyebrow="第四回合 · 答案揭曉與文獻深度解析",
-        zone_pos="左上",
-        zone_title="第二象限",
-        zone_sub="平等主義 × 共識型決策",
+        zone_pos="左下",
+        zone_title="左下象限",
+        zone_sub="平等 × 共識",
         target_x=18,
-        target_y=85,
-        target_quadrant="Q2",
-        culture_feat="荷蘭低地協商模式，基層工程師擁有一票否決權，追求刻在石碑上的神聖大承諾。",
+        target_y=15,
+        target_quadrant="左下",
+        culture_feat="低地協商模式，基層工程師擁有一票否決權，追求刻在石碑上的神聖大承諾。",
         blindspot="試圖透過職級施壓或私下利益妥協，會被視為踐踏專業誠信與違背團隊共識。",
         correct_action="主管轉化為中立協調促進者，召集雙方技術人員公開數據、透明共審，凝聚神聖共識。",
-        notes_text="【計分引導】靶心座標為 (18, 85)。至此四回合已全部揭曉，請各組加總四輪總積分！",
+        notes_text="【計分引導】靶心座標為 (18, 15)。至此四回合已全部揭曉，請各組加總四輪總積分！",
         countries="丹麥、荷蘭"
     )
 
@@ -680,10 +680,10 @@ def build_presentation():
     col_w = Inches(2.78)
     col_h = Inches(5.3)
     quadrants_summary = [
-        ("第一象限（右上）", "階層制 × 共識型決策", "【日本、德國】\n• 決策機制：根回與稟議制\n• 領導者角色：整合協調者 \n• 關鍵動作：大會前私下一對一對齊，由下而上會簽審核。\n• 致命地雷：在正式會議強行舉手或當眾表態。", C_AMBER_LIGHT, C_AMBER),
-        ("第二象限（左上）", "平等主義 × 共識型決策", "【丹麥、荷蘭】\n• 決策機制：低地共識協商模式\n• 領導者角色：中立促進者 \n• 關鍵動作：全員公開透明共審，拍板即刻在石碑上不可翻案。\n• 致命地雷：私下密室妥協、威權壓迫或隨意翻案。", C_INDIGO_LIGHT, C_INDIGO),
-        ("第三象限（左下）", "平等主義 × 由上而下速決", "【美國、英國】\n• 決策機制：小速決敏捷試錯\n• 領導者角色：方向定舵者 \n• 關鍵動作：鼓勵平等暢所欲言，授權主管速決，後續線上動態修補。\n• 致命地雷：耗費數週追求全員共識，錯失市場先機。", C_GREEN_LIGHT, C_GREEN),
-        ("第四象限（右下）", "階層制 × 由上而下速決", "【中國、法國】\n• 決策機制：指揮官指揮模式\n• 領導者角色：最高指揮官 \n• 關鍵動作：危機時給予清晰步驟，領導者一肩承擔全部成敗。\n• 致命地雷：危機時要求基層投票表態，被視為推諉懦弱。", C_BLUE_LIGHT, C_BLUE),
+        ("左上象限", "平等 × 由上而下", "【美國、英國】\n• 決策機制：小速決敏捷試錯\n• 領導者角色：方向定舵者 \n• 關鍵動作：鼓勵平等暢所欲言，授權主管速決，後續線上動態修補。\n• 致命地雷：耗費數週追求全員共識，錯失市場先機。", C_INDIGO_LIGHT, C_INDIGO),
+        ("右上象限", "階級 × 由上而下", "【中國、法國】\n• 決策機制：指揮官指揮模式\n• 領導者角色：最高指揮官 \n• 關鍵動作：危機時給予清晰步驟，領導者一肩承擔全部成敗。\n• 致命地雷：危機時要求基層投票表態，被視為推諉懦弱。", C_AMBER_LIGHT, C_AMBER),
+        ("左下象限", "平等 × 共識", "【丹麥、荷蘭】\n• 決策機制：低地共識協商模式\n• 領導者角色：中立促進者 \n• 關鍵動作：全員公開透明共審，拍板即刻在石碑上不可翻案。\n• 致命地雷：私下密室妥協、威權壓迫或隨意翻案。", C_GREEN_LIGHT, C_GREEN),
+        ("右下象限", "階級 × 共識", "【德國、日本】\n• 決策機制：根回與稟議制\n• 領導者角色：整合協調者 \n• 關鍵動作：大會前私下一對一對齊，由下而上會簽審核。\n• 致命地雷：在正式會議強行舉手或當眾表態。", C_BLUE_LIGHT, C_BLUE),
     ]
 
     for i, (qname, qtype, qdesc, qbg, qborder) in enumerate(quadrants_summary):

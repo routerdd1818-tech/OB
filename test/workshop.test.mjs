@@ -102,17 +102,17 @@ test('representatives only; participant role cannot trigger host actions', async
 
 test('concurrent group votes stay isolated; all 5 groups can vote independently', async () => {
   const current = (await host()).data;
-  // All 5 groups submit initial votes: G1:A, G2:B, G3:C, G4:D, G5:A
+  // All 5 groups submit initial votes: G1:A, G2:D, G3:C, G4:B, G5:A
   const responses = await Promise.all(
     [0, 1, 2, 3, 4].map(i =>
-      request('vote', { choice: ['A', 'B', 'C', 'D', 'A'][i], epoch: current.epoch, roundIndex: 0 }, memberCookies[i])
+      request('vote', { choice: ['A', 'D', 'C', 'B', 'A'][i], epoch: current.epoch, roundIndex: 0 }, memberCookies[i])
     )
   );
   assert.ok(responses.every(r => r.status === 200));
 
   for (let i = 0; i < 5; i++) {
     const { data } = await request('state', undefined, memberCookies[i]);
-    assert.equal(data.vote.choice, ['A', 'B', 'C', 'D', 'A'][i]);
+    assert.equal(data.vote.choice, ['A', 'D', 'C', 'B', 'A'][i]);
     assert.equal(data.result, null);
     assert.equal('results' in data, false);
     assert.equal('distribution' in data, false);
@@ -166,15 +166,15 @@ test('persuasion points allocation validation, chief navigator computation, and 
   assert.equal(g1State.hiddenIntel, null);
 
   // 5. Only Chief Navigator (Group 2) or Host can make final decision
-  const nonNavFinal = await request('final-decision', { choice: 'B', roundIndex: 0 }, memberCookies[0]);
+  const nonNavFinal = await request('final-decision', { choice: 'D', roundIndex: 0 }, memberCookies[0]);
   assert.equal(nonNavFinal.status, 403);
 
-  const navFinal = await request('final-decision', { choice: 'B', roundIndex: 0 }, memberCookies[1]);
+  const navFinal = await request('final-decision', { choice: 'D', roundIndex: 0 }, memberCookies[1]);
   assert.equal(navFinal.status, 200);
 
   const g2Decided = (await request('state', undefined, memberCookies[1])).data;
   assert.equal(g2Decided.hasFinalDecision, true);
-  assert.equal(g2Decided.finalDecision, 'B');
+  assert.equal(g2Decided.finalDecision, 'D');
 });
 
 test('reveal settlement: optimal final decision triggers literature optimal, distance-based scoring from 0, and sets worldState to good', async () => {
@@ -182,25 +182,25 @@ test('reveal settlement: optimal final decision triggers literature optimal, dis
   const afterReveal = (await host()).data;
 
   // Round 1 initial votes distance scoring (starts from 0, closer = higher score):
-  // Target: (78, 82)
-  // G1: A -> fallback (25, 75). dist = 53. roundScore = 47. (cq: 0 + 47 = 47)
-  assert.equal(afterReveal.results[1].baseDelta, 47);
-  assert.equal(afterReveal.results[1].actualDelta, 47);
-  assert.equal(afterReveal.groups[0].cq, 47);
+  // Target: (78, 18)
+  // G1: A -> fallback (25, 75). dist = 78. roundScore = 22. (cq: 0 + 22 = 22)
+  assert.equal(afterReveal.results[1].baseDelta, 22);
+  assert.equal(afterReveal.results[1].actualDelta, 22);
+  assert.equal(afterReveal.groups[0].cq, 22);
 
-  // G2: B -> fallback (75, 75). dist = 8. roundScore = 92. Chief Navigator / Culture King! (cq: 0 + 92 = 92)
+  // G2: D -> fallback (75, 25). dist = 8. roundScore = 92. Chief Navigator / Culture King! (cq: 0 + 92 = 92)
   assert.equal(afterReveal.results[2].baseDelta, 92);
   assert.equal(afterReveal.results[2].actualDelta, 92);
   assert.equal(afterReveal.groups[1].cq, 92);
   assert.equal(afterReveal.results[2].rank, 1);
   assert.equal(afterReveal.results[2].isCultureKing, true);
 
-  // G3: C -> fallback (25, 25). dist = 78. roundScore = 22. (cq: 0 + 22 = 22)
-  assert.equal(afterReveal.results[3].baseDelta, 22);
-  assert.equal(afterReveal.results[3].actualDelta, 22);
-  assert.equal(afterReveal.groups[2].cq, 22);
+  // G3: C -> fallback (25, 25). dist = 53. roundScore = 47. (cq: 0 + 47 = 47)
+  assert.equal(afterReveal.results[3].baseDelta, 47);
+  assert.equal(afterReveal.results[3].actualDelta, 47);
+  assert.equal(afterReveal.groups[2].cq, 47);
 
-  // G4: D -> fallback (75, 25). dist = 57. roundScore = 43. (cq: 0 + 43 = 43)
+  // G4: B -> fallback (75, 75). dist = 57. roundScore = 43. (cq: 0 + 43 = 43)
   assert.equal(afterReveal.results[4].baseDelta, 43);
   assert.equal(afterReveal.results[4].actualDelta, 43);
   assert.equal(afterReveal.groups[3].cq, 43);
@@ -241,20 +241,20 @@ test('bad outcome in round 2 causes full penalty, no rescue, and shared conseque
   let state = (await host()).data;
   assert.equal(state.roundIndex, 2); // Round 3 (0-indexed 2)
 
-  // Groups vote in Round 3 (optimal is B, bad is A: -25 CQ)
+  // Groups vote in Round 3 (target is A: 22, 76; bad choice is C: fallback 25, 25)
   for (let i = 0; i < 5; i++) {
-    await request('vote', { choice: 'A', epoch: state.epoch, roundIndex: 2 }, memberCookies[i]);
+    await request('vote', { choice: 'C', epoch: state.epoch, roundIndex: 2 }, memberCookies[i]);
   }
   // Allocate points to G1 as navigator (G5 votes G1: 2, G2: 1)
   await request('persuade', { points: { 1: 2, 2: 1 }, roundIndex: 2 }, memberCookies[4]);
-  // G1 picks A (bad choice)
-  await request('final-decision', { choice: 'A', roundIndex: 2 }, memberCookies[0]);
+  // G1 picks C (bad choice)
+  await request('final-decision', { choice: 'C', roundIndex: 2 }, memberCookies[0]);
 
   // Reveal
   await host('reveal', {});
   const revealed = (await host()).data;
   assert.equal(revealed.worldState.r3, 'bad');
-  // G1 chose A -> fallback (25, 75). dist = 51, roundScore = 49
+  // G1 chose C -> fallback (25, 25). dist = 51, roundScore = 49
   assert.equal(revealed.results[1].baseDelta, 49);
   assert.equal(revealed.results[1].actualDelta, 49);
   assert.equal(revealed.results[3].baseDelta, 49);

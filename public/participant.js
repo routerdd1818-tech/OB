@@ -103,23 +103,23 @@ function saveJoinData(name, group, isRep = true) {
   } catch {}
 }
 
-// 數學標準四象限映射：
-// 第一象限 (右上: X>=50, Y>=50) -> B
-// 第二象限 (左上: X<50,  Y>=50) -> A
-// 第三象限 (左下: X<50,  Y<50)  -> C
-// 第四象限 (右下: X>=50, Y<50)  -> D
+// 領導文化四象限映射（依文獻：縱軸上方為由上而下、下方為共識決策；橫軸左側為較平等、右側為重階層）：
+// 左上象限 (X<50,  Y>=50) -> A（平等 × 由上而下，美國、英國）
+// 右上象限 (X>=50, Y>=50) -> B（階級 × 由上而下，中國、法國）
+// 左下象限 (X<50,  Y<50)  -> C（平等 × 共識，丹麥、荷蘭）
+// 右下象限 (X>=50, Y<50)  -> D（階級 × 共識，德國、日本）
 function mapPinToChoice(x, y) {
-  if (x >= 50 && y >= 50) return 'B'; // 第一象限（右上）
-  if (x < 50 && y >= 50) return 'A';  // 第二象限（左上）
-  if (x < 50 && y < 50) return 'C';   // 第三象限（左下）
-  return 'D';                         // 第四象限（右下）
+  if (x < 50 && y >= 50) return 'A';  // 左上：平等 × 由上而下
+  if (x >= 50 && y >= 50) return 'B'; // 右上：階級 × 由上而下
+  if (x < 50 && y < 50) return 'C';   // 左下：平等 × 共識
+  return 'D';                         // 右下：階級 × 共識
 }
 
 function getZoneLabel(x, y) {
-  if (x >= 50 && y >= 50) return '【第一象限（右上）】共識型決策 × 階層制';
-  if (x < 50 && y >= 50) return '【第二象限（左上）】共識型決策 × 平等主義';
-  if (x < 50 && y < 50) return '【第三象限（左下）】由上而下速決 × 平等主義';
-  return '【第四象限（右下）】由上而下速決 × 階層制';
+  if (x < 50 && y >= 50) return '【左上】平等 × 由上而下（美國、英國）';
+  if (x >= 50 && y >= 50) return '【右上】階級 × 由上而下（中國、法國）';
+  if (x < 50 && y < 50) return '【左下】平等 × 共識（丹麥、荷蘭）';
+  return '【右下】階級 × 共識（德國、日本）';
 }
 
 function updatePinUI() {
@@ -304,26 +304,26 @@ function quadrantSelectMarkup() {
         ${isLeader ? '👑 你是組長：請點擊你們決定的象限座標' : '請先判斷對方文化類型，由組長點擊象限插旗'}
       </h2>
       <p style="font-size:12px; color:var(--muted); margin-bottom:12px;">
-        橫軸：平等主義 (0) ↔ 階層制 (100) ｜ 縱軸：由上而下 (0) ↔ 共識決策 (100)
+        橫軸：較平等 (0) ↔ 重階層 (100) ｜ 縱軸：共識決策 (0) ↔ 由上而下決策 (100)
       </p>
 
-      <div class="quadrant-axis-header">▲ 共識型決策 (縱軸: 100)</div>
+      <div class="quadrant-axis-header">▲ 由上而下決策 (縱軸: 100)</div>
       <div id="geo-pin-board" class="quadrant-board geo-interactive-board" style="height:285px; cursor:crosshair; position:relative; user-select:none;">
         <div class="q-cell q-tl">
-          <span class="q-zone-name">第二象限（左上）</span>
-          <small>共識決策 × 平等主義</small>
+          <span class="q-zone-name">左上象限</span>
+          <small>平等 × 由上而下<br><span style="color:#64748b; font-weight:700;">（美國、英國）</span></small>
         </div>
         <div class="q-cell q-tr">
-          <span class="q-zone-name">第一象限（右上）</span>
-          <small>共識決策 × 階層制</small>
+          <span class="q-zone-name">右上象限</span>
+          <small>階級 × 由上而下<br><span style="color:#64748b; font-weight:700;">（中國、法國）</span></small>
         </div>
         <div class="q-cell q-bl">
-          <span class="q-zone-name">第三象限（左下）</span>
-          <small>由上而下 × 平等主義</small>
+          <span class="q-zone-name">左下象限</span>
+          <small>平等 × 共識<br><span style="color:#64748b; font-weight:700;">（丹麥、荷蘭）</span></small>
         </div>
         <div class="q-cell q-br">
-          <span class="q-zone-name">第四象限（右下）</span>
-          <small>由上而下 × 階層制</small>
+          <span class="q-zone-name">右下象限</span>
+          <small>階級 × 共識<br><span style="color:#64748b; font-weight:700;">（德國、日本）</span></small>
         </div>
         <div class="q-axis-h" style="position:absolute; left:0; right:0; top:50%; border-top:1.5px dashed rgba(60,50,40,0.3);"></div>
         <div class="q-axis-v" style="position:absolute; top:0; bottom:0; left:50%; border-left:1.5px dashed rgba(60,50,40,0.3);"></div>
@@ -333,9 +333,9 @@ function quadrantSelectMarkup() {
         </div>
       </div>
       <div class="quadrant-axis-footer">
-        <span>◀ 平等主義 (0)</span>
-        <span>▼ 由上而下 (0)</span>
-        <span>階層制 (100) ▶</span>
+        <span>◀ 較平等 (0)</span>
+        <span>▼ 共識決策 (0)</span>
+        <span>重階層 (100) ▶</span>
       </div>
 
       <div id="pin-coord-readout" style="margin-top:12px; padding:10px 12px; background:#f8fafc; border:1px solid var(--line); border-radius:10px; font-size:13px; text-align:center;">

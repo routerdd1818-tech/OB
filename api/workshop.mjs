@@ -564,13 +564,31 @@ export default async function handler(req, res) {
         if (!state.finalDecisions) state.finalDecisions = [null, null, null, null];
         state.finalDecisions[state.round] = finalChoice;
 
+        const TARGETS = [
+          { x: 78, y: 18 }, // Round 1: 德國、日本（右下：階級 × 共識）
+          { x: 84, y: 82 }, // Round 2: 中國、法國（右上：階級 × 由上而下）
+          { x: 22, y: 76 }, // Round 3: 美國、英國（左上：平等 × 由上而下）
+          { x: 18, y: 15 }  // Round 4: 丹麥、荷蘭（左下：平等 × 共識）
+        ];
+        const FALLBACK_COORDS = {
+          A: { x: 25, y: 75 }, // 左上：平等 × 由上而下
+          B: { x: 75, y: 75 }, // 右上：階級 × 由上而下
+          C: { x: 25, y: 25 }, // 左下：平等 × 共識
+          D: { x: 75, y: 25 }  // 右下：階級 × 共識
+        };
+        const target = TARGETS[state.round] || { x: 50, y: 50 };
+
+
         const finalOutcome = outcome(state.round, { choice: finalChoice });
-        const isBestFinal = (finalOutcome?.cq ?? 0) > 0;
+        const finalCoord = FALLBACK_COORDS[finalChoice] || { x: 50, y: 50 };
+        const isBestFinal = (finalOutcome?.cq ?? 0) > 0 || Math.hypot(finalCoord.x - target.x, finalCoord.y - target.y) <= 30;
 
         // 說服王初選判定
         const kingVote = state.votes[state.round]?.[navId];
         const kingOutcome = kingVote ? outcome(state.round, kingVote) : null;
-        const isKingOptimal = kingOutcome ? ((kingOutcome.cq ?? 0) > 0) : false;
+        const kingCoord = kingVote ? (typeof kingVote.pinX === 'number' ? { x: kingVote.pinX, y: kingVote.pinY } : (FALLBACK_COORDS[kingVote.choice] || { x: 50, y: 50 })) : null;
+        const isKingCoordOptimal = kingCoord ? (Math.hypot(kingCoord.x - target.x, kingCoord.y - target.y) <= 30) : false;
+        const isKingOptimal = (kingOutcome && (kingOutcome.cq ?? 0) > 0) || isKingCoordOptimal;
         const hasKing = Boolean(navId && kingVote);
         // 若說服王選到錯的答案，則增加全班負面效果
         const isKingFailed = hasKing ? !isKingOptimal : !isBestFinal;
@@ -600,19 +618,6 @@ export default async function handler(req, res) {
           persuasionPointsMap[item.id] = item.totalPoints || 0;
         }
 
-        const TARGETS = [
-          { x: 78, y: 82 },
-          { x: 84, y: 18 },
-          { x: 22, y: 24 },
-          { x: 18, y: 85 }
-        ];
-        const FALLBACK_COORDS = {
-          A: { x: 25, y: 75 },
-          B: { x: 75, y: 75 },
-          C: { x: 25, y: 25 },
-          D: { x: 75, y: 25 }
-        };
-        const target = TARGETS[state.round] || { x: 50, y: 50 };
 
         for (const group of state.groups) {
           const vote = state.votes[state.round]?.[group.id];
