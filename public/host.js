@@ -291,97 +291,63 @@ function scenarioMarkup() {
   const totalStudents = state.groups.reduce((n, g) => n + (g.count || 0), 0);
 
   return `
-    <div class="voting-stage-grid" style="grid-template-columns: 1.4fr 1fr; gap: 20px;">
-      <!-- 左欄：漫畫與精簡情境對白呈現 -->
-      <div class="voting-left-col">
-        <section class="card" style="padding:22px 26px; height:100%; display:flex; flex-direction:column; justify-content:space-between;">
+    <div class="voting-stage-grid" style="grid-template-columns: 1.15fr 1fr; gap: 20px; align-items: stretch;">
+      <!-- 左欄：大尺寸情境四格漫畫（放大呈現） -->
+      <div class="voting-left-col" style="display:flex; flex-direction:column;">
+        <section class="card" style="padding:16px; height:100%; display:flex; align-items:center; justify-content:center; background:#ffffff; overflow:hidden;">
+          <img src="/comics/${geoRound.comic}" alt="情境四格漫畫" style="width:100%; height:auto; max-height:580px; object-fit:contain; border-radius:12px; display:block; box-shadow:0 6px 20px rgba(0,0,0,0.06);" />
+        </section>
+      </div>
+
+      <!-- 右欄：情境對白、決策課題與各組插旗進度（文字集中於右側） -->
+      <div class="voting-right-col" style="display:flex; flex-direction:column; justify-content:space-between; gap:14px;">
+        <section class="card" style="padding:22px 24px; flex:1; display:flex; flex-direction:column; justify-content:space-between;">
           <div>
-            <div class="topic-row" style="margin-bottom:12px; justify-content:space-between;">
-              <div style="display:flex; align-items:center; gap:10px;">
+            <div class="topic-row" style="margin-bottom:10px; justify-content:space-between; align-items:center;">
+              <div style="display:flex; align-items:center; gap:8px;">
                 <span class="topic-badge">第 0${state.roundIndex + 1} 回合 / 共 4 回合</span>
                 <span class="topic-location" style="font-size:13px; font-weight:700; color:var(--ink);">${esc(geoRound.location)}</span>
               </div>
-              <span class="pill" style="background:var(--oat); color:var(--muted);">小組討論與座標盲測</span>
+              <div id="stage-qr-code" class="qr-mini-box" title="點擊放大 QR Code 掃碼入席" onclick="document.getElementById('qr-open')?.click()"></div>
             </div>
 
-            <h1 style="font-size:clamp(22px, 2vw, 30px); line-height:1.3; font-weight:850; margin:0 0 14px; color:#1c1917;">
+            <h1 style="font-size:clamp(20px, 1.8vw, 26px); line-height:1.3; font-weight:850; margin:0 0 12px; color:#1c1917;">
               ${esc(geoRound.title)}
             </h1>
 
-            <!-- 漫畫與精簡情境對白並列呈現 -->
-            <div style="display:flex; gap:16px; margin-bottom:14px; align-items:stretch;">
-              <div style="width:250px; flex-shrink:0; background:#fff; border:1.5px solid var(--line); border-radius:14px; padding:6px; box-shadow:0 4px 12px rgba(0,0,0,0.05); display:flex; align-items:center; justify-content:center;">
-                <img src="/comics/${geoRound.comic}" alt="情境漫畫" style="width:100%; height:auto; border-radius:10px; display:block;" />
+            <!-- 四行情境精簡對白 -->
+            <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;">
+              ${geoRound.dialogues.map(d => `
+                <div style="background:#faf8f5; border:1px solid var(--line); border-left:4px solid #d97706; border-radius:10px; padding:9px 13px;">
+                  <span style="display:inline-block; font-size:11.5px; font-weight:800; color:#b45309; margin-bottom:2px;">${esc(d.tag)}</span>
+                  <div style="font-size:13.5px; font-weight:600; line-height:1.5; color:#1c1917;">${esc(d.text)}</div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+
+          <div>
+            <!-- 決策課題 -->
+            <div class="question-prompt" style="margin:0 0 12px 0 !important; background:#fffbeb; border:1.5px solid #f59e0b; border-left:6px solid #d97706; padding:12px 16px; border-radius:12px;">
+              <span class="prompt-badge" style="background:#d97706; color:#fff; font-size:11.5px; font-weight:800; padding:3px 7px; border-radius:6px; margin-right:6px;">決策課題</span>
+              <span class="prompt-text" style="font-size:14.5px; font-weight:700; color:#451a03;">${esc(geoRound.prompt)}</span>
+            </div>
+
+            <!-- 整合在下方的 5 組插旗進度 -->
+            <div style="background:#f8fafc; border:1px solid var(--line); border-radius:12px; padding:12px 14px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                <span style="font-size:12.5px; font-weight:800; color:#334155;">各組插旗進度 <small style="font-weight:500; color:var(--muted);">(${totalStudents} 人在線)</small></span>
+                <span class="stat-number" style="font-size:15px; font-weight:900; color:#0f172a;">${state.completed} / 5 組</span>
               </div>
-              <div style="flex:1; display:flex; flex-direction:column; justify-content:space-between; gap:8px;">
-                ${geoRound.dialogues.map(d => `
-                  <div style="background:#faf8f5; border:1px solid var(--line); border-left:4px solid #d97706; border-radius:10px; padding:8px 12px;">
-                    <span style="display:inline-block; font-size:11.5px; font-weight:800; color:#b45309; margin-bottom:2px;">${esc(d.tag)}</span>
-                    <div style="font-size:13.5px; font-weight:600; line-height:1.5; color:#1c1917;">${esc(d.text)}</div>
+              <div class="progress-chips-row" style="display:flex; gap:6px; flex-wrap:wrap;">
+                ${state.groups.map(g => `
+                  <div class="progress-chip ${g.submitted ? 'is-done done' : g.count ? 'is-active' : ''}" style="flex:1; padding:5px 6px; font-size:11.5px; text-align:center;">
+                    <span class="chip-name" style="font-weight:700;">G${g.id}</span>
+                    <span class="chip-status" style="margin-left:3px;">${g.submitted ? '已鎖定' : g.count ? '討論中' : '未入席'}</span>
                   </div>
                 `).join('')}
               </div>
             </div>
-          </div>
-
-          <div class="question-prompt" style="margin:0 !important; background:#fffbeb; border:1.5px solid #f59e0b; border-left:6px solid #d97706; padding:14px 18px; border-radius:12px;">
-            <span class="prompt-badge" style="background:#d97706; color:#fff; font-size:12px; font-weight:800; padding:4px 8px; border-radius:6px; margin-right:8px;">決策課題</span>
-            <span class="prompt-text" style="font-size:15px; font-weight:700; color:#451a03;">${esc(geoRound.prompt)}</span>
-          </div>
-        </section>
-      </div>
-
-      <!-- 右欄：四象限盲測雷達 ＋ 邊欄精簡插旗進度與 QR Code -->
-      <div class="voting-right-col" style="display:flex; flex-direction:column; gap:14px; justify-content:space-between;">
-        <section class="card" style="padding:18px 20px; flex:1; display:flex; flex-direction:column; justify-content:space-between;">
-          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-            <div>
-              <div class="eyebrow">四象限落點盲測雷達</div>
-              <h2 style="font-size:18px; font-weight:800; margin:2px 0 0;">四象限領導落點雷達</h2>
-            </div>
-            <div id="stage-qr-code" class="qr-mini-box" title="點擊放大 QR Code 掃碼入席" onclick="document.getElementById('qr-open')?.click()"></div>
-          </div>
-
-          <div class="quadrant-axis-header">▲ 共識型決策 (縱軸: 100)</div>
-          <div class="quadrant-board" style="flex:1; min-height:210px; position:relative;">
-            <div class="q-cell q-tl"><span class="q-zone-name">左上：共識 × 平等</span></div>
-            <div class="q-cell q-tr"><span class="q-zone-name">右上：共識 × 階層</span></div>
-            <div class="q-cell q-bl"><span class="q-zone-name">左下：由上而下 × 平等</span></div>
-            <div class="q-cell q-br"><span class="q-zone-name">右下：由上而下 × 階層</span></div>
-            <div class="q-axis-h"></div>
-            <div class="q-axis-v"></div>
-            <div style="position:absolute; inset:0; display:grid; place-items:center; pointer-events:none;">
-              <div style="background:rgba(28,25,23,0.88); color:#fff; padding:10px 18px; border-radius:14px; text-align:center; box-shadow:0 8px 24px rgba(0,0,0,0.2);">
-                <strong style="font-size:14px; display:block; color:#facc15; margin-bottom:4px;">座標盲測進行中</strong>
-                <span style="font-size:12px; color:#e7e5e4;">各組在手機象限圖插旗鎖定後，揭曉時公開真實靶心與誤差連線</span>
-              </div>
-            </div>
-          </div>
-          <div class="quadrant-axis-footer">
-            <span>◀ 平等主義 (橫軸: 0)</span>
-            <span>▼ 由上而下 (縱軸: 0)</span>
-            <span>階層制 (橫軸: 100) ▶</span>
-          </div>
-        </section>
-
-        <!-- 整合在邊邊的 5 組插旗進度 -->
-        <section class="progress-card card" style="padding:16px 20px; margin-top:0;">
-          <div class="progress-intro" style="min-width:auto; margin-bottom:10px;">
-            <div style="display:flex; justify-content:space-between; align-items:center;">
-              <h2 style="font-size:14px; margin:0; font-weight:800;">各組插旗進度 <small style="font-weight:500; color:var(--muted);">(${totalStudents} 人在線)</small></h2>
-              <div class="stat-number" style="font-size:20px; font-weight:800;">${state.completed} / 5 組</div>
-            </div>
-            <p style="font-size:11.5px; color:var(--muted); margin:4px 0 0;">
-              ${state.completed >= 5 ? '5 組皆已鎖定落點！可按右下方揭曉靶心與計分' : '各組由代表於手機點擊四象限插旗鎖定…'}
-            </p>
-          </div>
-          <div class="progress-chips-row" style="display:flex; gap:6px; flex-wrap:wrap;">
-            ${state.groups.map(g => `
-              <div class="progress-chip ${g.submitted ? 'is-done done' : g.count ? 'is-active' : ''}" style="flex:1; padding:6px 8px; font-size:11.5px; text-align:center;">
-                <span class="chip-name" style="font-weight:700;">G${g.id}</span>
-                <span class="chip-status" style="margin-left:4px;">${g.submitted ? '已鎖定' : g.count ? '討論中' : '未入席'}</span>
-              </div>
-            `).join('')}
           </div>
         </section>
       </div>

@@ -128,21 +128,21 @@ def build_presentation():
         comic_path = f"/Users/routertt/Documents/OB/GPT/public/comics/{comic_file}"
         c_left = Inches(0.8)
         c_top = Inches(1.35)
-        c_size = Inches(4.75)
+        c_size = Inches(5.5)
 
-        # 漫畫卡片包裝
+        # 漫畫卡片包裝（放大呈現）
         add_card(s, c_left - Inches(0.06), c_top - Inches(0.06), c_size + Inches(0.12), c_size + Inches(0.12), bg_color=C_WHITE, border_color=C_LINE)
         if os.path.exists(comic_path):
             s.shapes.add_picture(comic_path, c_left, c_top, c_size, c_size)
 
         # 右側情境對白卡片
-        r_left = Inches(5.8)
-        r_w = Inches(6.733)
-        dialogue_card = add_card(s, r_left, c_top, r_w, Inches(3.75), bg_color=C_WHITE, border_color=C_LINE)
+        r_left = Inches(6.55)
+        r_w = Inches(5.98)
+        dialogue_card = add_card(s, r_left, c_top, r_w, Inches(4.25), bg_color=C_WHITE, border_color=C_LINE)
         dtf = dialogue_card.text_frame
         dtf.word_wrap = True
         dtf.margin_left = dtf.margin_right = Inches(0.28)
-        dtf.margin_top = Inches(0.2)
+        dtf.margin_top = Inches(0.22)
 
         p_loc = dtf.paragraphs[0]
         p_loc.text = f"📍 {location}"
@@ -165,7 +165,7 @@ def build_presentation():
             pt.line_spacing = 1.25
 
         # 底部決策任務盒
-        prompt_card = add_card(s, r_left, c_top + Inches(3.9), r_w, Inches(0.95), bg_color=C_NAVY, border_color=None)
+        prompt_card = add_card(s, r_left, c_top + Inches(4.4), r_w, Inches(1.1), bg_color=C_NAVY, border_color=None)
         ptf = prompt_card.text_frame
         ptf.word_wrap = True
         ptf.margin_left = ptf.margin_right = Inches(0.25)
