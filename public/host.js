@@ -42,6 +42,7 @@ const GEO_ROUNDS_DATA = [
     verdict: '右下象限：階級 × 共識',
     countries: '德國、日本',
     bullets: {
+      clue: '大會全員沉默低頭反映重階級；私下批評未在會前討論，則反映需事前摸底（根回）凝聚共識。',
       feat: '兼具嚴明的職級尊卑與全員深度共識，重視循序漸進的組織倫理與事前校準。',
       blindspot: '誤以為大會能直接討論拍板；在該文化中大會僅為用印儀式，未經會前私下摸底強推必遭消極抗命。',
       action: '尊重既有職級序列，會前透過資深幹部由下而上私下溝通、全員完成確認後再開會拍板。'
@@ -66,6 +67,7 @@ const GEO_ROUNDS_DATA = [
     verdict: '右上象限：階級 × 由上而下',
     countries: '中國、法國',
     bullets: {
+      clue: '基層無人敢擅自做主反映重階層；領班急求主管明確裁示，反映危機時仰賴由上而下拍板擔責。',
       feat: '導演式指揮模式，高度重視階級秩序，危機時刻基層仰賴最高主管明確指令。',
       blindspot: '在危機時刻若尋求民主討論凝聚共識，會被基層視為軟弱、無能且推卸責任。',
       action: '主管迅速聽取關鍵資訊後果斷拍板，下達清晰執行步驟，並由最高主管親自扛起成敗責任。'
@@ -90,6 +92,7 @@ const GEO_ROUNDS_DATA = [
     verdict: '左上象限：平等 × 由上而下',
     countries: '美國、英國',
     bullets: {
+      clue: '工程師當面直言挑戰主管反映極致平等；崇尚先跑再修並由主管拍板，反映由上而下敏捷速決。',
       feat: '敏捷試錯模式，組織極度扁平，決策採小速決快速推進與動態修補。',
       blindspot: '若開馬拉松會議追求完美共識，會被視為官僚、保守且缺乏魄力與市場速度。',
       action: '肯定創新熱情並迅速拍板小規模試跑，保留後續動態修補彈性。'
@@ -114,6 +117,7 @@ const GEO_ROUNDS_DATA = [
     verdict: '左下象限：平等 × 共識',
     countries: '丹麥、荷蘭',
     bullets: {
+      clue: '基層測試員平起平坐主導談判反映高度平等；堅持全員公開共審達成一致，反映神聖共識大承諾。',
       feat: '低地協商模式，基層工程師擁有一票否決權，追求刻在石碑上的神聖大承諾。',
       blindspot: '試圖透過職級施壓或私下利益妥協，會被視為踐踏專業誠信與違背團隊共識。',
       action: '主管轉化為中立協調促進者，召集雙方技術人員公開數據、透明共審，凝聚神聖共識。'
@@ -508,27 +512,35 @@ function resultsMarkup() {
           </div>
         </div>
 
-        <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:16px; padding:22px 24px; display:flex; flex-direction:column; gap:20px; flex:1; justify-content:space-around;">
-          <!-- 列點 1：文化特徵 -->
+        <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:16px; padding:18px 22px; display:flex; flex-direction:column; gap:14px; flex:1; justify-content:space-around;">
+          <!-- 列點 1：題目線索 -->
           <div style="display:flex; align-items:flex-start; gap:14px;">
-            <span style="background:#1e3a8a; color:#fff; font-size:14.5px; font-weight:800; padding:6px 13px; border-radius:8px; flex-shrink:0; margin-top:2px; letter-spacing:0.5px;">文化特徵</span>
-            <div style="font-size:18px; line-height:1.7; color:#1e293b; font-weight:700;">
+            <span style="background:#4338ca; color:#fff; font-size:14px; font-weight:800; padding:5px 12px; border-radius:8px; flex-shrink:0; margin-top:2px; letter-spacing:0.5px;">題目線索</span>
+            <div style="font-size:16.5px; line-height:1.6; color:#1e1b4b; font-weight:700;">
+              ${esc(geoRound.bullets.clue)}
+            </div>
+          </div>
+
+          <!-- 列點 2：文化特徵 -->
+          <div style="display:flex; align-items:flex-start; gap:14px;">
+            <span style="background:#1e3a8a; color:#fff; font-size:14px; font-weight:800; padding:5px 12px; border-radius:8px; flex-shrink:0; margin-top:2px; letter-spacing:0.5px;">文化特徵</span>
+            <div style="font-size:16.5px; line-height:1.6; color:#1e293b; font-weight:700;">
               ${esc(geoRound.bullets.feat)}
             </div>
           </div>
 
-          <!-- 列點 2：管理盲點 -->
+          <!-- 列點 3：管理盲點 -->
           <div style="display:flex; align-items:flex-start; gap:14px;">
-            <span style="background:#d97706; color:#fff; font-size:14.5px; font-weight:800; padding:6px 13px; border-radius:8px; flex-shrink:0; margin-top:2px; letter-spacing:0.5px;">管理盲點</span>
-            <div style="font-size:18px; line-height:1.7; color:#78350f; font-weight:700;">
+            <span style="background:#d97706; color:#fff; font-size:14px; font-weight:800; padding:5px 12px; border-radius:8px; flex-shrink:0; margin-top:2px; letter-spacing:0.5px;">管理盲點</span>
+            <div style="font-size:16.5px; line-height:1.6; color:#78350f; font-weight:700;">
               ${esc(geoRound.bullets.blindspot)}
             </div>
           </div>
 
-          <!-- 列點 3：正確對策 -->
+          <!-- 列點 4：正確對策 -->
           <div style="display:flex; align-items:flex-start; gap:14px;">
-            <span style="background:#16a34a; color:#fff; font-size:14.5px; font-weight:800; padding:6px 13px; border-radius:8px; flex-shrink:0; margin-top:2px; letter-spacing:0.5px;">正確對策</span>
-            <div style="font-size:18px; line-height:1.7; color:#14532d; font-weight:700;">
+            <span style="background:#16a34a; color:#fff; font-size:14px; font-weight:800; padding:5px 12px; border-radius:8px; flex-shrink:0; margin-top:2px; letter-spacing:0.5px;">正確對策</span>
+            <div style="font-size:16.5px; line-height:1.6; color:#14532d; font-weight:700;">
               ${esc(geoRound.bullets.action)}
             </div>
           </div>

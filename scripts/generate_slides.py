@@ -179,7 +179,7 @@ def build_presentation():
         add_notes(s, notes_text)
         return s
 
-    def add_reveal_slide_image5(slide_title, eyebrow, zone_pos, zone_title, zone_sub, target_x, target_y, target_quadrant, culture_feat, blindspot, correct_action, notes_text, countries=""):
+    def add_reveal_slide_image5(slide_title, eyebrow, zone_pos, zone_title, zone_sub, target_x, target_y, target_quadrant, clue, culture_feat, blindspot, correct_action, notes_text, countries=""):
         s = prs.slides.add_slide(blank_layout)
         set_bg(s, C_SLATE_LIGHT)
         add_header(s, slide_title, eyebrow)
@@ -246,29 +246,30 @@ def build_presentation():
         # 左側卡片底部的微型四象限圖
         draw_quadrant(s, Inches(1.8), Inches(4.5), Inches(2.3), target_x=target_x, target_y=target_y, highlight_zone=target_quadrant)
 
-        # 右側白底列點卡片（精準復刻 Image 5 樣式：三大原因清晰列點）
+        # 右側白底列點卡片（精準復刻 Image 5 樣式：四大原因清晰列點）
         r_w = Inches(7.033)
         r_card = add_card(s, Inches(5.5), card_t, r_w, card_h, bg_color=C_WHITE, border_color=C_LINE)
         rtf = r_card.text_frame
         rtf.word_wrap = True
         rtf.margin_left = rtf.margin_right = Inches(0.4)
-        rtf.margin_top = Inches(0.4)
+        rtf.margin_top = Inches(0.3)
 
         p_rh = rtf.paragraphs[0]
         p_rh.text = f"文獻理論依據與決策盲點解析"
-        p_rh.font.size = Pt(20)
+        p_rh.font.size = Pt(18)
         p_rh.font.bold = True
         p_rh.font.color.rgb = C_SLATE_DARK
 
         if countries:
             p_rh_c = rtf.add_paragraph()
-            p_rh_c.space_before = Pt(4)
+            p_rh_c.space_before = Pt(3)
             p_rh_c.text = f"代表國家：{countries}"
-            p_rh_c.font.size = Pt(15)
+            p_rh_c.font.size = Pt(13.5)
             p_rh_c.font.bold = True
             p_rh_c.font.color.rgb = C_BLUE
 
         bullets = [
+            ("題目線索", clue, C_INDIGO),
             ("文化特徵", culture_feat, C_BLUE),
             ("管理盲點", blindspot, C_AMBER),
             ("正確對策", correct_action, C_GREEN),
@@ -276,17 +277,17 @@ def build_presentation():
 
         for label, text, color in bullets:
             p_lbl = rtf.add_paragraph()
-            p_lbl.space_before = Pt(16)
+            p_lbl.space_before = Pt(9)
             p_lbl.text = f"{label}："
-            p_lbl.font.size = Pt(17)
+            p_lbl.font.size = Pt(14)
             p_lbl.font.bold = True
-            p_lbl.font.color.rgb = C_SLATE_DARK
+            p_lbl.font.color.rgb = color
 
             p_txt = rtf.add_paragraph()
             p_txt.text = text
-            p_txt.font.size = Pt(14.5)
+            p_txt.font.size = Pt(12)
             p_txt.font.color.rgb = C_SLATE_MID
-            p_txt.line_spacing = 1.35
+            p_txt.line_spacing = 1.25
 
         add_notes(s, notes_text)
         return s
@@ -552,6 +553,7 @@ def build_presentation():
         target_x=78,
         target_y=18,
         target_quadrant="右下",
+        clue="大會全員沉默低頭反映重階級；私下批評未在會前討論，則反映需事前摸底（根回）凝聚共識。",
         culture_feat="兼具嚴明的職級尊卑與全員深度共識，重視循序漸進的組織倫理與事前校準。",
         blindspot="誤以為大會能直接討論拍板；在該文化中大會僅為用印儀式，未經會前私下摸底（根回）強推必遭消極抗命。",
         correct_action="尊重既有職級序列，會前透過資深幹部由下而上私下溝通、全員完成會簽後再開會確認。",
@@ -589,6 +591,7 @@ def build_presentation():
         target_x=84,
         target_y=82,
         target_quadrant="右上",
+        clue="基層無人敢擅自做主反映重階層；領班急求主管明確裁示，反映危機時仰賴由上而下拍板擔責。",
         culture_feat="導演式指揮模式，高度重視階級秩序，危機時刻基層仰賴最高主管明確指令。",
         blindspot="在危機時刻若尋求民主討論凝聚共識，會被基層視為軟弱、無能且推卸責任。",
         correct_action="主管迅速聽取關鍵資訊後果斷拍板，下達清晰執行步驟，並由最高主管親自扛起成敗責任。",
@@ -626,6 +629,7 @@ def build_presentation():
         target_x=22,
         target_y=76,
         target_quadrant="左上",
+        clue="工程師當面直言挑戰主管反映極致平等；崇尚先跑再修並由主管拍板，反映由上而下敏捷速決。",
         culture_feat="敏捷試錯模式，組織極度扁平，決策採小速決快速推進與動態修補。",
         blindspot="若開馬拉松會議追求完美共識，會被視為官僚、保守且缺乏魄力與市場速度。",
         correct_action="肯定創新熱情並迅速拍板小規模試跑（如灰度發布），保留後續動態修補彈性。",
@@ -663,6 +667,7 @@ def build_presentation():
         target_x=18,
         target_y=15,
         target_quadrant="左下",
+        clue="基層測試員平起平坐主導談判反映高度平等；堅持全員公開共審達成一致，反映神聖共識大承諾。",
         culture_feat="低地協商模式，基層工程師擁有一票否決權，追求刻在石碑上的神聖大承諾。",
         blindspot="試圖透過職級施壓或私下利益妥協，會被視為踐踏專業誠信與違背團隊共識。",
         correct_action="主管轉化為中立協調促進者，召集雙方技術人員公開數據、透明共審，凝聚神聖共識。",

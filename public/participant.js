@@ -14,6 +14,7 @@ const MOBILE_QUESTIONS = [
       { tag: '茶水間外議論', text: '員工私下罵你破壞規則：「沒有在會議前先跟大家討論，根本不尊重專業！」' }
     ],
     bullets: {
+      clue: '大會全員沉默低頭反映重階級；私下批評未在會前討論，則反映需事前摸底（根回）凝聚共識。',
       feat: '兼具嚴明的職級尊卑與全員深度共識，重視循序漸進的組織倫理與事前校準。',
       blindspot: '誤以為大會能直接討論拍板；在該文化中大會僅為用印儀式，未經會前私下摸底強推必遭消極抗命。',
       action: '尊重既有職級序列，會前透過資深幹部由下而上私下溝通、全員完成確認後再開會拍板。'
@@ -31,6 +32,7 @@ const MOBILE_QUESTIONS = [
       { tag: '領班私訊求救', text: '領班私訊：「現在到底該聽誰的？請給我們明確裁示，否則沒人敢動手！」' }
     ],
     bullets: {
+      clue: '基層無人敢擅自做主反映重階層；領班急求主管明確裁示，反映危機時仰賴由上而下拍板擔責。',
       feat: '導演式指揮模式，高度重視階級秩序，危機時刻基層仰賴最高主管明確指令。',
       blindspot: '在危機時刻若尋求民主討論凝聚共識，會被基層視為軟弱、無能且推卸責任。',
       action: '主管迅速聽取關鍵資訊後果斷拍板，下達清晰執行步驟，並由最高主管親自扛起成敗責任。'
@@ -48,6 +50,7 @@ const MOBILE_QUESTIONS = [
       { tag: '品保主管沉默', text: '品保主管面色凝重，沉默看向你等待定奪。' }
     ],
     bullets: {
+      clue: '工程師當面直言挑戰主管反映極致平等；崇尚先跑再修並由主管拍板，反映由上而下敏捷速決。',
       feat: '敏捷試錯模式，組織極度扁平，決策採小速決快速推進與動態修補。',
       blindspot: '若開馬拉松會議追求完美共識，會被視為官僚、保守且缺乏魄力與市場速度。',
       action: '肯定創新熱情並迅速拍板小規模試跑，保留後續動態修補彈性。'
@@ -59,12 +62,13 @@ const MOBILE_QUESTIONS = [
     prompt: '發表會倒數兩小時，面對客戶技術員在後台強硬阻擋放行，你的領導決策座標落點在哪裡？',
     countries: '丹麥、荷蘭',
     dialogues: [
-      { tag: '客戶後台突發', text: '全球發表會倒數兩小時，戰略客戶技術長帶著兩名年輕測試員突然走進後台。' },
+      { tag: '客戶後台突發', text: '全球發表會倒数兩小時，戰略客戶技術長帶著兩名年輕測試員突然走進後台。' },
       { tag: '攤牌數據報告', text: '測試員將「極端低溫環境訊號衰減報告」拍在桌上！' },
       { tag: '基層堅持把關', text: '年輕測試員：「在我們團隊裡，每位技術員都有權為安全把關，我們不在乎職銜。」' },
       { tag: '堅持全體共審', text: '「若非雙方工程師公開透明共同審核並達成一致協議，我們絕不簽署放行同意書！」' }
     ],
     bullets: {
+      clue: '基層測試員平起平坐主導談判反映高度平等；堅持全員公開共審達成一致，反映神聖共識大承諾。',
       feat: '低地協商模式，基層工程師擁有一票否決權，追求刻在石碑上的神聖大承諾。',
       blindspot: '試圖透過職級施壓或私下利益妥協，會被視為踐踏專業誠信與違背團隊共識。',
       action: '主管轉化為中立協調促進者，召集雙方技術人員公開數據、透明共審，凝聚神聖共識。'
@@ -385,18 +389,22 @@ function resultMarkup() {
         <span style="background:#2563eb; color:#fff; font-size:11px; font-weight:800; padding:2px 6px; border-radius:4px;">代表國家</span>
         <strong style="font-size:13px; color:#1e40af; font-weight:700;">${esc(qData.countries)}</strong>
       </div>
-      <div style="display:flex; flex-direction:column; gap:12px;">
-        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-left:4px solid #1e3a8a; border-radius:10px; padding:11px 13px;">
-          <span style="display:inline-block; font-size:12.5px; font-weight:800; color:#1e3a8a; margin-bottom:4px;">文化特徵</span>
-          <div style="font-size:14.5px; line-height:1.6; color:#1e293b; font-weight:600;">${esc(qData.bullets.feat)}</div>
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        <div style="background:#eef2ff; border:1px solid #c7d2fe; border-left:4px solid #4338ca; border-radius:10px; padding:10px 12px;">
+          <span style="display:inline-block; font-size:12px; font-weight:800; color:#4338ca; margin-bottom:3px;">題目線索</span>
+          <div style="font-size:14px; line-height:1.55; color:#1e1b4b; font-weight:600;">${esc(qData.bullets.clue)}</div>
         </div>
-        <div style="background:#fffbeb; border:1px solid #fef3c7; border-left:4px solid #d97706; border-radius:10px; padding:11px 13px;">
-          <span style="display:inline-block; font-size:12.5px; font-weight:800; color:#d97706; margin-bottom:4px;">管理盲點</span>
-          <div style="font-size:14.5px; line-height:1.6; color:#78350f; font-weight:600;">${esc(qData.bullets.blindspot)}</div>
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-left:4px solid #1e3a8a; border-radius:10px; padding:10px 12px;">
+          <span style="display:inline-block; font-size:12px; font-weight:800; color:#1e3a8a; margin-bottom:3px;">文化特徵</span>
+          <div style="font-size:14px; line-height:1.55; color:#1e293b; font-weight:600;">${esc(qData.bullets.feat)}</div>
         </div>
-        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-left:4px solid #16a34a; border-radius:10px; padding:11px 13px;">
-          <span style="display:inline-block; font-size:12.5px; font-weight:800; color:#16a34a; margin-bottom:4px;">正確對策</span>
-          <div style="font-size:14.5px; line-height:1.6; color:#14532d; font-weight:600;">${esc(qData.bullets.action)}</div>
+        <div style="background:#fffbeb; border:1px solid #fef3c7; border-left:4px solid #d97706; border-radius:10px; padding:10px 12px;">
+          <span style="display:inline-block; font-size:12px; font-weight:800; color:#d97706; margin-bottom:3px;">管理盲點</span>
+          <div style="font-size:14px; line-height:1.55; color:#78350f; font-weight:600;">${esc(qData.bullets.blindspot)}</div>
+        </div>
+        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-left:4px solid #16a34a; border-radius:10px; padding:10px 12px;">
+          <span style="display:inline-block; font-size:12px; font-weight:800; color:#16a34a; margin-bottom:3px;">正確對策</span>
+          <div style="font-size:14px; line-height:1.55; color:#14532d; font-weight:600;">${esc(qData.bullets.action)}</div>
         </div>
       </div>
     </section>
