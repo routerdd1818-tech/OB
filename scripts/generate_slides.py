@@ -179,7 +179,7 @@ def build_presentation():
         add_notes(s, notes_text)
         return s
 
-    def add_reveal_slide_image5(slide_title, eyebrow, zone_pos, zone_title, zone_sub, target_x, target_y, target_quadrant, culture_feat, blindspot, correct_action, notes_text):
+    def add_reveal_slide_image5(slide_title, eyebrow, zone_pos, zone_title, zone_sub, target_x, target_y, target_quadrant, culture_feat, blindspot, correct_action, notes_text, countries=""):
         s = prs.slides.add_slide(blank_layout)
         set_bg(s, C_SLATE_LIGHT)
         add_header(s, slide_title, eyebrow)
@@ -219,6 +219,15 @@ def build_presentation():
         p3.font.color.rgb = RGBColor(254, 243, 199)
         p3.alignment = PP_ALIGN.CENTER
 
+        if countries:
+            p3_c = ltf.add_paragraph()
+            p3_c.space_before = Pt(4)
+            p3_c.text = f"【代表國家：{countries}】"
+            p3_c.font.size = Pt(13)
+            p3_c.font.bold = True
+            p3_c.font.color.rgb = RGBColor(147, 197, 253)
+            p3_c.alignment = PP_ALIGN.CENTER
+
         p4 = ltf.add_paragraph()
         p4.space_before = Pt(6)
         p4.text = f"🎯 靶心座標：({target_x}, {target_y})"
@@ -243,13 +252,21 @@ def build_presentation():
         rtf = r_card.text_frame
         rtf.word_wrap = True
         rtf.margin_left = rtf.margin_right = Inches(0.4)
-        rtf.margin_top = Inches(0.45)
+        rtf.margin_top = Inches(0.4)
 
         p_rh = rtf.paragraphs[0]
-        p_rh.text = "文獻理論依據與決策盲點解析"
-        p_rh.font.size = Pt(19)
+        p_rh.text = f"文獻理論依據與決策盲點解析"
+        p_rh.font.size = Pt(20)
         p_rh.font.bold = True
         p_rh.font.color.rgb = C_SLATE_DARK
+
+        if countries:
+            p_rh_c = rtf.add_paragraph()
+            p_rh_c.space_before = Pt(4)
+            p_rh_c.text = f"代表國家：{countries}"
+            p_rh_c.font.size = Pt(15)
+            p_rh_c.font.bold = True
+            p_rh_c.font.color.rgb = C_BLUE
 
         bullets = [
             ("文化特徵", culture_feat, C_BLUE),
@@ -259,15 +276,15 @@ def build_presentation():
 
         for label, text, color in bullets:
             p_lbl = rtf.add_paragraph()
-            p_lbl.space_before = Pt(18)
+            p_lbl.space_before = Pt(16)
             p_lbl.text = f"{label}："
-            p_lbl.font.size = Pt(16)
+            p_lbl.font.size = Pt(17)
             p_lbl.font.bold = True
             p_lbl.font.color.rgb = C_SLATE_DARK
 
             p_txt = rtf.add_paragraph()
             p_txt.text = text
-            p_txt.font.size = Pt(13)
+            p_txt.font.size = Pt(14.5)
             p_txt.font.color.rgb = C_SLATE_MID
             p_txt.line_spacing = 1.35
 
@@ -538,7 +555,8 @@ def build_presentation():
         culture_feat="日本根回與稟議模式，兼具嚴明的職級尊卑與全員深度共識。",
         blindspot="誤以為大會能直接討論拍板；在該文化中大會僅為用印儀式，未經會前私下摸底（根回）強推必遭消極抗命。",
         correct_action="尊重既有職級序列，會前透過資深幹部由下而上私下溝通、全員完成會簽後再開會確認。",
-        notes_text="【計分引導】靶心座標為 (78, 82)。請計算距離 d = √[(X-78)² + (Y-82)²]，得分為 100 - d。"
+        notes_text="【計分引導】靶心座標為 (78, 82)。請計算距離 d = √[(X-78)² + (Y-82)²]，得分為 100 - d。",
+        countries="日本、韓國"
     )
 
     # =========================================================================
@@ -574,7 +592,8 @@ def build_presentation():
         culture_feat="導演式指揮模式，高度重視階級秩序，危機時刻基層仰賴最高主管明確指令。",
         blindspot="在危機時刻若尋求民主討論凝聚共識，會被基層視為軟弱、無能且推卸責任。",
         correct_action="主管迅速聽取關鍵資訊後果斷拍板，下達清晰執行步驟，並由最高主管親自扛起成敗責任。",
-        notes_text="【計分引導】靶心座標為 (84, 18)。交期只剩四小時的危機中，尋求共識會被視為卸責。"
+        notes_text="【計分引導】靶心座標為 (84, 18)。交期只剩四小時的危機中，尋求共識會被視為卸責。",
+        countries="中國、俄羅斯、印度、沙烏地阿拉伯"
     )
 
     # =========================================================================
@@ -610,7 +629,8 @@ def build_presentation():
         culture_feat="矽谷敏捷試錯模式，組織極度扁平，決策採快速推進與動態修補。",
         blindspot="若開馬拉松會議追求完美共識，會被視為官僚、保守且缺乏魄力與市場速度。",
         correct_action="肯定創新熱情並迅速拍板小規模試跑（如灰度發布），保留後續動態修補彈性。",
-        notes_text="【計分引導】靶心座標為 (22, 24)。引導學員理解敏捷文化中的小速決思維。"
+        notes_text="【計分引導】靶心座標為 (22, 24)。引導學員理解敏捷文化中的小速決思維。",
+        countries="美國（矽谷）、澳洲、加拿大、英國"
     )
 
     # =========================================================================
@@ -646,7 +666,8 @@ def build_presentation():
         culture_feat="荷蘭低地協商模式，基層工程師擁有一票否決權，追求刻在石碑上的神聖大承諾。",
         blindspot="試圖透過職級施壓或私下利益妥協，會被視為踐踏專業誠信與違背團隊共識。",
         correct_action="主管轉化為中立協調促進者，召集雙方技術人員公開數據、透明共審，凝聚神聖共識。",
-        notes_text="【計分引導】靶心座標為 (18, 85)。至此四回合已全部揭曉，請各組加總四輪總積分！"
+        notes_text="【計分引導】靶心座標為 (18, 85)。至此四回合已全部揭曉，請各組加總四輪總積分！",
+        countries="荷蘭、瑞典、丹麥、挪威（北歐與低地國）"
     )
 
     # =========================================================================

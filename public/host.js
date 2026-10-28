@@ -40,6 +40,7 @@ const GEO_ROUNDS_DATA = [
       { tag: '茶水間外衝突', text: '技術主管嚴厲斥責昨晚私信向你提建議的年輕工程師：「不懂規矩，破壞團隊程序！」' }
     ],
     verdict: '第一象限（右上）：階層制 × 共識型決策',
+    countries: '日本、韓國',
     bullets: {
       feat: '兼具嚴明的職級尊卑與全員深度共識，重視循序漸進的組織倫理與事前校準。',
       blindspot: '誤以為大會能直接討論拍板；在該文化中大會僅為用印儀式，未經會前私下摸底強推必遭消極抗命。',
@@ -63,6 +64,7 @@ const GEO_ROUNDS_DATA = [
       { tag: '交貨倒數危機', text: '距離清晨交貨只剩四小時，全體基層等待最高主管下達直接指令並扛起成敗。' }
     ],
     verdict: '第四象限（右下）：階層制 × 由上而下速決',
+    countries: '中國、俄羅斯、印度、沙烏地阿拉伯',
     bullets: {
       feat: '導演式指揮模式，高度重視階級秩序，危機時刻基層仰賴最高主管明確指令。',
       blindspot: '在危機時刻若尋求民主討論凝聚共識，會被基層視為軟弱、無能且推卸責任。',
@@ -86,6 +88,7 @@ const GEO_ROUNDS_DATA = [
       { tag: '品保主管提醒', text: '品保主管提醒還有一成五極端條件未測，面色凝重轉向你等待最終定奪。' }
     ],
     verdict: '第三象限（左下）：平等主義 × 由上而下速決',
+    countries: '美國（矽谷）、澳洲、加拿大、英國',
     bullets: {
       feat: '敏捷試錯模式，組織極度扁平，決策採小速決快速推進與動態修補。',
       blindspot: '若開馬拉松會議追求完美共識，會被視為官僚、保守且缺乏魄力與市場速度。',
@@ -109,6 +112,7 @@ const GEO_ROUNDS_DATA = [
       { tag: '全員共識底線', text: '「若非雙方所有技術人員公開透明共同審核並達成一致協議，我們絕不簽署放行！」' }
     ],
     verdict: '第二象限（左上）：平等主義 × 共識型決策',
+    countries: '荷蘭、瑞典、丹麥、挪威（北歐與低地國）',
     bullets: {
       feat: '低地協商模式，基層工程師擁有一票否決權，追求刻在石碑上的神聖大承諾。',
       blindspot: '試圖透過職級施壓或私下利益妥協，會被視為踐踏專業誠信與違背團隊共識。',
@@ -489,38 +493,42 @@ function resultsMarkup() {
       </div>
 
       <!-- 右欄：Image 5 樣式的三大列點原因卡片（全新大器排版） -->
-      <section class="card results-main-review" style="padding:22px 26px !important; display:flex; flex-direction:column; justify-content:space-between;">
+      <section class="card results-main-review" style="padding:24px 28px !important; display:flex; flex-direction:column; justify-content:space-between;">
         <div style="margin-bottom:14px;">
-          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:6px;">
-            <span class="topic-badge" style="background:#15803d; color:#fff; padding:4px 10px; font-size:12px; font-weight:800; border-radius:6px;">正解落點：(${target.x}, ${target.y})</span>
-            <span class="pill" style="background:#f0fdf4; color:#166534; font-weight:700; font-size:12px; border:1px solid #bbf7d0;">答案解析與文獻依據</span>
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:8px;">
+            <span class="topic-badge" style="background:#15803d; color:#fff; padding:5px 12px; font-size:13px; font-weight:800; border-radius:6px;">正解落點：(${target.x}, ${target.y})</span>
+            <span class="pill" style="background:#f0fdf4; color:#166534; font-weight:800; font-size:13px; border:1px solid #bbf7d0; padding:4px 10px; border-radius:6px;">答案解析與文獻依據</span>
           </div>
-          <h2 style="font-size:22px; font-weight:900; color:#0f172a; margin:4px 0 0; line-height:1.35;">
+          <h2 style="font-size:26px; font-weight:900; color:#0f172a; margin:4px 0 10px; line-height:1.35;">
             ${esc(geoRound.verdict)}
           </h2>
+          <div style="display:inline-flex; align-items:center; gap:8px; background:#eff6ff; border:1.5px solid #bfdbfe; padding:6px 14px; border-radius:8px;">
+            <span style="background:#2563eb; color:#fff; font-size:13px; font-weight:800; padding:3px 9px; border-radius:6px;">代表國家</span>
+            <span style="font-size:16px; color:#1e40af; font-weight:800;">${esc(geoRound.countries)}</span>
+          </div>
         </div>
 
-        <div style="background:#f8fafc; border:1.5px solid #e2e8f0; border-radius:16px; padding:18px 20px; display:flex; flex-direction:column; gap:16px; flex:1; justify-content:space-around;">
+        <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:16px; padding:22px 24px; display:flex; flex-direction:column; gap:20px; flex:1; justify-content:space-around;">
           <!-- 列點 1：文化特徵 -->
-          <div style="display:flex; align-items:flex-start; gap:12px;">
-            <span style="background:#1e3a8a; color:#fff; font-size:12.5px; font-weight:800; padding:4px 10px; border-radius:8px; flex-shrink:0; margin-top:2px;">文化特徵</span>
-            <div style="font-size:15px; line-height:1.65; color:#1e293b; font-weight:600;">
+          <div style="display:flex; align-items:flex-start; gap:14px;">
+            <span style="background:#1e3a8a; color:#fff; font-size:14.5px; font-weight:800; padding:6px 13px; border-radius:8px; flex-shrink:0; margin-top:2px; letter-spacing:0.5px;">文化特徵</span>
+            <div style="font-size:18px; line-height:1.7; color:#1e293b; font-weight:700;">
               ${esc(geoRound.bullets.feat)}
             </div>
           </div>
 
           <!-- 列點 2：管理盲點 -->
-          <div style="display:flex; align-items:flex-start; gap:12px;">
-            <span style="background:#d97706; color:#fff; font-size:12.5px; font-weight:800; padding:4px 10px; border-radius:8px; flex-shrink:0; margin-top:2px;">管理盲點</span>
-            <div style="font-size:15px; line-height:1.65; color:#78350f; font-weight:600;">
+          <div style="display:flex; align-items:flex-start; gap:14px;">
+            <span style="background:#d97706; color:#fff; font-size:14.5px; font-weight:800; padding:6px 13px; border-radius:8px; flex-shrink:0; margin-top:2px; letter-spacing:0.5px;">管理盲點</span>
+            <div style="font-size:18px; line-height:1.7; color:#78350f; font-weight:700;">
               ${esc(geoRound.bullets.blindspot)}
             </div>
           </div>
 
           <!-- 列點 3：正確對策 -->
-          <div style="display:flex; align-items:flex-start; gap:12px;">
-            <span style="background:#16a34a; color:#fff; font-size:12.5px; font-weight:800; padding:4px 10px; border-radius:8px; flex-shrink:0; margin-top:2px;">正確對策</span>
-            <div style="font-size:15px; line-height:1.65; color:#14532d; font-weight:600;">
+          <div style="display:flex; align-items:flex-start; gap:14px;">
+            <span style="background:#16a34a; color:#fff; font-size:14.5px; font-weight:800; padding:6px 13px; border-radius:8px; flex-shrink:0; margin-top:2px; letter-spacing:0.5px;">正確對策</span>
+            <div style="font-size:18px; line-height:1.7; color:#14532d; font-weight:700;">
               ${esc(geoRound.bullets.action)}
             </div>
           </div>

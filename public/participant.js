@@ -6,6 +6,7 @@ const MOBILE_QUESTIONS = [
     code: '案例一 · 精密研發中心',
     lead: '你剛接管精密研發中心，提議縮短高溫測試工時，會議上無人反對，事後卻完全無人執行。',
     prompt: '面對會議全員沉默抄筆記、會後產線完全不動的局面，你的領導決策座標落點在哪裡？',
+    countries: '日本、韓國',
     dialogues: [
       { tag: '週一全體大會', text: '你提議縮短高溫測試工時兩成，詢問有無異議；全場低頭抄筆記，一片沉默。' },
       { tag: '技術主管態度', text: '技術主管微笑回應：「我們會盡力研究。」' },
@@ -22,6 +23,7 @@ const MOBILE_QUESTIONS = [
     code: '案例二 · 核心試產基地',
     lead: '交貨只剩四小時，半夜產線突然發生重大良率異常，基層工程師慌亂甩鍋不敢決定。',
     prompt: '距離交貨剩四小時，面對團隊恐懼責任且無人敢動手，你的領導決策座標落點在哪裡？',
+    countries: '中國、俄羅斯、印度、沙烏地阿拉伯',
     dialogues: [
       { tag: '夜班兩點十分', text: '塗佈機良率暴跌至百分之四十八！產線領班大驚失色。' },
       { tag: '現場緊急下令', text: '資深廠長：「立刻停線，把機台洗乾淨！」機台強制按下停機。' },
@@ -38,6 +40,7 @@ const MOBILE_QUESTIONS = [
     code: '案例三 · 高速運算實驗室',
     lead: '新產品發表在即，年輕工程師在全員站立會議上直接挑戰你的保守決策，提出激進改動。',
     prompt: '面對成員大膽挑戰既有架構並要求立即上線，你的領導決策座標落點在哪裡？',
+    countries: '美國（矽谷）、澳洲、加拿大、英國',
     dialogues: [
       { tag: '封版倒數時刻', text: '站立會議上，年輕核心工程師直接對你說：「你昨天定的架構太保守了！」' },
       { tag: '提出激進架構', text: '他拿出私下寫的新演算法原型：「效能提升兩倍！現在就推上線，有問題明天再修！」' },
@@ -54,6 +57,7 @@ const MOBILE_QUESTIONS = [
     code: '案例四 · 戰略客戶攤牌現場',
     lead: '全球發表會前夕，戰略客戶直接帶著基層測試人員闖進後台，要求公開透明審查瑕疵。',
     prompt: '發表會倒數兩小時，面對客戶技術員在後台強硬阻擋放行，你的領導決策座標落點在哪裡？',
+    countries: '荷蘭、瑞典、丹麥、挪威（北歐與低地國）',
     dialogues: [
       { tag: '客戶後台突發', text: '全球發表會倒數兩小時，戰略客戶技術長帶著兩名年輕測試員突然走進後台。' },
       { tag: '攤牌數據報告', text: '測試員將「極端低溫環境訊號衰減報告」拍在桌上！' },
@@ -374,19 +378,25 @@ function resultMarkup() {
 
     <!-- 列點式原因呈現 -->
     <section class="card" style="padding:16px 18px; margin-bottom:20px; text-align:left; background:#ffffff; border:1.5px solid var(--line);">
-      <div class="eyebrow" style="margin-bottom:10px; color:#15803d; font-weight:800;">答案解析 · 列點式原因拆解</div>
-      <div style="display:flex; flex-direction:column; gap:10px;">
-        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-left:4px solid #1e3a8a; border-radius:10px; padding:10px 12px;">
-          <span style="display:inline-block; font-size:11.5px; font-weight:800; color:#1e3a8a; margin-bottom:3px;">文化特徵</span>
-          <div style="font-size:13px; line-height:1.5; color:#334155; font-weight:600;">${esc(qData.bullets.feat)}</div>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+        <span class="eyebrow" style="color:#15803d; font-weight:800;">答案解析 · 列點式原因拆解</span>
+      </div>
+      <div style="display:inline-flex; align-items:center; gap:6px; background:#eff6ff; border:1px solid #bfdbfe; padding:4px 10px; border-radius:6px; margin-bottom:12px;">
+        <span style="background:#2563eb; color:#fff; font-size:11px; font-weight:800; padding:2px 6px; border-radius:4px;">代表國家</span>
+        <strong style="font-size:13px; color:#1e40af; font-weight:700;">${esc(qData.countries)}</strong>
+      </div>
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        <div style="background:#f8fafc; border:1px solid #e2e8f0; border-left:4px solid #1e3a8a; border-radius:10px; padding:11px 13px;">
+          <span style="display:inline-block; font-size:12.5px; font-weight:800; color:#1e3a8a; margin-bottom:4px;">文化特徵</span>
+          <div style="font-size:14.5px; line-height:1.6; color:#1e293b; font-weight:600;">${esc(qData.bullets.feat)}</div>
         </div>
-        <div style="background:#fffbeb; border:1px solid #fef3c7; border-left:4px solid #d97706; border-radius:10px; padding:10px 12px;">
-          <span style="display:inline-block; font-size:11.5px; font-weight:800; color:#d97706; margin-bottom:3px;">管理盲點</span>
-          <div style="font-size:13px; line-height:1.5; color:#78350f; font-weight:600;">${esc(qData.bullets.blindspot)}</div>
+        <div style="background:#fffbeb; border:1px solid #fef3c7; border-left:4px solid #d97706; border-radius:10px; padding:11px 13px;">
+          <span style="display:inline-block; font-size:12.5px; font-weight:800; color:#d97706; margin-bottom:4px;">管理盲點</span>
+          <div style="font-size:14.5px; line-height:1.6; color:#78350f; font-weight:600;">${esc(qData.bullets.blindspot)}</div>
         </div>
-        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-left:4px solid #16a34a; border-radius:10px; padding:10px 12px;">
-          <span style="display:inline-block; font-size:11.5px; font-weight:800; color:#16a34a; margin-bottom:3px;">正確對策</span>
-          <div style="font-size:13px; line-height:1.5; color:#14532d; font-weight:600;">${esc(qData.bullets.action)}</div>
+        <div style="background:#f0fdf4; border:1px solid #bbf7d0; border-left:4px solid #16a34a; border-radius:10px; padding:11px 13px;">
+          <span style="display:inline-block; font-size:12.5px; font-weight:800; color:#16a34a; margin-bottom:4px;">正確對策</span>
+          <div style="font-size:14.5px; line-height:1.6; color:#14532d; font-weight:600;">${esc(qData.bullets.action)}</div>
         </div>
       </div>
     </section>
