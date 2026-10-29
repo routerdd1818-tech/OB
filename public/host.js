@@ -299,7 +299,7 @@ function scenarioMarkup() {
   const totalStudents = state.groups.reduce((n, g) => n + (g.count || 0), 0);
 
   return `
-    <div class="voting-stage-grid" style="grid-template-columns: 1.15fr 1fr; gap: 20px; align-items: stretch;">
+    <div class="voting-stage-grid" style="grid-template-columns: 1fr 1.08fr; gap: 22px; align-items: stretch;">
       <!-- 左欄：大尺寸情境四格漫畫（放大呈現） -->
       <div class="voting-left-col" style="display:flex; flex-direction:column;">
         <section class="card" style="padding:16px; height:100%; display:flex; align-items:center; justify-content:center; background:#ffffff; overflow:hidden;">
@@ -307,50 +307,50 @@ function scenarioMarkup() {
         </section>
       </div>
 
-      <!-- 右欄：情境對白、決策課題與各組插旗進度（文字集中於右側） -->
+      <!-- 右欄：情境對白、決策課題與各組插旗進度（文字集中於右側，字體超大顯眼） -->
       <div class="voting-right-col" style="display:flex; flex-direction:column; justify-content:space-between; gap:14px;">
-        <section class="card" style="padding:22px 24px; flex:1; display:flex; flex-direction:column; justify-content:space-between;">
+        <section class="card" style="padding:22px 26px; flex:1; display:flex; flex-direction:column; justify-content:space-between;">
           <div>
-            <div class="topic-row" style="margin-bottom:10px; justify-content:space-between; align-items:center;">
-              <div style="display:flex; align-items:center; gap:8px;">
-                <span class="topic-badge">第 0${state.roundIndex + 1} 回合 / 共 4 回合</span>
-                <span class="topic-location" style="font-size:14px; font-weight:700; color:var(--ink);">${esc(geoRound.location)}</span>
+            <div class="topic-row" style="margin-bottom:12px; justify-content:space-between; align-items:center;">
+              <div style="display:flex; align-items:center; gap:10px;">
+                <span class="topic-badge" style="font-size:13px; font-weight:800; padding:4px 9px;">第 0${state.roundIndex + 1} 回合 / 共 4 回合</span>
+                <span class="topic-location" style="font-size:15.5px; font-weight:750; color:var(--ink);">${esc(geoRound.location)}</span>
               </div>
               <div id="stage-qr-code" class="qr-mini-box" title="點擊放大 QR Code 掃碼入席" onclick="document.getElementById('qr-open')?.click()"></div>
             </div>
 
-            <h1 style="font-size:clamp(22px, 2vw, 28px); line-height:1.3; font-weight:850; margin:0 0 14px; color:#1c1917;">
+            <h1 style="font-size:clamp(24px, 2.1vw, 30px); line-height:1.3; font-weight:850; margin:0 0 16px; color:#1c1917;">
               ${esc(geoRound.title)}
             </h1>
 
-            <!-- 四行情境精簡對白（字體放大提升大螢幕辨識度） -->
-            <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;">
+            <!-- 四行情境精簡對白（大字體超清晰呈現） -->
+            <div style="display:flex; flex-direction:column; gap:11px; margin-bottom:18px;">
               ${geoRound.dialogues.map(d => `
-                <div style="background:#faf8f5; border:1px solid var(--line); border-left:4px solid #d97706; border-radius:10px; padding:10px 14px;">
-                  <span style="display:inline-block; font-size:13.5px; font-weight:800; color:#b45309; margin-bottom:3px;">${esc(d.tag)}</span>
-                  <div style="font-size:16.5px; font-weight:650; line-height:1.55; color:#1c1917;">${esc(d.text)}</div>
+                <div style="background:#faf8f5; border:1px solid var(--line); border-left:5px solid #d97706; border-radius:11px; padding:11px 16px;">
+                  <span style="display:inline-block; font-size:15px; font-weight:850; color:#b45309; margin-bottom:4px;">${esc(d.tag)}</span>
+                  <div style="font-size:19.5px; font-weight:700; line-height:1.5; color:#111827;">${esc(d.text)}</div>
                 </div>
               `).join('')}
             </div>
           </div>
 
           <div>
-            <!-- 決策課題（字體放大） -->
-            <div class="question-prompt" style="margin:0 0 12px 0 !important; background:#fffbeb; border:1.5px solid #f59e0b; border-left:6px solid #d97706; padding:14px 18px; border-radius:12px;">
-              <span class="prompt-badge" style="background:#d97706; color:#fff; font-size:13px; font-weight:800; padding:4px 8px; border-radius:6px; margin-right:8px;">決策課題</span>
-              <span class="prompt-text" style="font-size:17px; font-weight:750; color:#451a03; line-height:1.55;">${esc(geoRound.prompt)}</span>
+            <!-- 決策課題（大字體深色高對比醒目呈現） -->
+            <div class="question-prompt" style="margin:0 0 14px 0 !important; background:#fffbeb; border:2px solid #f59e0b; border-left:7px solid #d97706; padding:15px 20px; border-radius:14px; box-shadow:0 3px 12px rgba(217,119,6,0.08);">
+              <span class="prompt-badge" style="background:#d97706; color:#fff; font-size:15px; font-weight:850; padding:4px 10px; border-radius:7px; margin-right:10px; display:inline-block;">決策課題</span>
+              <span class="prompt-text" style="font-size:20px; font-weight:800; color:#451a03; line-height:1.5;">${esc(geoRound.prompt)}</span>
             </div>
 
             <!-- 整合在下方的 5 組插旗進度 -->
-            <div style="background:#f8fafc; border:1px solid var(--line); border-radius:12px; padding:12px 14px;">
+            <div style="background:#f8fafc; border:1px solid var(--line); border-radius:12px; padding:12px 16px;">
               <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-                <span style="font-size:12.5px; font-weight:800; color:#334155;">各組插旗進度 <small style="font-weight:500; color:var(--muted);">(${totalStudents} 人在線)</small></span>
-                <span class="stat-number" style="font-size:15px; font-weight:900; color:#0f172a;">${state.completed} / 5 組</span>
+                <span style="font-size:13.5px; font-weight:800; color:#334155;">各組插旗進度 <small style="font-weight:500; color:var(--muted);">(${totalStudents} 人在線)</small></span>
+                <span class="stat-number" style="font-size:16px; font-weight:900; color:#0f172a;">${state.completed} / 5 組</span>
               </div>
               <div class="progress-chips-row" style="display:flex; gap:6px; flex-wrap:wrap;">
                 ${state.groups.map(g => `
-                  <div class="progress-chip ${g.submitted ? 'is-done done' : g.count ? 'is-active' : ''}" style="flex:1; padding:5px 6px; font-size:11.5px; text-align:center;">
-                    <span class="chip-name" style="font-weight:700;">G${g.id}</span>
+                  <div class="progress-chip ${g.submitted ? 'is-done done' : g.count ? 'is-active' : ''}" style="flex:1; padding:6px 8px; font-size:12.5px; text-align:center;">
+                    <span class="chip-name" style="font-weight:750;">G${g.id}</span>
                     <span class="chip-status" style="margin-left:3px;">${g.submitted ? '已鎖定' : g.count ? '討論中' : '未入席'}</span>
                   </div>
                 `).join('')}

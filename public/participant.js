@@ -220,11 +220,11 @@ function render() {
           ${esc(qData.lead)}
         </div>
       ` : ''}
-      <div style="display:flex; flex-direction:column; gap:8px;">
+      <div style="display:flex; flex-direction:column; gap:9px;">
         ${(qData.dialogues || []).map(d => `
-          <div style="background:#faf8f5; border-left:3.5px solid #d97706; border-radius:8px; padding:7px 10px;">
-            <span style="font-size:11px; font-weight:800; color:#b45309; display:block; margin-bottom:2px;">${esc(d.tag)}</span>
-            <div style="font-size:13.5px; font-weight:600; line-height:1.45; color:#1c1917;">${esc(d.text)}</div>
+          <div style="background:#faf8f5; border-left:4px solid #d97706; border-radius:9px; padding:9px 12px;">
+            <span style="font-size:13px; font-weight:800; color:#b45309; display:block; margin-bottom:3px;">${esc(d.tag)}</span>
+            <div style="font-size:15.5px; font-weight:650; line-height:1.5; color:#1c1917;">${esc(d.text)}</div>
           </div>
         `).join('')}
       </div>
@@ -232,12 +232,12 @@ function render() {
   `;
 
   const keyQuestionBox = `
-    <section class="card" style="padding:14px 16px; margin-bottom:12px; border:2px solid #f59e0b; border-left:6px solid #d97706; background:#fffbeb;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
-        <span class="topic-badge" style="background:#d97706; color:#fff;">第 0${state.roundIndex + 1} 回合 · 決策課題</span>
-        <span style="font-size:11.5px; color:#92400e; font-weight:700;">${esc(qData.code)}</span>
+    <section class="card" style="padding:15px 18px; margin-bottom:14px; border:2px solid #f59e0b; border-left:6px solid #d97706; background:#fffbeb;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+        <span class="topic-badge" style="background:#d97706; color:#fff; font-size:12.5px; font-weight:800; padding:3px 8px;">第 0${state.roundIndex + 1} 回合 · 決策課題</span>
+        <span style="font-size:12px; color:#92400e; font-weight:700;">${esc(qData.code)}</span>
       </div>
-      <h1 style="font-size:15px; line-height:1.5; font-weight:800; color:#1c1917; margin:0;">
+      <h1 style="font-size:17px; line-height:1.5; font-weight:800; color:#1c1917; margin:0;">
         🎯 ${esc(qData.prompt)}
       </h1>
     </section>

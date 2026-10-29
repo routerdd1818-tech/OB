@@ -146,33 +146,33 @@ def build_presentation():
 
         p_loc = dtf.paragraphs[0]
         p_loc.text = f"📍 {location}"
-        p_loc.font.size = Pt(14)
+        p_loc.font.size = Pt(15.5)
         p_loc.font.bold = True
         p_loc.font.color.rgb = C_BLUE
 
         for who, text in dialogues:
             pw = dtf.add_paragraph()
-            pw.space_before = Pt(6)
+            pw.space_before = Pt(5)
             pw.text = f"【{who}】"
-            pw.font.size = Pt(13)
+            pw.font.size = Pt(14)
             pw.font.bold = True
             pw.font.color.rgb = C_SLATE_DARK
 
             pt = dtf.add_paragraph()
             pt.text = text
-            pt.font.size = Pt(12)
+            pt.font.size = Pt(13.5)
             pt.font.color.rgb = C_SLATE_MID
             pt.line_spacing = 1.2
 
         # 底部決策任務盒
-        prompt_card = add_card(s, r_left, c_top + Inches(4.4), r_w, Inches(1.1), bg_color=C_NAVY, border_color=None)
+        prompt_card = add_card(s, r_left, c_top + Inches(4.35), r_w, Inches(1.15), bg_color=C_NAVY, border_color=None)
         ptf = prompt_card.text_frame
         ptf.word_wrap = True
         ptf.margin_left = ptf.margin_right = Inches(0.25)
         ptf.margin_top = Inches(0.15)
         pp = ptf.paragraphs[0]
         pp.text = f"⏱️ 決策課題：{prompt}"
-        pp.font.size = Pt(13.5)
+        pp.font.size = Pt(15)
         pp.font.bold = True
         pp.font.color.rgb = C_AMBER_LIGHT
 
