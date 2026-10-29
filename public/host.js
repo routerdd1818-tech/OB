@@ -314,31 +314,31 @@ function scenarioMarkup() {
             <div class="topic-row" style="margin-bottom:10px; justify-content:space-between; align-items:center;">
               <div style="display:flex; align-items:center; gap:8px;">
                 <span class="topic-badge">第 0${state.roundIndex + 1} 回合 / 共 4 回合</span>
-                <span class="topic-location" style="font-size:13px; font-weight:700; color:var(--ink);">${esc(geoRound.location)}</span>
+                <span class="topic-location" style="font-size:14px; font-weight:700; color:var(--ink);">${esc(geoRound.location)}</span>
               </div>
               <div id="stage-qr-code" class="qr-mini-box" title="點擊放大 QR Code 掃碼入席" onclick="document.getElementById('qr-open')?.click()"></div>
             </div>
 
-            <h1 style="font-size:clamp(20px, 1.8vw, 26px); line-height:1.3; font-weight:850; margin:0 0 12px; color:#1c1917;">
+            <h1 style="font-size:clamp(22px, 2vw, 28px); line-height:1.3; font-weight:850; margin:0 0 14px; color:#1c1917;">
               ${esc(geoRound.title)}
             </h1>
 
-            <!-- 四行情境精簡對白 -->
-            <div style="display:flex; flex-direction:column; gap:8px; margin-bottom:14px;">
+            <!-- 四行情境精簡對白（字體放大提升大螢幕辨識度） -->
+            <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:16px;">
               ${geoRound.dialogues.map(d => `
-                <div style="background:#faf8f5; border:1px solid var(--line); border-left:4px solid #d97706; border-radius:10px; padding:9px 13px;">
-                  <span style="display:inline-block; font-size:11.5px; font-weight:800; color:#b45309; margin-bottom:2px;">${esc(d.tag)}</span>
-                  <div style="font-size:13.5px; font-weight:600; line-height:1.5; color:#1c1917;">${esc(d.text)}</div>
+                <div style="background:#faf8f5; border:1px solid var(--line); border-left:4px solid #d97706; border-radius:10px; padding:10px 14px;">
+                  <span style="display:inline-block; font-size:13.5px; font-weight:800; color:#b45309; margin-bottom:3px;">${esc(d.tag)}</span>
+                  <div style="font-size:16.5px; font-weight:650; line-height:1.55; color:#1c1917;">${esc(d.text)}</div>
                 </div>
               `).join('')}
             </div>
           </div>
 
           <div>
-            <!-- 決策課題 -->
-            <div class="question-prompt" style="margin:0 0 12px 0 !important; background:#fffbeb; border:1.5px solid #f59e0b; border-left:6px solid #d97706; padding:12px 16px; border-radius:12px;">
-              <span class="prompt-badge" style="background:#d97706; color:#fff; font-size:11.5px; font-weight:800; padding:3px 7px; border-radius:6px; margin-right:6px;">決策課題</span>
-              <span class="prompt-text" style="font-size:14.5px; font-weight:700; color:#451a03;">${esc(geoRound.prompt)}</span>
+            <!-- 決策課題（字體放大） -->
+            <div class="question-prompt" style="margin:0 0 12px 0 !important; background:#fffbeb; border:1.5px solid #f59e0b; border-left:6px solid #d97706; padding:14px 18px; border-radius:12px;">
+              <span class="prompt-badge" style="background:#d97706; color:#fff; font-size:13px; font-weight:800; padding:4px 8px; border-radius:6px; margin-right:8px;">決策課題</span>
+              <span class="prompt-text" style="font-size:17px; font-weight:750; color:#451a03; line-height:1.55;">${esc(geoRound.prompt)}</span>
             </div>
 
             <!-- 整合在下方的 5 組插旗進度 -->
